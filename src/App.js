@@ -277,6 +277,7 @@ const TUBE_PROFILES = {
   "100x50x4": { desc: "100×50 e=4mm", pesoM: 8.78, areaMm2: 1118 },
 };
 
+// eslint-disable-next-line no-unused-vars
 const BARRA_PROFILES = {
   "barra_12": { desc: "Barra chata 3/4\" (19×3mm)", pesoM: 0.45, tipo: "barra" },
   "barra_25x3": { desc: "Barra chata 25×3mm", pesoM: 0.59, tipo: "barra" },
@@ -300,6 +301,7 @@ function calcWindLoad(altura, largura, velocidadeVento = 40) {
 // ─── DEFLECTION CHECK (viga bi-apoiada, carga uniforme) ──────────────────
 function checkDeflection(vao_m, pesoTotalKg, profile) {
   const E = 200000; // MPa aço
+  // eslint-disable-next-line no-unused-vars
   const t = 3; // mm espessura ref
   const h = parseInt(profile.split("x")[1]) || 40;
   const b = parseInt(profile.split("x")[0]) || 40;
@@ -332,6 +334,7 @@ function PortaoCalc() {
     if (!L || !H || L <= 0 || H <= 0) return;
 
     const Lfolha = L / folhas;
+    // eslint-disable-next-line no-unused-vars
     const perim = 2 * (Lfolha + H); // perímetro por folha
     const diagComp = form.incluiDiagonal ? Math.sqrt(Lfolha ** 2 + H ** 2) : 0;
 
