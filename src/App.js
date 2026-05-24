@@ -333,7 +333,7 @@ function PortaoCalc() {
 
     const Lfolha = L / folhas;
     const perim = 2 * (Lfolha + H); // perímetro por folha
-    const diagComp = form.incluiDiagonal ? Math.sqrt(Lfolha * 2 + H * 2) : 0;
+    const diagComp = form.incluiDiagonal ? Math.sqrt(Lfolha ** 2 + H ** 2) : 0;
 
     // Montantes horizontais (top, bottom, meio)
     const qtdHorizontais = 3;
@@ -377,7 +377,7 @@ function PortaoCalc() {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div className="grid-2">
         <div className="section">
-          <div className="section-header">⚙️ Dimensões</div>
+          <div className="section-header">⚙ Dimensões</div>
           <div className="section-body">
             <div className="field">
               <label>Largura total <span className="unit">(m)</span></label>
@@ -440,7 +440,7 @@ function PortaoCalc() {
 
       {result && (
         <div className="results">
-          <div className="results-header">✔️ Resultado</div>
+          <div className="results-header">✔ Resultado</div>
           <div className="results-body">
             <div className="result-group-title">MATERIAL</div>
             <div className="result-row">
@@ -488,14 +488,14 @@ function PortaoCalc() {
             <div className="result-group-title" style={{ marginTop: 12 }}>RIGIDEZ</div>
             <div className="result-row">
               <span className="result-label">Flecha estimada (vão por folha)</span>
-              <span className={result-value ${result.defl.ok ? "" : "danger"}}>{result.defl.delta} mm</span>
+              <span className={`result-value ${result.defl.ok ? "" : "danger"}`}>{result.defl.delta} mm</span>
             </div>
             <div className="result-row">
               <span className="result-label">Limite L/250</span>
               <span className="result-value">{result.defl.limite} mm</span>
             </div>
             {!result.defl.ok && (
-              <div className="alert">⚠️ Flecha excede o limite. Considere perfil maior ou adicione montante intermediário.</div>
+              <div className="alert">⚠ Flecha excede o limite. Considere perfil maior ou adicione montante intermediário.</div>
             )}
           </div>
         </div>
@@ -568,7 +568,7 @@ function ParapeitoCalc() {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div className="grid-2">
         <div className="section">
-          <div className="section-header">⚙️ Dimensões</div>
+          <div className="section-header">⚙ Dimensões</div>
           <div className="section-body">
             <div className="field">
               <label>Comprimento <span className="unit">(m)</span></label>
@@ -630,7 +630,7 @@ function ParapeitoCalc() {
 
       {result && (
         <div className="results">
-          <div className="results-header">✔️ Resultado</div>
+          <div className="results-header">✔ Resultado</div>
           <div className="results-body">
             <div className="result-group-title">MATERIAL</div>
             <div className="result-row">
@@ -674,10 +674,10 @@ function ParapeitoCalc() {
             </div>
             <div className="result-row">
               <span className="result-label">Momento no pé do poste</span>
-              <span className={result-value ${parseFloat(result.momentoPoste) > 1.5 ? "warn" : ""}}>{result.momentoPoste} kNm</span>
+              <span className={`result-value ${parseFloat(result.momentoPoste) > 1.5 ? "warn" : ""}`}>{result.momentoPoste} kNm</span>
             </div>
             {parseFloat(form.altura) < 1.05 && (
-              <div className="alert">⚠️ Altura abaixo de 1,05m. NBR 9050 exige altura mínima de 1,05m para parapeitos em locais de uso público.</div>
+              <div className="alert">⚠ Altura abaixo de 1,05m. NBR 9050 exige altura mínima de 1,05m para parapeitos em locais de uso público.</div>
             )}
           </div>
         </div>
@@ -742,7 +742,7 @@ function GradeCalc() {
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       <div className="grid-2">
         <div className="section">
-          <div className="section-header">⚙️ Dimensões</div>
+          <div className="section-header">⚙ Dimensões</div>
           <div className="section-body">
             <div className="field">
               <label>Largura <span className="unit">(m)</span></label>
@@ -799,7 +799,7 @@ function GradeCalc() {
 
       {result && (
         <div className="results">
-          <div className="results-header">✔️ Resultado</div>
+          <div className="results-header">✔ Resultado</div>
           <div className="results-body">
             <div className="result-group-title">MATERIAL</div>
             <div className="result-row">
@@ -837,10 +837,10 @@ function GradeCalc() {
             <div className="result-group-title" style={{ marginTop: 12 }}>SEGURANÇA</div>
             <div className="result-row">
               <span className="result-label">Abertura livre entre barras</span>
-              <span className={result-value ${result.aberturaOk ? "" : "danger"}}>{result.espV} cm {result.aberturaOk ? "✔️" : "✘"}</span>
+              <span className={`result-value ${result.aberturaOk ? "" : "danger"}`}>{result.espV} cm {result.aberturaOk ? "✔" : "✘"}</span>
             </div>
             {!result.aberturaOk && (
-              <div className="alert">⚠️ Abertura maior que 11cm. Para grades de segurança em áreas com crianças, NBR 9050 recomenda máx. 11cm para impedir passagem de cabeça.</div>
+              <div className="alert">⚠ Abertura maior que 11cm. Para grades de segurança em áreas com crianças, NBR 9050 recomenda máx. 11cm para impedir passagem de cabeça.</div>
             )}
           </div>
         </div>
@@ -854,7 +854,7 @@ function GradeCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 const TABS = [
   { id: "portao", label: "🚪 Portão", comp: PortaoCalc },
-  { id: "parapeito", label: "🏗️ Parapeito", comp: ParapeitoCalc },
+  { id: "parapeito", label: "🏗 Parapeito", comp: ParapeitoCalc },
   { id: "grade", label: "⊞ Grade", comp: GradeCalc },
 ];
 
@@ -876,7 +876,7 @@ export default function App() {
 
         <div className="tabs">
           {TABS.map(t => (
-            <button key={t.id} className={tab ${tab === t.id ? "active" : ""}} onClick={() => setTab(t.id)}>
+            <button key={t.id} className={`tab ${tab === t.id ? "active" : ""}`} onClick={() => setTab(t.id)}>
               {t.label}
             </button>
           ))}
