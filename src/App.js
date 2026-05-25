@@ -332,8 +332,8 @@ function PortaoCalc() {
     const compTravMeio    = Lf - 2 * espEst;           // meio: por dentro dos montantes, inteira
     const compPreH        = Lf - 2 * espEst;           // horizontal: por dentro dos montantes
     // Barra vertical: cada segmento = metade da altura interna menos meia travessa do meio
-    const altInterna      = H - 2 * espEst;            // altura interna (entre sup e inf)
-    const compPreV        = (altInterna / 2) - espEst; // cada segmento: metade − travessa meio
+    const altInterna      = H - 2 * espEst;                    // altura interna (entre sup e inf)
+    const compPreV        = (altInterna / 2) - (espEst / 2);   // cada segmento: metade − metade da travessa do meio
 
     let nPreenchi = 0;
     if (form.oriPreenchi === "horizontal") nPreenchi = Math.max(0, Math.floor(H/esp) - 1);
