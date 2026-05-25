@@ -47,11 +47,11 @@ const styles = `
   .alert { background: #2a1a0a; border: 1px solid #f5a623; border-radius: 3px; padding: 12px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #f5a623; }
   .divider { border: none; border-top: 1px solid #2a2a2a; margin: 4px 0; }
   .result-group-title { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: #f5a623; margin-top: 6px; }
-  .drawing-box { background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
-  .drawing-header { background: #181818; padding: 12px 20px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: #aaa; border-bottom: 1px solid #2a2a2a; }
-  .drawing-svg { width: 100%; display: block; }
-  .legend-box { background: #151515; border-top: 1px solid #2a2a2a; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 14px; }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #999; }
+  .drawing-box { background: #f5f5f0; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
+  .drawing-header { background: #e8e8e0; padding: 12px 20px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: #333; border-bottom: 1px solid #ddd; }
+  .drawing-svg { width: 100%; display: block; background: #f5f5f0; }
+  .legend-box { background: #eeeee8; border-top: 1px solid #ddd; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #555; }
   .legend-swatch { width: 28px; height: 5px; border-radius: 2px; }
   .corte-table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
   .corte-table th { background: #222; color: #f5a623; padding: 8px 12px; text-align: left; letter-spacing: 1px; font-size: 11px; border-bottom: 2px solid #333; }
@@ -192,7 +192,7 @@ function ListaCorte({ pecas }) {
               return (
                 <tr key={i} style={{ background: bg }}>
                   <td style={{ color: "#555" }}>{i + 1}</td>
-                  <td><span style={{ background: cor + "22", color: cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
+                  <td><span style={{ background: bg, border: `1px solid ${cor}`, color: cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
                   <td style={{ color: "#888" }}>{p.perfil}</td>
                   <td style={{ color: cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(0)} cm</td>
                   <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
@@ -237,7 +237,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
       <div className="drawing-header">📐 VISTA FRONTAL — PORTÃO</div>
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
-        <rect width={W} height={SH} fill="#0a0a0a" />
+        <rect width={W} height={SH} fill="#f5f5f0" />
         <line x1={ox} y1={oy+dh+4} x2={ox+dw} y2={oy+dh+4} stroke="#555" strokeWidth="3" />
         {[...Array(12)].map((_,i) => <line key={i} x1={ox+i*(dw/12)} y1={oy+dh+4} x2={ox+i*(dw/12)-8} y2={oy+dh+14} stroke="#444" strokeWidth="1" />)}
 
@@ -254,7 +254,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
                 <line key={bi} x1={fx+bx} y1={oy+3} x2={fx+bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="1.5" />
               ))}
               {incluiDiagonal && <line x1={fx+3} y1={oy+3} x2={fx+fw-3} y2={oy+dh-3} stroke="#e0a020" strokeWidth="1.5" strokeDasharray="4,3" />}
-              <text x={fx+fw/2} y={oy+dh/2-8} textAnchor="middle" fill="#444" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
+              <text x={fx+fw/2} y={oy+dh/2-8} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
             </g>
           );
         })}
@@ -414,7 +414,7 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
       <div className="drawing-header">📐 VISTA FRONTAL — PARAPEITO</div>
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
-        <rect width={W} height={SH} fill="#0a0a0a" />
+        <rect width={W} height={SH} fill="#f5f5f0" />
         <line x1={ox-10} y1={oy+dh+4} x2={ox+dw+10} y2={oy+dh+4} stroke="#555" strokeWidth="3" />
         {[...Array(12)].map((_,i)=><line key={i} x1={ox-10+i*((dw+20)/12)} y1={oy+dh+4} x2={ox-18+i*((dw+20)/12)} y2={oy+dh+14} stroke="#444" strokeWidth="1" />)}
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke="#4a9eff" strokeWidth="3" />
@@ -540,7 +540,7 @@ function DesenhoGrade({ L, H, nV, nH, perfilMoldura, perfilBarra }) {
       <div className="drawing-header">📐 VISTA FRONTAL — GRADE</div>
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
-        <rect width={W} height={SH} fill="#0a0a0a" />
+        <rect width={W} height={SH} fill="#f5f5f0" />
         {barrasV.map((bx,i)=><line key={i} x1={bx} y1={oy+3} x2={bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="2" />)}
         {barrasH.map((by,i)=><line key={i} x1={ox+3} y1={by} x2={ox+dw-3} y2={by} stroke="#6fcf6f" strokeWidth="1.5" opacity="0.7" />)}
         <rect x={ox} y={oy} width={dw} height={dh} fill="none" stroke="#4a9eff" strokeWidth="4" />
