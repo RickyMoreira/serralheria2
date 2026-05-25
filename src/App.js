@@ -213,8 +213,6 @@ function PainelBarras({ pecas, perfil }) {
     setResultado(otimizarCorte(pecas, t));
   }
 
-  const corPerfil = "#f5a623";
-
   return (
     <div className="drawing-box">
       <div className="drawing-header">📦 QUANTIDADE DE BARRAS COMERCIAIS</div>
