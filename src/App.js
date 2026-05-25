@@ -238,8 +238,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
         <rect width={W} height={SH} fill="#f5f5f0" />
-        <line x1={ox} y1={oy+dh+4} x2={ox+dw} y2={oy+dh+4} stroke="#555" strokeWidth="3" />
-        {[...Array(12)].map((_,i) => <line key={i} x1={ox+i*(dw/12)} y1={oy+dh+4} x2={ox+i*(dw/12)-8} y2={oy+dh+14} stroke="#444" strokeWidth="1" />)}
+        
 
         {[...Array(folhas)].map((_,fi) => {
           const fx = ox + fi * fw;
@@ -265,9 +264,12 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
               {oriPreenchi === "horizontal" && barrasH.map((by,bi) => (
                 <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPreH} strokeWidth="1.5" />
               ))}
-              {/* Preenchimento vertical */}
+              {/* Preenchimento vertical - 2 segmentos interrompidos pela travessa do meio */}
               {oriPreenchi === "vertical" && barrasV.map((bx,bi) => (
-                <line key={bi} x1={fx+bx} y1={oy+4} x2={fx+bx} y2={oy+dh-4} stroke={corPreV} strokeWidth="1.5" />
+                <g key={bi}>
+                  <line x1={fx+bx} y1={oy+4} x2={fx+bx} y2={oy+dh/2-2} stroke={corPreV} strokeWidth="1.5" />
+                  <line x1={fx+bx} y1={oy+dh/2+4} x2={fx+bx} y2={oy+dh-4} stroke={corPreV} strokeWidth="1.5" />
+                </g>
               ))}
               {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
               <text x={fx+fw/2} y={oy+dh/2-10} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
@@ -315,19 +317,23 @@ function PortaoCalc() {
     //           travessa do meio tbm por dentro (H − sup − inf, já descontado)
     //           preenchimento horizontal por dentro dos montantes (Lf − 2×montante)
     //           preenchimento vertical por dentro de todas as travessas (H − 3×travessa)
-    const nTravessas = 3; // sup + inf + meio
 
     // MONTAGEM PORTÃO (confirmado):
     // Travessa sup e inf (2 por folha) → comprimento total da folha (Lf), por fora
     // Montantes verticais (2 por folha) → H − 2×esp (por dentro de sup e inf)
-    // Travessa do meio (1 por folha) → Lf − 2×esp (por dentro dos montantes)
-    // Preenchimento horizontal → Lf − 2×esp (por dentro dos montantes)
-    // Preenchimento vertical → H − 3×esp (por dentro das 3 travessas)
-    const compTravSupInf = Lf;              // sup e inf: largura total da folha
-    const compMontante   = H - 2 * espEst; // montantes: por dentro de sup e inf
-    const compTravMeio   = Lf - 2 * espEst; // meio: por dentro dos 2 montantes
-    const compPreH       = Lf - 2 * espEst; // horizontal: por dentro dos montantes
-    const compPreV       = H - nTravessas * espEst; // vertical: H − 3 travessas
+    // Travessa do meio (1 por folha) → Lf − 2×esp (por dentro dos montantes), INTEIRA
+    // Barras verticais → INTERROMPIDAS pela travessa do meio, 2 segmentos por barra:
+    //   segmento cima: (H/2) − sup − meio/2  ≈ H/2 − 1.5×esp
+    //   segmento baixo: (H/2) − meio/2 − inf ≈ H/2 − 1.5×esp
+    //   (assumindo travessa do meio no centro)
+    // Barras horizontais → Lf − 2×esp (por dentro dos montantes)
+    const compTravSupInf  = Lf;                        // sup e inf: por fora
+    const compMontante    = H - 2 * espEst;            // montantes: H − sup − inf
+    const compTravMeio    = Lf - 2 * espEst;           // meio: por dentro dos montantes, inteira
+    const compPreH        = Lf - 2 * espEst;           // horizontal: por dentro dos montantes
+    // Barra vertical: cada segmento = metade da altura interna menos meia travessa do meio
+    const altInterna      = H - 2 * espEst;            // altura interna (entre sup e inf)
+    const compPreV        = (altInterna / 2) - espEst; // cada segmento: metade − travessa meio
 
     let nPreenchi = 0;
     if (form.oriPreenchi === "horizontal") nPreenchi = Math.max(0, Math.floor(H/esp) - 1);
@@ -344,7 +350,7 @@ function PortaoCalc() {
     pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,   compTotal: folhas*compTravSupInf,   peso: folhas*compTravSupInf*pEst,   obs:`${(compTravSupInf*100).toFixed(0)}cm — por fora` });
     // Montantes: 2 por folha, por dentro de sup e inf
     pecas.push({ nome:"Montante vertical", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante,   qtd: 2*folhas, compTotal: 2*folhas*compMontante,   peso: 2*folhas*compMontante*pEst,   obs:`H − 2×${(espEst*100).toFixed(0)}cm = ${(compMontante*100).toFixed(0)}cm` });
-    // Travessa do meio: 1 por folha, por dentro dos montantes
+    // Travessa do meio: inteira, por dentro dos montantes
     pecas.push({ nome:"Travessa do meio",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravMeio,   qtd: folhas,   compTotal: folhas*compTravMeio,     peso: folhas*compTravMeio*pEst,     obs:`Lf − 2×${(espEst*100).toFixed(0)}cm = ${(compTravMeio*100).toFixed(0)}cm` });
 
     if (form.incluiDiagonal) {
@@ -353,12 +359,13 @@ function PortaoCalc() {
 
     // Preenchimento
     if (nPreenchi > 0) {
-      const compPre = form.oriPreenchi === "horizontal" ? compPreH : compPreV;
-      const nomePre = form.oriPreenchi === "horizontal" ? "Barra horizontal" : "Barra vertical";
-      const obs = form.oriPreenchi === "horizontal"
-        ? `Lf − 2×${(espEst*100).toFixed(0)}cm montantes`
-        : `H − ${nTravessas}×${(espEst*100).toFixed(0)}cm travessas`;
-      pecas.push({ nome: nomePre, tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPre, qtd: nPreenchi*folhas, compTotal: nPreenchi*folhas*compPre, peso: nPreenchi*folhas*compPre*pPre, obs });
+      if (form.oriPreenchi === "horizontal") {
+        pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreH, qtd: nPreenchi*folhas, compTotal: nPreenchi*folhas*compPreH, peso: nPreenchi*folhas*compPreH*pPre, obs:`Lf − 2×${(espEst*100).toFixed(0)}cm montantes` });
+      } else {
+        // Vertical: 2 segmentos por barra (acima e abaixo da travessa do meio)
+        const qtdSegmentos = nPreenchi * folhas * 2;
+        pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreV, qtd: qtdSegmentos, compTotal: qtdSegmentos*compPreV, peso: qtdSegmentos*compPreV*pPre, obs:`(H/2 − 1.5×${(espEst*100).toFixed(0)}cm) × 2 seg/barra` });
+      }
     }
 
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
@@ -433,8 +440,7 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
         <rect width={W} height={SH} fill="#f5f5f0" />
-        <line x1={ox-10} y1={oy+dh+4} x2={ox+dw+10} y2={oy+dh+4} stroke="#555" strokeWidth="3" />
-        {[...Array(12)].map((_,i)=><line key={i} x1={ox-10+i*((dw+20)/12)} y1={oy+dh+4} x2={ox-18+i*((dw+20)/12)} y2={oy+dh+14} stroke="#444" strokeWidth="1" />)}
+        
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke="#4a9eff" strokeWidth="3" />
         <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke="#4a9eff" strokeWidth="3" />
         {postesX.map((px,i)=><rect key={i} x={px-3} y={oy} width={6} height={dh} fill="#4a9eff" opacity="0.9" />)}
