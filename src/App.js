@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 const styles = `
@@ -107,14 +108,7 @@ function getEsp(key) {
   return Math.max(...vals) / 1000; // mm → m
 }
 
-// Dimensão menor (altura do perfil quando deitado) — usada para desconto lateral
-function getEspMenor(key) {
-  if (!key) return 0;
-  const parts = key.replace("bc_","").split("x");
-  const vals = parts.map(p => parseFloat(p)).filter(n => !isNaN(n));
-  if (vals.length < 2) return getEsp(key);
-  return Math.min(vals[0], vals[1]) / 1000;
-}
+
 
 // ─── SVG helpers ─────────────────────────────────────────────────────────────
 function Defs() {
