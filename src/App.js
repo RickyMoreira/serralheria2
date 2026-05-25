@@ -554,7 +554,7 @@ function PortaoCalc() {
           <div className="section-body">
             <div className="field"><label>Perfil estrutural</label><select value={form.perfilEst} onChange={e=>set("perfilEst",e.target.value)}>{perfisEstrutura().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
             <div className="field"><label>Perfil de preenchimento</label><select value={form.perfilPre} onChange={e=>set("perfilPre",e.target.value)}>{perfisPreenchimento().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
-            <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>set("oriPreenchi",e.target.value)}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
+            <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
             <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="100" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
           </div>
         </div>
@@ -682,7 +682,7 @@ function ParapeitoCalc() {
           <div className="section-body">
             <div className="field"><label>Perfil dos postes / travessas</label><select value={form.perfilEst} onChange={e=>set("perfilEst",e.target.value)}>{perfisEstrutura().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
             <div className="field"><label>Perfil de preenchimento</label><select value={form.perfilPre} onChange={e=>set("perfilPre",e.target.value)}>{perfisPreenchimento().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
-            <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>set("oriPreenchi",e.target.value)}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
+            <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
             <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="50" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
           </div>
         </div>
