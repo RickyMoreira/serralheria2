@@ -276,11 +276,17 @@ function PortaoCalc() {
     //           preenchimento vertical por dentro de todas as travessas (H − 3×travessa)
     const nTravessas = 3; // sup + inf + meio
 
-    const compTravSupInf = Lf;                          // sup e inf: largura total da folha
-    const compMontante   = H - 2 * espEst;             // montante lateral: H − sup − inf
-    const compTravMeio   = Lf - 2 * espEst;            // meio: por dentro dos montantes
-    const compPreH       = Lf - 2 * espEst;            // horizontal: por dentro dos montantes
-    const compPreV       = H - nTravessas * espEst;    // vertical: H − 3 travessas
+    // MONTAGEM PORTÃO:
+    // Travessa sup e inf → comprimento total da folha (por fora)
+    // 4 montantes verticais (2 laterais + 2 internos) → H − sup − inf (por dentro)
+    // Travessa do meio → Lf − 2× espessura montante (por dentro dos montantes)
+    // Preenchimento horizontal → Lf − 2× espessura montante
+    // Preenchimento vertical → H − 3× espessura travessa
+    const compTravSupInf = Lf;               // sup e inf: largura total da folha
+    const compMontante   = H - 2 * espEst;  // todos os montantes: H − sup − inf
+    const compTravMeio   = Lf - 2 * espEst; // meio: por dentro dos montantes
+    const compPreH       = Lf - 2 * espEst; // horizontal: por dentro dos montantes
+    const compPreV       = H - nTravessas * espEst; // vertical: H − 3 travessas
 
     let nPreenchi = 0;
     if (form.oriPreenchi === "horizontal") nPreenchi = Math.max(0, Math.floor(H/esp) - 1);
@@ -292,13 +298,13 @@ function PortaoCalc() {
     const pEst = PERFIS[form.perfilEst]?.pesoM||0;
     const pPre = PERFIS[form.perfilPre]?.pesoM||0;
 
-    // Travessas sup e inf: comprimento total da folha
-    pecas.push({ nome:"Travessa superior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas, compTotal: folhas*compTravSupInf, peso: folhas*compTravSupInf*pEst, obs:"comprimento total da folha" });
-    pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas, compTotal: folhas*compTravSupInf, peso: folhas*compTravSupInf*pEst, obs:"comprimento total da folha" });
+    // Travessas sup e inf: comprimento total da folha (por fora)
+    pecas.push({ nome:"Travessa superior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,   compTotal: folhas*compTravSupInf,   peso: folhas*compTravSupInf*pEst,   obs:"comprimento total da folha" });
+    pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,   compTotal: folhas*compTravSupInf,   peso: folhas*compTravSupInf*pEst,   obs:"comprimento total da folha" });
     // Travessa do meio: por dentro dos montantes
-    pecas.push({ nome:"Travessa do meio",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravMeio, qtd: folhas, compTotal: folhas*compTravMeio, peso: folhas*compTravMeio*pEst, obs:`Lf − 2×${(espEst*100).toFixed(0)}cm montantes` });
-    // Montantes laterais: H − sup − inf
-    pecas.push({ nome:"Montante vertical", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante, qtd: 2*folhas, compTotal: 2*folhas*compMontante, peso: 2*folhas*compMontante*pEst, obs:`H − 2×${(espEst*100).toFixed(0)}cm travessas` });
+    pecas.push({ nome:"Travessa do meio",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravMeio,   qtd: folhas,   compTotal: folhas*compTravMeio,     peso: folhas*compTravMeio*pEst,     obs:`Lf − 2×${(espEst*100).toFixed(0)}cm montantes` });
+    // 4 montantes por folha (2 laterais + 2 internos), todos por dentro de sup e inf
+    pecas.push({ nome:"Montante vertical", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante,   qtd: 4*folhas, compTotal: 4*folhas*compMontante,   peso: 4*folhas*compMontante*pEst,   obs:`H − 2×${(espEst*100).toFixed(0)}cm travessas` });
 
     if (form.incluiDiagonal) {
       pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: PERFIS[form.perfilEst]?.desc, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
