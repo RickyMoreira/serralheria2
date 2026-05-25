@@ -243,18 +243,34 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
 
         {[...Array(folhas)].map((_,fi) => {
           const fx = ox + fi * fw;
+          const corTravSup  = PECA_CORES["Travessa superior"].cor;
+          const corTravInf  = PECA_CORES["Travessa inferior"].cor;
+          const corMontante = PECA_CORES["Montante vertical"].cor;
+          const corTravMeio = PECA_CORES["Travessa do meio"].cor;
+          const corPreV     = PECA_CORES["Barra vertical"].cor;
+          const corPreH     = PECA_CORES["Barra horizontal"].cor;
+          const corDiag     = PECA_CORES["Diagonal"].cor;
           return (
             <g key={fi}>
-              <rect x={fx+1} y={oy} width={fw-2} height={dh} fill="none" stroke="#4a9eff" strokeWidth="3" />
-              <line x1={fx+1} y1={oy+dh/2} x2={fx+fw-1} y2={oy+dh/2} stroke="#4a9eff" strokeWidth="2.5" />
+              {/* Travessa superior */}
+              <line x1={fx+1} y1={oy} x2={fx+fw-1} y2={oy} stroke={corTravSup} strokeWidth="4" />
+              {/* Travessa inferior */}
+              <line x1={fx+1} y1={oy+dh} x2={fx+fw-1} y2={oy+dh} stroke={corTravInf} strokeWidth="4" />
+              {/* Montantes verticais (esquerdo e direito) */}
+              <line x1={fx+2} y1={oy+4} x2={fx+2} y2={oy+dh-4} stroke={corMontante} strokeWidth="4" />
+              <line x1={fx+fw-2} y1={oy+4} x2={fx+fw-2} y2={oy+dh-4} stroke={corMontante} strokeWidth="4" />
+              {/* Travessa do meio */}
+              <line x1={fx+6} y1={oy+dh/2} x2={fx+fw-6} y2={oy+dh/2} stroke={corTravMeio} strokeWidth="3" />
+              {/* Preenchimento horizontal */}
               {oriPreenchi === "horizontal" && barrasH.map((by,bi) => (
-                <line key={bi} x1={fx+4} y1={by} x2={fx+fw-4} y2={by} stroke="#6fcf6f" strokeWidth="1.5" />
+                <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPreH} strokeWidth="1.5" />
               ))}
+              {/* Preenchimento vertical */}
               {oriPreenchi === "vertical" && barrasV.map((bx,bi) => (
-                <line key={bi} x1={fx+bx} y1={oy+3} x2={fx+bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="1.5" />
+                <line key={bi} x1={fx+bx} y1={oy+4} x2={fx+bx} y2={oy+dh-4} stroke={corPreV} strokeWidth="1.5" />
               ))}
-              {incluiDiagonal && <line x1={fx+3} y1={oy+3} x2={fx+fw-3} y2={oy+dh-3} stroke="#e0a020" strokeWidth="1.5" strokeDasharray="4,3" />}
-              <text x={fx+fw/2} y={oy+dh/2-8} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
+              {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
+              <text x={fx+fw/2} y={oy+dh/2-10} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
             </g>
           );
         })}
@@ -264,9 +280,11 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
         {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={cotaH+22} orient="h" />}
       </svg>
       <div className="legend-box">
-        <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />{PERFIS[perfilEst]?.desc} — Estrutura</div>
-        <div className="legend-item"><div className="legend-swatch" style={{background:"#6fcf6f"}} />{PERFIS[perfilPre]?.desc} — Preenchimento</div>
-        {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background:"#e0a020",height:3}} />Diagonal</div>}
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Montante vertical"].cor}} />Montante vertical</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa do meio"].cor}} />Travessa do meio</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />{PERFIS[perfilPre]?.desc} — Preenchimento</div>
+        {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Diagonal"].cor, height:3}} />Diagonal</div>}
       </div>
     </div>
   );
