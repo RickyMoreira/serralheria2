@@ -295,7 +295,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
 
   // Separar peças por perfil para calcular barras independentemente
-  const pecasEst = pecas.filter(p => p.tipo === "estrutura" || p.tipo === "diagonal");
+  const pecasEst = pecas.filter(p => p.tipo === "estrutura" || (p.tipo === "diagonal" && p.qtd > 0));
   const pecasPre = pecas.filter(p => p.tipo === "preenchimento");
   const temDoisPerfis = perfilEst !== perfilPre && pecasPre.length > 0;
   return (
@@ -484,7 +484,7 @@ function PortaoCalc() {
       pecas.push({ nome:"Travessa do meio", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravMeio, qtd: nMeio*folhas, compTotal: nMeio*folhas*compTravMeio, peso: nMeio*folhas*compTravMeio*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravMeio*100).toFixed(1)}cm` });
     }
 
-    if (form.incluiDiagonal) {
+    if (form.incluiDiagonal && diagComp > 0) {
       pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: PERFIS[form.perfilEst]?.desc, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
     }
 
