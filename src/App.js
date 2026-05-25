@@ -120,7 +120,7 @@ function Defs() {
   );
 }
 
-function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
+function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h", rightSide = false }) {
   const co = "#f5a623"; const ts = 9;
   if (orient === "h") {
     const y = y1 + offset;
@@ -133,21 +133,39 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
       </g>
     );
   } else {
-    // vertical cota — drawn to the LEFT inside the canvas using x1 as the structure edge
-    const x = x1 - offset; // offset pushes left, must stay >= 0
-    const mx = Math.max(x, 4); // clamp inside canvas
+    // vertical cota — always drawn to the RIGHT of x2 (right edge of structure)
+    const rx = x2 + offset;
     return (
       <g>
-        <line x1={x1} y1={y1} x2={mx} y2={y1} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1={x1} y1={y2} x2={mx} y2={y2} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1={mx} y1={y1} x2={mx} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        <text x={mx - 2} y={(y1+y2)/2+4} textAnchor="end" fill={co} fontSize={ts} fontFamily="monospace">{label}</text>
+        <line x1={x2} y1={y1} x2={rx} y2={y1} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1={x2} y1={y2} x2={rx} y2={y2} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1={rx} y1={y1} x2={rx} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
+        <text x={rx+4} y={(y1+y2)/2+4} textAnchor="start" fill={co} fontSize={ts} fontFamily="monospace">{label}</text>
       </g>
     );
   }
 }
 
 // ─── LISTA DE CORTE ──────────────────────────────────────────────────────────
+const PECA_CORES = {
+  "Travessa superior": { bg: "#0d1a2e", cor: "#4a9eff" },
+  "Travessa inferior": { bg: "#0d1a2e", cor: "#74b8ff" },
+  "Montante vertical": { bg: "#1a0d2e", cor: "#b47aff" },
+  "Travessa do meio":  { bg: "#0d1e2e", cor: "#40d0ff" },
+  "Barra horizontal":  { bg: "#0a160a", cor: "#6fcf6f" },
+  "Barra vertical":    { bg: "#0d1a0d", cor: "#a0e0a0" },
+  "Diagonal":          { bg: "#1e1408", cor: "#e0a020" },
+  "Poste vertical":    { bg: "#1a0d2e", cor: "#b47aff" },
+  "Travessa horizontal":{ bg: "#0a160a", cor: "#6fcf6f" },
+  "Moldura lateral":   { bg: "#0d1a2e", cor: "#4a9eff" },
+  "Moldura superior":  { bg: "#0d1a2e", cor: "#74b8ff" },
+  "Moldura inferior":  { bg: "#0d1e2e", cor: "#40d0ff" },
+  "Travessa vertical": { bg: "#0d1a0d", cor: "#a0e0a0" },
+};
+
+function getPecaCor(nome) {
+  return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
+}
 function ListaCorte({ pecas }) {
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
@@ -169,18 +187,21 @@ function ListaCorte({ pecas }) {
             </tr>
           </thead>
           <tbody>
-            {pecas.map((p, i) => (
-              <tr key={i} style={{ background: p.tipo === "estrutura" ? "#0d1520" : p.tipo === "diagonal" ? "#161008" : "#0a160a" }}>
-                <td style={{ color: "#555" }}>{i + 1}</td>
-                <td><span className={`corte-tag ${p.tipo === "estrutura" ? "corte-est" : p.tipo === "diagonal" ? "corte-diag" : "corte-pre"}`}>{p.nome}</span></td>
-                <td style={{ color: "#aaa" }}>{p.perfil}</td>
-                <td style={{ color: p.tipo === "estrutura" ? "#4a9eff" : p.tipo === "diagonal" ? "#e0a020" : "#6fcf6f", fontWeight: 600, fontSize: 14 }}>{(p.comp * 100).toFixed(0)} cm</td>
-                <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
-                <td>{p.compTotal.toFixed(2)}</td>
-                <td>{p.peso.toFixed(2)}</td>
-                <td style={{ color: "#555", fontSize: 10 }}>{p.obs || "—"}</td>
-              </tr>
-            ))}
+            {pecas.map((p, i) => {
+              const { bg, cor } = getPecaCor(p.nome);
+              return (
+                <tr key={i} style={{ background: bg }}>
+                  <td style={{ color: "#555" }}>{i + 1}</td>
+                  <td><span style={{ background: cor + "22", color: cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
+                  <td style={{ color: "#888" }}>{p.perfil}</td>
+                  <td style={{ color: cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(0)} cm</td>
+                  <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
+                  <td style={{ color: "#ccc" }}>{p.compTotal.toFixed(2)}</td>
+                  <td style={{ color: "#ccc" }}>{p.peso.toFixed(2)}</td>
+                  <td style={{ color: "#555", fontSize: 10 }}>{p.obs || "—"}</td>
+                </tr>
+              );
+            })}
             <tr className="total-row">
               <td colSpan={4} style={{ textAlign: "right", paddingRight: 12 }}>TOTAL</td>
               <td>—</td>
@@ -199,9 +220,9 @@ function ListaCorte({ pecas }) {
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
-  const W = 620; const SH = 320;
-  const cotaV = 60; const cotaH = 36; const pad = 14;
-  const dw = W - cotaV - pad; const dh = SH - cotaH - pad - 10;
+  const W = 680; const SH = 320;
+  const cotaV = 50; const cotaH = 36; const pad = 14; const padR = 70;
+  const dw = W - cotaV - pad - padR; const dh = SH - cotaH - pad - 10;
   const ox = cotaV; const oy = 10;
   const fw = dw / folhas;
 
@@ -239,7 +260,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDi
         })}
 
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={cotaH} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
         {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={cotaH+22} orient="h" />}
       </svg>
       <div className="legend-box">
@@ -376,9 +397,9 @@ function PortaoCalc() {
 // PARAPEITO
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre }) {
-  const W = 620; const SH = 280;
-  const cotaV = 60; const cotaH = 36; const pad = 14;
-  const dw = W - cotaV - pad; const dh = SH - cotaH - pad - 20;
+  const W = 680; const SH = 280;
+  const cotaV = 50; const cotaH = 36; const pad = 14; const padR = 70;
+  const dw = W - cotaV - pad - padR; const dh = SH - cotaH - pad - 20;
   const ox = cotaV; const oy = 20;
 
   const postesX = [];
@@ -402,7 +423,7 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
         {elsY.map((ey,i)=><line key={i} x1={ox} y1={ey} x2={ox+dw} y2={ey} stroke="#6fcf6f" strokeWidth="1.5" />)}
         {elsX.map((ex,i)=><line key={i} x1={ex} y1={oy} x2={ex} y2={oy+dh} stroke="#6fcf6f" strokeWidth="1.5" />)}
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={cotaH} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
         {nPostes>1 && <Cota x1={postesX[0]} y1={oy+dh} x2={postesX[1]} y2={oy+dh} label={`${(L/(nPostes-1)).toFixed(2)} m`} offset={cotaH+22} orient="h" />}
       </svg>
       <div className="legend-box">
@@ -506,9 +527,9 @@ function ParapeitoCalc() {
 // GRADE
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoGrade({ L, H, nV, nH, perfilMoldura, perfilBarra }) {
-  const W = 420; const SH = 340;
-  const cotaV = 60; const cotaH = 36; const pad = 14;
-  const dw = W - cotaV - pad; const dh = SH - cotaH - pad - 20;
+  const W = 480; const SH = 340;
+  const cotaV = 50; const cotaH = 36; const pad = 14; const padR = 70;
+  const dw = W - cotaV - pad - padR; const dh = SH - cotaH - pad - 20;
   const ox = cotaV; const oy = 20;
 
   const barrasV = []; for(let i=1;i<=Math.min(nV,30);i++) barrasV.push(ox+(i/(nV+1))*dw);
@@ -524,7 +545,7 @@ function DesenhoGrade({ L, H, nV, nH, perfilMoldura, perfilBarra }) {
         {barrasH.map((by,i)=><line key={i} x1={ox+3} y1={by} x2={ox+dw-3} y2={by} stroke="#6fcf6f" strokeWidth="1.5" opacity="0.7" />)}
         <rect x={ox} y={oy} width={dw} height={dh} fill="none" stroke="#4a9eff" strokeWidth="4" />
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={cotaH} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
       </svg>
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />{PERFIS[perfilMoldura]?.desc} — Moldura</div>
