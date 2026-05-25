@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 const styles = `
@@ -267,23 +266,21 @@ function PortaoCalc() {
     const Lf = L / folhas;
     const esp = parseFloat(form.espacamento) / 100;
 
-    // Espessura do perfil estrutural (para descontos de encaixe)
-    const espEst = getEsp(form.perfilEst); // ex: 50mm → 0.05m
+    // Espessura do perfil estrutural em metros (ex: 50×50 → 0.05m)
+    const espEst = getEsp(form.perfilEst);
 
-    // Travessas: encaixam entre os montantes verticais
-    // Logo travessa = Lf − 2 × espEst (desconta as duas laterais)
-    const compTravessa = Lf - 2 * espEst;
+    // MONTAGEM: travessas passam de lado a lado (comprimento = Lf)
+    //           montantes ficam por dentro das travessas (H − sup − inf)
+    //           travessa do meio tbm por dentro (H − sup − inf, já descontado)
+    //           preenchimento horizontal por dentro dos montantes (Lf − 2×montante)
+    //           preenchimento vertical por dentro de todas as travessas (H − 3×travessa)
+    const nTravessas = 3; // sup + inf + meio
 
-    // Montantes verticais: altura total (passam por fora das travessas)
-    const compMontante = H;
-
-    // Preenchimento vertical: desconta todas as travessas (sup + inf + meias)
-    // nTravessas = 3 (sup, inf, meio). Cada travessa descontada uma vez.
-    const nTravessas = 3;
-    const compPreV = H - nTravessas * espEst; // vertical descontado
-
-    // Preenchimento horizontal: desconta os dois montantes laterais
-    const compPreH = Lf - 2 * espEst; // horizontal descontado
+    const compTravSupInf = Lf;                          // sup e inf: largura total da folha
+    const compMontante   = H - 2 * espEst;             // montante lateral: H − sup − inf
+    const compTravMeio   = Lf - 2 * espEst;            // meio: por dentro dos montantes
+    const compPreH       = Lf - 2 * espEst;            // horizontal: por dentro dos montantes
+    const compPreV       = H - nTravessas * espEst;    // vertical: H − 3 travessas
 
     let nPreenchi = 0;
     if (form.oriPreenchi === "horizontal") nPreenchi = Math.max(0, Math.floor(H/esp) - 1);
@@ -295,25 +292,26 @@ function PortaoCalc() {
     const pEst = PERFIS[form.perfilEst]?.pesoM||0;
     const pPre = PERFIS[form.perfilPre]?.pesoM||0;
 
-    // Montantes verticais laterais (2 por folha) — comprimento total H
-    pecas.push({ nome:"Montante vertical", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante, qtd: 2*folhas, compTotal: 2*folhas*compMontante, peso: 2*folhas*compMontante*pEst });
-    // Travessas — descontam as duas laterais
-    pecas.push({ nome:"Travessa superior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravessa, qtd: folhas, compTotal: folhas*compTravessa, peso: folhas*compTravessa*pEst });
-    pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravessa, qtd: folhas, compTotal: folhas*compTravessa, peso: folhas*compTravessa*pEst });
-    pecas.push({ nome:"Travessa do meio",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravessa, qtd: folhas, compTotal: folhas*compTravessa, peso: folhas*compTravessa*pEst });
+    // Travessas sup e inf: comprimento total da folha
+    pecas.push({ nome:"Travessa superior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas, compTotal: folhas*compTravSupInf, peso: folhas*compTravSupInf*pEst, obs:"comprimento total da folha" });
+    pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas, compTotal: folhas*compTravSupInf, peso: folhas*compTravSupInf*pEst, obs:"comprimento total da folha" });
+    // Travessa do meio: por dentro dos montantes
+    pecas.push({ nome:"Travessa do meio",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravMeio, qtd: folhas, compTotal: folhas*compTravMeio, peso: folhas*compTravMeio*pEst, obs:`Lf − 2×${(espEst*100).toFixed(0)}cm montantes` });
+    // Montantes laterais: H − sup − inf
+    pecas.push({ nome:"Montante vertical", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante, qtd: 2*folhas, compTotal: 2*folhas*compMontante, peso: 2*folhas*compMontante*pEst, obs:`H − 2×${(espEst*100).toFixed(0)}cm travessas` });
 
     if (form.incluiDiagonal) {
       pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: PERFIS[form.perfilEst]?.desc, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
     }
 
-    // Preenchimento — desconta espessura conforme orientação
+    // Preenchimento
     if (nPreenchi > 0) {
       const compPre = form.oriPreenchi === "horizontal" ? compPreH : compPreV;
       const nomePre = form.oriPreenchi === "horizontal" ? "Barra horizontal" : "Barra vertical";
-      const desconto = form.oriPreenchi === "horizontal"
-        ? `(Lf − 2×${(espEst*100).toFixed(0)}cm montantes)`
-        : `(H − ${nTravessas}×${(espEst*100).toFixed(0)}cm travessas)`;
-      pecas.push({ nome: nomePre, tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPre, qtd: nPreenchi*folhas, compTotal: nPreenchi*folhas*compPre, peso: nPreenchi*folhas*compPre*pPre, obs: desconto });
+      const obs = form.oriPreenchi === "horizontal"
+        ? `Lf − 2×${(espEst*100).toFixed(0)}cm montantes`
+        : `H − ${nTravessas}×${(espEst*100).toFixed(0)}cm travessas`;
+      pecas.push({ nome: nomePre, tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPre, qtd: nPreenchi*folhas, compTotal: nPreenchi*folhas*compPre, peso: nPreenchi*folhas*compPre*pPre, obs });
     }
 
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
@@ -424,27 +422,29 @@ function ParapeitoCalc() {
     if (form.oriPreenchi==="horizontal") nEl = Math.max(0,Math.floor(H/esp)-1);
     else nEl = Math.max(0,Math.floor(L/esp)-1);
 
-    // Postes: altura total (passam por fora das travessas)
-    const compPoste = H;
-    // Travessas: descontam os dois postes das extremidades
-    const compTravessa = L - 2 * espEst;
-    // Preenchimento horizontal: descontado pelos postes laterais de cada vão
-    const compPreH = (L / (nPostes-1||1)) - 2 * espEst; // entre postes, menos dois postes
-    // Preenchimento vertical: descontado pelas 2 travessas (sup + inf)
-    const compPreV = H - 2 * espEst;
+    // MONTAGEM PARAPEITO:
+    // Postes: altura total (passam por fora, travessas encaixam entre eles)
+    // Travessas sup/inf: comprimento total L (passam de posta a poste por fora)
+    // Preenchimento horizontal: por dentro dos postes (vão − 2× poste)
+    // Preenchimento vertical: por dentro das travessas (H − 2× travessa)
+    const vao = L / (nPostes - 1 || 1); // distância entre postes
+    const compPoste   = H;                      // poste: altura total
+    const compTravessa = L;                     // travessa: comprimento total
+    const compPreH    = vao - 2 * espEst;       // horizontal: vão − 2 postes
+    const compPreV    = H - 2 * espEst;         // vertical: H − sup − inf
 
     const pEst = PERFIS[form.perfilEst]?.pesoM||0;
     const pPre = PERFIS[form.perfilPre]?.pesoM||0;
 
     const pecas = [];
-    pecas.push({ nome:"Poste vertical", tipo:"estrutura", perfil:PERFIS[form.perfilEst]?.desc, comp:compPoste, qtd:nPostes, compTotal:nPostes*compPoste, peso:nPostes*compPoste*pEst });
-    pecas.push({ nome:"Travessa superior", tipo:"estrutura", perfil:PERFIS[form.perfilEst]?.desc, comp:compTravessa, qtd:1, compTotal:compTravessa, peso:compTravessa*pEst, obs:`(L − 2×${(espEst*100).toFixed(0)}cm postes)` });
-    pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil:PERFIS[form.perfilEst]?.desc, comp:compTravessa, qtd:1, compTotal:compTravessa, peso:compTravessa*pEst, obs:`(L − 2×${(espEst*100).toFixed(0)}cm postes)` });
+    pecas.push({ nome:"Poste vertical",   tipo:"estrutura",    perfil:PERFIS[form.perfilEst]?.desc, comp:compPoste,    qtd:nPostes, compTotal:nPostes*compPoste,    peso:nPostes*compPoste*pEst,    obs:"altura total" });
+    pecas.push({ nome:"Travessa superior", tipo:"estrutura",   perfil:PERFIS[form.perfilEst]?.desc, comp:compTravessa, qtd:1,       compTotal:compTravessa,           peso:compTravessa*pEst,         obs:"comprimento total" });
+    pecas.push({ nome:"Travessa inferior", tipo:"estrutura",   perfil:PERFIS[form.perfilEst]?.desc, comp:compTravessa, qtd:1,       compTotal:compTravessa,           peso:compTravessa*pEst,         obs:"comprimento total" });
     if (nEl>0) {
       const compEl = form.oriPreenchi==="horizontal" ? compPreH : compPreV;
       const obs = form.oriPreenchi==="horizontal"
-        ? `(vão − 2×${(espEst*100).toFixed(0)}cm postes)`
-        : `(H − 2×${(espEst*100).toFixed(0)}cm travessas)`;
+        ? `vão − 2×${(espEst*100).toFixed(0)}cm postes`
+        : `H − 2×${(espEst*100).toFixed(0)}cm travessas`;
       pecas.push({ nome: form.oriPreenchi==="horizontal"?"Barra horizontal":"Barra vertical", tipo:"preenchimento", perfil:PERFIS[form.perfilPre]?.desc, comp:compEl, qtd:nEl, compTotal:nEl*compEl, peso:nEl*compEl*pPre, obs });
     }
 
@@ -539,25 +539,26 @@ function GradeCalc() {
     let nH=0;
     if (form.temMontanteH&&form.espacamentoH) { const espH=parseFloat(form.espacamentoH)/100; nH=Math.max(0,Math.floor(H/espH)-1); }
 
-    const espMoldura = getEsp(form.perfilMoldura); // espessura da moldura em metros
-    // Moldura lateral: altura total (define a estrutura)
-    const compLateral = H;
-    // Moldura sup/inf: descontam as duas laterais
-    const compTopBot = L - 2 * espMoldura;
-    // Barras verticais: descontam moldura sup + inf
-    const compBarraV = H - 2 * espMoldura;
-    // Travessas horizontais internas: descontam as duas laterais
-    const compTraversaH = L - 2 * espMoldura;
+    const espMoldura = getEsp(form.perfilMoldura);
+    // MONTAGEM GRADE:
+    // Laterais: altura total (passam por fora, sup/inf encaixam entre elas)
+    // Sup/inf: L − 2× lateral (por dentro das laterais)
+    // Barras verticais: H − 2× moldura sup/inf
+    // Travessas horizontais internas: L − 2× lateral
+    const compLateral   = H;                        // lateral: altura total
+    const compTopBot    = L - 2 * espMoldura;       // sup/inf: por dentro das laterais
+    const compBarraV    = H - 2 * espMoldura;       // vertical: por dentro de sup e inf
+    const compTraversaH = L - 2 * espMoldura;       // travessa interna: por dentro das laterais
 
     const pMol = PERFIS[form.perfilMoldura]?.pesoM||0;
     const pBar = PERFIS[form.perfilBarra]?.pesoM||0;
 
     const pecas = [];
-    pecas.push({ nome:"Moldura lateral", tipo:"estrutura", perfil:PERFIS[form.perfilMoldura]?.desc, comp:compLateral, qtd:2, compTotal:2*compLateral, peso:2*compLateral*pMol });
-    pecas.push({ nome:"Moldura superior", tipo:"estrutura", perfil:PERFIS[form.perfilMoldura]?.desc, comp:compTopBot, qtd:1, compTotal:compTopBot, peso:compTopBot*pMol, obs:`(L − 2×${(espMoldura*100).toFixed(0)}cm laterais)` });
-    pecas.push({ nome:"Moldura inferior", tipo:"estrutura", perfil:PERFIS[form.perfilMoldura]?.desc, comp:compTopBot, qtd:1, compTotal:compTopBot, peso:compTopBot*pMol, obs:`(L − 2×${(espMoldura*100).toFixed(0)}cm laterais)` });
-    if (nV>0) pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil:PERFIS[form.perfilBarra]?.desc, comp:compBarraV, qtd:nV, compTotal:nV*compBarraV, peso:nV*compBarraV*pBar, obs:`(H − 2×${(espMoldura*100).toFixed(0)}cm moldura)` });
-    if (nH>0) pecas.push({ nome:"Travessa horizontal", tipo:"preenchimento", perfil:PERFIS[form.perfilBarra]?.desc, comp:compTraversaH, qtd:nH, compTotal:nH*compTraversaH, peso:nH*compTraversaH*pBar, obs:`(L − 2×${(espMoldura*100).toFixed(0)}cm laterais)` });
+    pecas.push({ nome:"Moldura lateral",   tipo:"estrutura",    perfil:PERFIS[form.perfilMoldura]?.desc, comp:compLateral,   qtd:2,  compTotal:2*compLateral,       peso:2*compLateral*pMol,       obs:"altura total" });
+    pecas.push({ nome:"Moldura superior",  tipo:"estrutura",    perfil:PERFIS[form.perfilMoldura]?.desc, comp:compTopBot,    qtd:1,  compTotal:compTopBot,           peso:compTopBot*pMol,           obs:`L − 2×${(espMoldura*100).toFixed(0)}cm laterais` });
+    pecas.push({ nome:"Moldura inferior",  tipo:"estrutura",    perfil:PERFIS[form.perfilMoldura]?.desc, comp:compTopBot,    qtd:1,  compTotal:compTopBot,           peso:compTopBot*pMol,           obs:`L − 2×${(espMoldura*100).toFixed(0)}cm laterais` });
+    if (nV>0) pecas.push({ nome:"Barra vertical",     tipo:"preenchimento", perfil:PERFIS[form.perfilBarra]?.desc,   comp:compBarraV,    qtd:nV, compTotal:nV*compBarraV,       peso:nV*compBarraV*pBar,       obs:`H − 2×${(espMoldura*100).toFixed(0)}cm moldura` });
+    if (nH>0) pecas.push({ nome:"Travessa horizontal", tipo:"preenchimento", perfil:PERFIS[form.perfilBarra]?.desc,  comp:compTraversaH, qtd:nH, compTotal:nH*compTraversaH,    peso:nH*compTraversaH*pBar,    obs:`L − 2×${(espMoldura*100).toFixed(0)}cm laterais` });
 
     const aberturaOk = espV<=0.11;
     const pesoTotal = pecas.reduce((s,p)=>s+p.peso,0);
