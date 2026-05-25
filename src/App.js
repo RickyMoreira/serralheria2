@@ -133,13 +133,15 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
       </g>
     );
   } else {
-    const x = x1 - offset;
+    // vertical cota — drawn to the LEFT inside the canvas using x1 as the structure edge
+    const x = x1 - offset; // offset pushes left, must stay >= 0
+    const mx = Math.max(x, 4); // clamp inside canvas
     return (
       <g>
-        <line x1={x1} y1={y1} x2={x} y2={y1} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1={x1} y1={y2} x2={x} y2={y2} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1={x} y1={y1} x2={x} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        <text x={x-3} y={(y1+y2)/2+4} textAnchor="end" fill={co} fontSize={ts} fontFamily="monospace">{label}</text>
+        <line x1={x1} y1={y1} x2={mx} y2={y1} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1={x1} y1={y2} x2={mx} y2={y2} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
+        <line x1={mx} y1={y1} x2={mx} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
+        <text x={mx - 2} y={(y1+y2)/2+4} textAnchor="end" fill={co} fontSize={ts} fontFamily="monospace">{label}</text>
       </g>
     );
   }
@@ -168,15 +170,15 @@ function ListaCorte({ pecas }) {
           </thead>
           <tbody>
             {pecas.map((p, i) => (
-              <tr key={i}>
+              <tr key={i} style={{ background: p.tipo === "estrutura" ? "#0d1520" : p.tipo === "diagonal" ? "#161008" : "#0a160a" }}>
                 <td style={{ color: "#555" }}>{i + 1}</td>
                 <td><span className={`corte-tag ${p.tipo === "estrutura" ? "corte-est" : p.tipo === "diagonal" ? "corte-diag" : "corte-pre"}`}>{p.nome}</span></td>
                 <td style={{ color: "#aaa" }}>{p.perfil}</td>
-                <td style={{ color: "#e8e0d0", fontWeight: 600 }}>{(p.comp * 100).toFixed(0)} cm</td>
+                <td style={{ color: p.tipo === "estrutura" ? "#4a9eff" : p.tipo === "diagonal" ? "#e0a020" : "#6fcf6f", fontWeight: 600, fontSize: 14 }}>{(p.comp * 100).toFixed(0)} cm</td>
                 <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
                 <td>{p.compTotal.toFixed(2)}</td>
                 <td>{p.peso.toFixed(2)}</td>
-                <td style={{ color: "#666", fontSize: 10 }}>{p.obs || "—"}</td>
+                <td style={{ color: "#555", fontSize: 10 }}>{p.obs || "—"}</td>
               </tr>
             ))}
             <tr className="total-row">
@@ -197,8 +199,8 @@ function ListaCorte({ pecas }) {
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
-  const W = 580; const SH = 320;
-  const cotaV = 42; const cotaH = 32; const pad = 14;
+  const W = 620; const SH = 320;
+  const cotaV = 60; const cotaH = 36; const pad = 14;
   const dw = W - cotaV - pad; const dh = SH - cotaH - pad - 10;
   const ox = cotaV; const oy = 10;
   const fw = dw / folhas;
@@ -374,8 +376,8 @@ function PortaoCalc() {
 // PARAPEITO
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre }) {
-  const W = 580; const SH = 280;
-  const cotaV = 42; const cotaH = 32; const pad = 14;
+  const W = 620; const SH = 280;
+  const cotaV = 60; const cotaH = 36; const pad = 14;
   const dw = W - cotaV - pad; const dh = SH - cotaH - pad - 20;
   const ox = cotaV; const oy = 20;
 
@@ -504,8 +506,8 @@ function ParapeitoCalc() {
 // GRADE
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoGrade({ L, H, nV, nH, perfilMoldura, perfilBarra }) {
-  const W = 400; const SH = 340;
-  const cotaV = 42; const cotaH = 32; const pad = 14;
+  const W = 420; const SH = 340;
+  const cotaV = 60; const cotaH = 36; const pad = 14;
   const dw = W - cotaV - pad; const dh = SH - cotaH - pad - 20;
   const ox = cotaV; const oy = 20;
 
