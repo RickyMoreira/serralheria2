@@ -282,8 +282,8 @@ function PortaoCalc() {
     // Travessa do meio (1 por folha) → Lf − 2×esp (por dentro dos montantes)
     // Preenchimento horizontal → Lf − 2×esp (por dentro dos montantes)
     // Preenchimento vertical → H − 3×esp (por dentro das 3 travessas)
-    const compTravSupInf = Lf;               // sup e inf: largura total da folha
-    const compMontante   = H - 2 * espEst;  // montantes: H − sup − inf
+    const compTravSupInf = Lf;              // sup e inf: largura total da folha
+    const compMontante   = H - 2 * espEst; // montantes: por dentro de sup e inf
     const compTravMeio   = Lf - 2 * espEst; // meio: por dentro dos 2 montantes
     const compPreH       = Lf - 2 * espEst; // horizontal: por dentro dos montantes
     const compPreV       = H - nTravessas * espEst; // vertical: H − 3 travessas
