@@ -164,11 +164,144 @@ const PECA_CORES = {
 function getPecaCor(nome) {
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
-function ListaCorte({ pecas }) {
+// ─── OTIMIZAÇÃO DE CORTE (First Fit Decreasing) ──────────────────────────────
+function otimizarCorte(pecas, tamanhoBarraM, kerfMm = 3) {
+  const kerf = kerfMm / 1000; // espessura do corte em metros
+  // Expandir cada peça em unidades individuais
+  const itens = [];
+  pecas.forEach(p => {
+    for (let i = 0; i < p.qtd; i++) {
+      itens.push({ nome: p.nome, comp: p.comp, cor: getPecaCor(p.nome).cor });
+    }
+  });
+  // Ordenar do maior para o menor
+  itens.sort((a, b) => b.comp - a.comp);
+
+  // First Fit Decreasing: encaixa cada peça na primeira barra onde cabe
+  const barras = [];
+  itens.forEach(item => {
+    let encaixou = false;
+    for (let b of barras) {
+      if (b.restante >= item.comp + kerf) {
+        b.pecas.push(item);
+        b.restante -= (item.comp + kerf);
+        encaixou = true;
+        break;
+      }
+    }
+    if (!encaixou) {
+      barras.push({ pecas: [item], restante: tamanhoBarraM - item.comp - kerf });
+    }
+  });
+
+  const totalBarras = barras.length;
+  const totalMaterial = totalBarras * tamanhoBarraM;
+  const totalUsado = itens.reduce((s, i) => s + i.comp, 0);
+  const desperdicio = totalMaterial - totalUsado;
+  const aproveitamento = (totalUsado / totalMaterial * 100);
+
+  return { barras, totalBarras, totalMaterial, totalUsado, desperdicio, aproveitamento };
+}
+
+function PainelBarras({ pecas, perfil }) {
+  const [tamanho, setTamanho] = useState("6");
+  const [resultado, setResultado] = useState(null);
+
+  function calcular() {
+    const t = parseFloat(tamanho);
+    if (!t || t <= 0) return;
+    setResultado(otimizarCorte(pecas, t));
+  }
+
+  const corPerfil = "#f5a623";
+
+  return (
+    <div className="drawing-box">
+      <div className="drawing-header">📦 QUANTIDADE DE BARRAS COMERCIAIS</div>
+      <div style={{ padding: "16px 20px", display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", background: "#111" }}>
+        <div className="field" style={{ flex: 1, minWidth: 180 }}>
+          <label>Tamanho da barra comercial <span className="unit">(m)</span></label>
+          <select value={tamanho} onChange={e => setTamanho(e.target.value)} style={{ background: "#111", border: "1px solid #333", color: "#e8e0d0", fontFamily: "monospace", fontSize: 14, padding: "10px 12px", borderRadius: 3 }}>
+            <option value="6">6 metros (padrão)</option>
+            <option value="6.4">6,40 metros</option>
+            <option value="7.5">7,5 metros</option>
+            <option value="12">12 metros</option>
+          </select>
+        </div>
+        <button className="btn-calc" style={{ width: "auto", padding: "10px 28px", fontSize: 18, marginTop: 0 }} onClick={calcular}>CALCULAR</button>
+      </div>
+
+      {resultado && (
+        <div style={{ padding: "0 20px 20px" }}>
+          {/* Resumo */}
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "16px 0" }}>
+            {[
+              { label: "Barras necessárias", valor: resultado.totalBarras, cor: "#f5a623", grande: true },
+              { label: "Material total", valor: `${resultado.totalMaterial.toFixed(1)} m`, cor: "#4a9eff" },
+              { label: "Material usado", valor: `${resultado.totalUsado.toFixed(2)} m`, cor: "#6fcf6f" },
+              { label: "Desperdício", valor: `${resultado.desperdicio.toFixed(2)} m`, cor: "#e05050" },
+              { label: "Aproveitamento", valor: `${resultado.aproveitamento.toFixed(1)}%`, cor: resultado.aproveitamento > 85 ? "#6fcf6f" : "#f5a623" },
+            ].map((item, i) => (
+              <div key={i} style={{ background: "#1a1a1a", border: `1px solid ${item.cor}33`, borderRadius: 4, padding: "10px 16px", flex: 1, minWidth: 120 }}>
+                <div style={{ fontFamily: "monospace", fontSize: 10, color: "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{item.label}</div>
+                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: item.grande ? 32 : 20, color: item.cor, letterSpacing: 2 }}>{item.valor}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Visualização das barras */}
+          <div style={{ fontFamily: "monospace", fontSize: 11, color: "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+            {perfil} — {tamanho}m por barra
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {resultado.barras.map((barra, bi) => {
+              const t = parseFloat(tamanho);
+              return (
+                <div key={bi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontFamily: "monospace", fontSize: 10, color: "#555", minWidth: 24, textAlign: "right" }}>#{bi+1}</span>
+                  <div style={{ flex: 1, height: 22, background: "#1a1a1a", borderRadius: 2, overflow: "hidden", display: "flex", border: "1px solid #2a2a2a" }}>
+                    {barra.pecas.map((peca, pi) => (
+                      <div key={pi} title={`${peca.nome}: ${(peca.comp*100).toFixed(1)}cm`}
+                        style={{ width: `${(peca.comp/t)*100}%`, background: peca.cor, borderRight: "1px solid #0a0a0a", height: "100%", minWidth: 1 }} />
+                    ))}
+                    {/* Sobra */}
+                    {barra.restante > 0.001 && (
+                      <div style={{ width: `${(barra.restante/t)*100}%`, background: "#2a2a2a", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <span style={{ fontFamily: "monospace", fontSize: 9, color: "#555" }}>{(barra.restante*100).toFixed(0)}cm</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10 }}>
+            {Object.entries(PECA_CORES).filter(([nome]) => pecas.some(p => p.nome === nome)).map(([nome, {cor}]) => (
+              <div key={nome} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#888" }}>
+                <div style={{ width: 16, height: 10, background: cor, borderRadius: 1 }} />{nome}
+              </div>
+            ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#555" }}>
+              <div style={{ width: 16, height: 10, background: "#2a2a2a", borderRadius: 1 }} />Sobra
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ListaCorte({ pecas, perfilEst, perfilPre }) {
   const sorted = [...pecas].sort((a, b) => b.comp - a.comp);
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
+
+  // Separar peças por perfil para calcular barras independentemente
+  const pecasEst = pecas.filter(p => p.tipo === "estrutura" || p.tipo === "diagonal");
+  const pecasPre = pecas.filter(p => p.tipo === "preenchimento");
+  const temDoisPerfis = perfilEst !== perfilPre && pecasPre.length > 0;
   return (
+    <>
     <div className="drawing-box">
       <div className="drawing-header">✂ LISTA DE CORTE</div>
       <div style={{ overflowX: "auto" }}>
@@ -212,6 +345,13 @@ function ListaCorte({ pecas }) {
         </table>
       </div>
     </div>
+    {temDoisPerfis ? (<>
+      <PainelBarras pecas={pecasEst} perfil={PERFIS[perfilEst]?.desc || perfilEst} />
+      <PainelBarras pecas={pecasPre} perfil={PERFIS[perfilPre]?.desc || perfilPre} />
+    </>) : (
+      <PainelBarras pecas={pecas} perfil={PERFIS[perfilEst]?.desc || perfilEst} />
+    )}
+    </>
   );
 }
 
@@ -401,7 +541,7 @@ function PortaoCalc() {
       </div>
       {result && (<>
         <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
-        <ListaCorte pecas={result.pecas} />
+        <ListaCorte pecas={result.pecas} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
@@ -529,7 +669,7 @@ function ParapeitoCalc() {
       </div>
       {result && (<>
         <DesenhoParapeito L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
-        <ListaCorte pecas={result.pecas} />
+        <ListaCorte pecas={result.pecas} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
@@ -645,7 +785,7 @@ function GradeCalc() {
       </div>
       {result && (<>
         <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} perfilMoldura={form.perfilMoldura} perfilBarra={form.perfilBarra} />
-        <ListaCorte pecas={result.pecas} />
+        <ListaCorte pecas={result.pecas} perfilEst={form.perfilMoldura} perfilPre={form.perfilBarra} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
