@@ -215,7 +215,7 @@ function PainelBarras({ pecas, perfil }) {
 
   return (
     <div className="drawing-box">
-      <div className="drawing-header">📦 QUANTIDADE DE BARRAS COMERCIAIS</div>
+      <div className="drawing-header">📦 BARRAS COMERCIAIS — {perfil}{resultado ? ` — ${tamanho}m` : ""}</div>
       <div style={{ padding: "16px 20px", display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", background: "#111" }}>
         <div className="field" style={{ flex: 1, minWidth: 180 }}>
           <label>Tamanho da barra comercial <span className="unit">(m)</span></label>
