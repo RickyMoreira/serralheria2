@@ -194,7 +194,7 @@ function ListaCorte({ pecas }) {
                   <td style={{ color: "#555" }}>{i + 1}</td>
                   <td><span style={{ background: bg, border: `1px solid ${cor}`, color: cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
                   <td style={{ color: "#888" }}>{p.perfil}</td>
-                  <td style={{ color: cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(0)} cm</td>
+                  <td style={{ color: cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(1)} cm</td>
                   <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
                   <td style={{ color: "#ccc" }}>{p.compTotal.toFixed(2)}</td>
                   <td style={{ color: "#ccc" }}>{p.peso.toFixed(2)}</td>
