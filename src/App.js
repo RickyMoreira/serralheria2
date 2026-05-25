@@ -169,7 +169,7 @@ function otimizarCorte(pecas, tamanhoBarraM, kerfMm = 3) {
   const kerf = kerfMm / 1000; // espessura do corte em metros
   // Expandir cada peça em unidades individuais
   const itens = [];
-  pecas.forEach(p => {
+  pecas.filter(p => p.qtd > 0 && p.comp > 0).forEach(p => {
     for (let i = 0; i < p.qtd; i++) {
       itens.push({ nome: p.nome, comp: p.comp, cor: getPecaCor(p.nome).cor });
     }
