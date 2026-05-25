@@ -165,6 +165,7 @@ function getPecaCor(nome) {
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
 function ListaCorte({ pecas }) {
+  const sorted = [...pecas].sort((a, b) => b.comp - a.comp);
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
   return (
@@ -185,7 +186,7 @@ function ListaCorte({ pecas }) {
             </tr>
           </thead>
           <tbody>
-            {pecas.map((p, i) => {
+            {sorted.map((p, i) => {
               const { bg, cor } = getPecaCor(p.nome);
               return (
                 <tr key={i} style={{ background: bg }}>
