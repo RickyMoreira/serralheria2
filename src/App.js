@@ -146,20 +146,18 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h", rightSide = fa
 
 // ─── LISTA DE CORTE ──────────────────────────────────────────────────────────
 const PECA_CORES = {
-  "Travessa superior": { bg: "#0d1a2e", cor: "#4a9eff" },
-  "Travessa inferior": { bg: "#0d1a2e", cor: "#74b8ff" },
-  "Montante vertical": { bg: "#1a0d2e", cor: "#b47aff" },
+  "Travessa superior":  { bg: "#0d1a2e", cor: "#4a9eff" },
+  "Travessa inferior":  { bg: "#0d1a2e", cor: "#74b8ff" },
+  "Montante vertical":  { bg: "#1a0d2e", cor: "#b47aff" },
   "Travessa horizontal":{ bg: "#0d1e2e", cor: "#40d0ff" },
   "Travessa vertical":  { bg: "#1a0a2e", cor: "#d070ff" },
-  "Barra horizontal":  { bg: "#0a160a", cor: "#6fcf6f" },
-  "Barra vertical":    { bg: "#0d1a0d", cor: "#a0e0a0" },
-  "Diagonal":          { bg: "#1e1408", cor: "#e0a020" },
-  "Poste vertical":    { bg: "#1a0d2e", cor: "#b47aff" },
-  "Travessa horizontal":{ bg: "#0a160a", cor: "#6fcf6f" },
-  "Moldura lateral":   { bg: "#0d1a2e", cor: "#4a9eff" },
-  "Moldura superior":  { bg: "#0d1a2e", cor: "#74b8ff" },
-  "Moldura inferior":  { bg: "#0d1e2e", cor: "#40d0ff" },
-  "Travessa vertical": { bg: "#0d1a0d", cor: "#a0e0a0" },
+  "Barra horizontal":   { bg: "#0a160a", cor: "#6fcf6f" },
+  "Barra vertical":     { bg: "#0d1a0d", cor: "#a0e0a0" },
+  "Diagonal":           { bg: "#1e1408", cor: "#e0a020" },
+  "Poste vertical":     { bg: "#1a0d2e", cor: "#b47aff" },
+  "Moldura lateral":    { bg: "#0d1a2e", cor: "#4a9eff" },
+  "Moldura superior":   { bg: "#0d1a2e", cor: "#74b8ff" },
+  "Moldura inferior":   { bg: "#0d1e2e", cor: "#40d0ff" },
 };
 
 function getPecaCor(nome) {
@@ -467,10 +465,9 @@ function PortaoCalc() {
     const nTravV = parseInt(form.nTravVert)  || 0; // montantes verticais internos
 
     const compTravSupInf = Lf;                      // sup e inf: por fora
-    const compMontante   = H - 2 * espEst;          // montantes laterais fixos: H − sup − inf
-    const compTravHoriz  = Lf - 2 * espEst;         // travessa horizontal interna: por dentro dos montantes
-    const compTravVert   = H - 2 * espEst;          // montante vertical interno: H − sup − inf (igual ao lateral)
-    const compPreH       = Lf - 2 * espEst;         // preenchimento horizontal: por dentro dos montantes
+    const compMontante   = H - 2 * espEst;
+    const compTravHoriz  = Lf - 2 * espEst;
+    const compTravVert   = H - 2 * espEst;
 
     // Preenchimento vertical: interrompido por cada travessa horizontal interna
     const altInterna = H - 2 * espEst;
