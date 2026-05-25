@@ -149,7 +149,8 @@ const PECA_CORES = {
   "Travessa superior": { bg: "#0d1a2e", cor: "#4a9eff" },
   "Travessa inferior": { bg: "#0d1a2e", cor: "#74b8ff" },
   "Montante vertical": { bg: "#1a0d2e", cor: "#b47aff" },
-  "Travessa do meio":  { bg: "#0d1e2e", cor: "#40d0ff" },
+  "Travessa horizontal":{ bg: "#0d1e2e", cor: "#40d0ff" },
+  "Travessa vertical":  { bg: "#1a0a2e", cor: "#d070ff" },
   "Barra horizontal":  { bg: "#0a160a", cor: "#6fcf6f" },
   "Barra vertical":    { bg: "#0d1a0d", cor: "#a0e0a0" },
   "Diagonal":          { bg: "#1e1408", cor: "#e0a020" },
@@ -356,7 +357,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
+function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
   const W = 680; const SH = 320;
   const cotaV = 50; const cotaH = 36; const pad = 14; const padR = 70;
   const dw = W - cotaV - pad - padR; const dh = SH - cotaH - pad - 10;
@@ -382,7 +383,8 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, oriPreenchi, i
           const corTravSup  = PECA_CORES["Travessa superior"].cor;
           const corTravInf  = PECA_CORES["Travessa inferior"].cor;
           const corMontante = PECA_CORES["Montante vertical"].cor;
-          const corTravMeio = PECA_CORES["Travessa do meio"].cor;
+          const corTravH    = PECA_CORES["Travessa horizontal"].cor;
+          const corTravV    = PECA_CORES["Travessa vertical"].cor;
           const corPreV     = PECA_CORES["Barra vertical"].cor;
           const corPreH     = PECA_CORES["Barra horizontal"].cor;
           const corDiag     = PECA_CORES["Diagonal"].cor;
@@ -395,10 +397,15 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, oriPreenchi, i
               {/* Montantes verticais (esquerdo e direito) */}
               <line x1={fx+2} y1={oy+4} x2={fx+2} y2={oy+dh-4} stroke={corMontante} strokeWidth="4" />
               <line x1={fx+fw-2} y1={oy+4} x2={fx+fw-2} y2={oy+dh-4} stroke={corMontante} strokeWidth="4" />
-              {/* Travessas do meio (0, 1, 2 ou 3) */}
+              {/* Travessas horizontais internas */}
               {[...Array(nMeio||0)].map((_,mi) => {
-                const my = oy + ((mi+1)/(( nMeio||0)+1)) * dh;
-                return <line key={mi} x1={fx+6} y1={my} x2={fx+fw-6} y2={my} stroke={corTravMeio} strokeWidth="3" />;
+                const my = oy + ((mi+1)/((nMeio||0)+1)) * dh;
+                return <line key={mi} x1={fx+6} y1={my} x2={fx+fw-6} y2={my} stroke={corTravH} strokeWidth="3" />;
+              })}
+              {/* Travessas verticais internas */}
+              {[...Array(nTravV||0)].map((_,vi) => {
+                const vx = fx + ((vi+1)/((nTravV||0)+1)) * fw;
+                return <line key={vi} x1={vx} y1={oy+4} x2={vx} y2={oy+dh-4} stroke={corTravV} strokeWidth="3" />;
               })}
               {/* Preenchimento horizontal */}
               {oriPreenchi === "horizontal" && barrasH.map((by,bi) => (
@@ -426,7 +433,8 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, oriPreenchi, i
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Montante vertical"].cor}} />Montante vertical</div>
-        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa do meio"].cor}} />Travessa do meio</div>
+        {(nMeio||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa horizontal"].cor}} />Travessa horizontal</div>}
+        {(nTravV||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa vertical"].cor}} />Travessa vertical</div>}
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />{PERFIS[perfilPre]?.desc} — Preenchimento</div>
         {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Diagonal"].cor, height:3}} />Diagonal</div>}
       </div>
@@ -440,7 +448,8 @@ function PortaoCalc() {
     perfilEst:"50x50x3", perfilPre:"30x30x2",
     oriPreenchi:"horizontal", espacamento:"15",
     incluiDiagonal:true,
-    nTravessasMeio:"1",
+    nTravHoriz:"1",
+    nTravVert:"0",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
@@ -454,18 +463,29 @@ function PortaoCalc() {
 
     // Espessura do perfil estrutural em metros (ex: 50×50 → 0.05m)
     const espEst = getEsp(form.perfilEst);
-    const nMeio = parseInt(form.nTravessasMeio) || 0;
+    const nTravH = parseInt(form.nTravHoriz) || 0; // travessas horizontais internas
+    const nTravV = parseInt(form.nTravVert)  || 0; // montantes verticais internos
 
-    const compTravSupInf = Lf;
-    const compMontante   = H - 2 * espEst;
-    const compTravMeio   = Lf - 2 * espEst;
-    const compPreH       = Lf - 2 * espEst;
-    const altInterna     = H - 2 * espEst;
-    // Cada segmento vertical = (altInterna − nMeio×espEst) / (nMeio+1)
-    const compPreV       = nMeio > 0
-      ? (altInterna - nMeio * espEst) / (nMeio + 1)
+    const compTravSupInf = Lf;                      // sup e inf: por fora
+    const compMontante   = H - 2 * espEst;          // montantes laterais fixos: H − sup − inf
+    const compTravHoriz  = Lf - 2 * espEst;         // travessa horizontal interna: por dentro dos montantes
+    const compTravVert   = H - 2 * espEst;          // montante vertical interno: H − sup − inf (igual ao lateral)
+    const compPreH       = Lf - 2 * espEst;         // preenchimento horizontal: por dentro dos montantes
+
+    // Preenchimento vertical: interrompido por cada travessa horizontal interna
+    const altInterna = H - 2 * espEst;
+    const compPreV   = nTravH > 0
+      ? (altInterna - nTravH * espEst) / (nTravH + 1)
       : altInterna;
-    const nSegmentos     = nMeio + 1; // segmentos por barra vertical
+    const nSegmentos = nTravH + 1;
+
+    // Preenchimento horizontal: interrompido por cada montante vertical interno
+    // largura de cada célula = (Lf - 2×montLateral - nTravV×espEst) / (nTravV+1)
+    const largInterna = Lf - 2 * espEst;
+    const compPreHCell = nTravV > 0
+      ? (largInterna - nTravV * espEst) / (nTravV + 1)
+      : largInterna;
+    const nColunas = nTravV + 1;
 
     let nPreenchi = 0;
     if (form.oriPreenchi === "horizontal") nPreenchi = Math.max(0, Math.floor(H/esp) - 1);
@@ -477,34 +497,42 @@ function PortaoCalc() {
     const pEst = PERFIS[form.perfilEst]?.pesoM||0;
     const pPre = PERFIS[form.perfilPre]?.pesoM||0;
 
-    pecas.push({ nome:"Travessa superior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,        compTotal: folhas*compTravSupInf,        peso: folhas*compTravSupInf*pEst,        obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
-    pecas.push({ nome:"Travessa inferior", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,        compTotal: folhas*compTravSupInf,        peso: folhas*compTravSupInf*pEst,        obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
-    pecas.push({ nome:"Montante vertical", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante,   qtd: 2*folhas,      compTotal: 2*folhas*compMontante,        peso: 2*folhas*compMontante*pEst,        obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
-    if (nMeio > 0) {
-      pecas.push({ nome:"Travessa do meio", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravMeio, qtd: nMeio*folhas, compTotal: nMeio*folhas*compTravMeio, peso: nMeio*folhas*compTravMeio*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravMeio*100).toFixed(1)}cm` });
+    pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
+    pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
+    pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante,   qtd: 2*folhas,     compTotal: 2*folhas*compMontante,       peso: 2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
+    if (nTravH > 0) {
+      pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravHoriz, qtd: nTravH*folhas, compTotal: nTravH*folhas*compTravHoriz, peso: nTravH*folhas*compTravHoriz*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravHoriz*100).toFixed(1)}cm` });
+    }
+    if (nTravV > 0) {
+      pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravVert,  qtd: nTravV*folhas, compTotal: nTravV*folhas*compTravVert,  peso: nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
     }
 
     if (form.incluiDiagonal && diagComp > 0) {
       pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: PERFIS[form.perfilEst]?.desc, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
     }
 
-    // Preenchimento
     if (nPreenchi > 0) {
       if (form.oriPreenchi === "horizontal") {
-        pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreH, qtd: nPreenchi*folhas, compTotal: nPreenchi*folhas*compPreH, peso: nPreenchi*folhas*compPreH*pPre, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm montantes` });
+        // Horizontal: interrompido pelos montantes verticais internos
+        const qtdH = nPreenchi * folhas * nColunas;
+        const obsH = nTravV > 0
+          ? `(largInt − ${nTravV}×${(espEst*100).toFixed(1)}cm) ÷ ${nColunas} = ${(compPreHCell*100).toFixed(1)}cm`
+          : `Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compPreHCell*100).toFixed(1)}cm`;
+        pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
       } else {
-        const qtdSegmentos = nPreenchi * folhas * nSegmentos;
-        const obsV = nMeio > 0
-          ? `(altInt − ${nMeio}×${(espEst*100).toFixed(1)}cm) ÷ ${nSegmentos} = ${(compPreV*100).toFixed(1)}cm`
+        // Vertical: interrompido pelas travessas horizontais internas
+        const qtdV = nPreenchi * folhas * nSegmentos;
+        const obsV = nTravH > 0
+          ? `(altInt − ${nTravH}×${(espEst*100).toFixed(1)}cm) ÷ ${nSegmentos} = ${(compPreV*100).toFixed(1)}cm`
           : `altInterna = ${(compPreV*100).toFixed(1)}cm`;
-        pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreV, qtd: qtdSegmentos, compTotal: qtdSegmentos*compPreV, peso: qtdSegmentos*compPreV*pPre, obs: obsV });
+        pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreV, qtd: qtdV, compTotal: qtdV*compPreV, peso: qtdV*compPreV*pPre, obs: obsV });
       }
     }
 
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio });
+    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV });
   }
 
   return (
@@ -516,7 +544,8 @@ function PortaoCalc() {
             <div className="field"><label>Largura total <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.largura} onChange={e=>set("largura",e.target.value)} placeholder="Ex: 4.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 2.00" /></div>
             <div className="field"><label>Nº de folhas</label><select value={form.folhas} onChange={e=>set("folhas",e.target.value)}><option value="1">1 folha</option><option value="2">2 folhas</option><option value="4">4 folhas</option></select></div>
-            <div className="field"><label>Travessas do meio por folha</label><select value={form.nTravessasMeio} onChange={e=>set("nTravessasMeio",e.target.value)}><option value="0">Sem travessa do meio</option><option value="1">1 travessa</option><option value="2">2 travessas</option><option value="3">3 travessas</option></select></div>
+            <div className="field"><label>Travessas horizontais internas</label><select value={form.nTravHoriz} onChange={e=>set("nTravHoriz",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i === 0 ? "Nenhuma" : `${i} travessa${i>1?"s":""}`}</option>)}</select></div>
+            <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i === 0 ? "Nenhuma" : `${i} travessa${i>1?"s":""}`}</option>)}</select></div>
             <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
               <input type="checkbox" id="diag" checked={form.incluiDiagonal} onChange={e=>set("incluiDiagonal",e.target.checked)} style={{width:"auto"}} />
               <label htmlFor="diag" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Incluir diagonal (contraventamento)</label>
@@ -538,7 +567,7 @@ function PortaoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
+        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
         <ListaCorte pecas={result.pecas} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
