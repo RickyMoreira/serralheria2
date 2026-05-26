@@ -427,7 +427,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre, usaBarraDeslocada, posBarraDeslocada, espInf, espSup }) {
   // Proporção real: L metros de largura, H metros de altura
   const maxW = 660; const maxDrawH = 400;
-  const padL = 14; const padR = 90; const padT = 14; const padB = 52;
+  const padL = 14; const padR = usaBarraDeslocada ? 130 : 90; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
@@ -528,6 +528,17 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
         <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
         {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={38} orient="h" />}
+        {usaBarraDeslocada && (() => {
+          const yBD = oy + (posBarraDeslocada / H) * dh;
+          const altSup = posBarraDeslocada;
+          const altInf = H - posBarraDeslocada;
+          return (
+            <g>
+              <Cota x1={ox} y1={oy} x2={ox+dw} y2={yBD} label={`${(altSup*100).toFixed(0)}cm`} offset={44} orient="v" />
+              <Cota x1={ox} y1={yBD} x2={ox+dw} y2={oy+dh} label={`${(altInf*100).toFixed(0)}cm`} offset={44} orient="v" />
+            </g>
+          );
+        })()}
       </svg>
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
