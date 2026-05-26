@@ -285,8 +285,8 @@ function PainelBarras({ pecas, perfil }) {
                   <div style={{ flex: 1, position: "relative", height: 24 }}>
                     <svg width="100%" height="24" style={{ display: "block", borderRadius: 2, overflow: "hidden", border: "1px solid #2a2a2a" }}>
                       <defs>
-                        <pattern id={`hatch${bi}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(90)">
-                          <line x1="0" y1="0" x2="0" y2="6" stroke="#555" strokeWidth="1.5" />
+                        <pattern id={`hatch${bi}`} width="6" height="6" patternUnits="userSpaceOnUse">
+                          <line x1="0" y1="6" x2="6" y2="0" stroke="#888" strokeWidth="1" />
                         </pattern>
                       </defs>
                       <rect width="100%" height="24" fill="#1a1a1a" />
@@ -310,13 +310,13 @@ function PainelBarras({ pecas, perfil }) {
                         const pecasW = barra.pecas.reduce((s, p) => s + (p.comp/t)*100, 0);
                         return (
                           <g>
+                            <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill="#555" />
                             <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill={`url(#hatch${bi})`} />
-                            <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill="#2a2a2a" opacity="0.4" />
                             <text
                               x={`${pecasW + sobraW*50}%`}
                               y="15"
                               textAnchor="middle"
-                              fill="#aaa"
+                              fill="#fff"
                               fontSize="8"
                               fontFamily="monospace"
                             >{(barra.restante*100).toFixed(0)}cm</text>
@@ -338,12 +338,12 @@ function PainelBarras({ pecas, perfil }) {
             <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#ccc" }}>
               <svg width="16" height="10" style={{borderRadius:1}}>
                 <defs>
-                  <pattern id="hatchLeg" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(90)">
-                    <line x1="0" y1="0" x2="0" y2="4" stroke="#555" strokeWidth="1.2" />
+                  <pattern id="hatchLeg" width="4" height="4" patternUnits="userSpaceOnUse">
+                    <line x1="0" y1="4" x2="4" y2="0" stroke="#888" strokeWidth="1" />
                   </pattern>
                 </defs>
+                <rect width="16" height="10" fill="#555" />
                 <rect width="16" height="10" fill="url(#hatchLeg)" />
-                <rect width="16" height="10" fill="#2a2a2a" opacity="0.4" />
               </svg>Sobra
             </div>
           </div>
