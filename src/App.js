@@ -645,19 +645,19 @@ function PortaoCalc() {
           : `Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compPreHCell*100).toFixed(1)}cm`;
         pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: descPre, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
       } else if (usaBarraDeslocada) {
-        // Parte superior (acima da barra deslocada) — espaçamento normal
-        const altSup = posBarraDeslocada - 2*espEst; // do topo até barra deslocada
-        const compPreVSup = altSup; // barras corridas na parte superior
+        // Parte superior (acima da barra deslocada)
+        // desconta: 1×espEst (montante topo) + 0.5×espEst (meia barra deslocada) = 1.5×espEst
+        const compPreVSup = posBarraDeslocada - 1.5*espEst;
         const nVSup = Math.max(0, Math.floor(Lf/esp) - 1);
         if (nVSup > 0 && compPreVSup > 0) {
-          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVSup, qtd: nVSup*folhas, compTotal: nVSup*folhas*compPreVSup, peso: nVSup*folhas*compPreVSup*pPre, obs:`Parte superior — ${(compPreVSup*100).toFixed(1)}cm` });
+          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVSup, qtd: nVSup*folhas, compTotal: nVSup*folhas*compPreVSup, peso: nVSup*folhas*compPreVSup*pPre, obs:`Sup: H_sup − 1.5×${(espEst*100).toFixed(1)}cm = ${(compPreVSup*100).toFixed(1)}cm` });
         }
-        // Parte inferior (abaixo da barra deslocada) — espaçamento menor
-        const altInf = H - posBarraDeslocada - 2*espEst;
-        const compPreVInf = altInf;
+        // Parte inferior (abaixo da barra deslocada)
+        // desconta: 0.5×espEst (meia barra deslocada) + 1×espEst (montante fundo) = 1.5×espEst
+        const compPreVInf = H - posBarraDeslocada - 1.5*espEst;
         const nVInf = Math.max(0, Math.floor(Lf/espInf) - 1);
         if (nVInf > 0 && compPreVInf > 0) {
-          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVInf, qtd: nVInf*folhas, compTotal: nVInf*folhas*compPreVInf, peso: nVInf*folhas*compPreVInf*pPre, obs:`Parte inferior — esp. ${(espInf*100).toFixed(1)}cm — ${(compPreVInf*100).toFixed(1)}cm` });
+          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVInf, qtd: nVInf*folhas, compTotal: nVInf*folhas*compPreVInf, peso: nVInf*folhas*compPreVInf*pPre, obs:`Inf: H_inf − 1.5×${(espEst*100).toFixed(1)}cm = ${(compPreVInf*100).toFixed(1)}cm` });
         }
       } else {
         const qtdV = nPreenchi * folhas * nSegmentos;
