@@ -530,7 +530,6 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
         {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={38} orient="h" />}
         {usaBarraDeslocada && (() => {
           const yBD = oy + (posBarraDeslocada / H) * dh;
-          const altSup = posBarraDeslocada;
           const altInf = H - posBarraDeslocada;
           return (
             <g>
