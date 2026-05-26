@@ -130,24 +130,26 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
     const mx = (x1+x2)/2;
     return (
       <g>
-        <line x1={x1} y1={y1} x2={x1} y2={y} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1={x2} y1={y1} x2={x2} y2={y} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
+        {/* Short tick marks instead of long dashes */}
+        <line x1={x1} y1={y1} x2={x1} y2={y1+8} stroke={co} strokeWidth="1" />
+        <line x1={x2} y1={y1} x2={x2} y2={y1+8} stroke={co} strokeWidth="1" />
         <line x1={x1} y1={y} x2={x2} y2={y} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        <rect x={mx-18} y={y+2} width={36} height={ts+3} fill="#f5f5f0" opacity="0.8" />
+        <rect x={mx-20} y={y+1} width={40} height={ts+4} fill="#f5f5f0" opacity="0.92" rx="2" />
         <text x={mx} y={y+ts+2} textAnchor="middle" fill={co} fontSize={ts} fontFamily="monospace" fontWeight="bold">{label}</text>
       </g>
     );
   } else {
-    // Vertical cota — drawn to the RIGHT, text inside canvas
     const rx = x2 + offset;
     const my = (y1+y2)/2;
+    const lw = label.length * 5.5 + 8;
     return (
       <g>
-        <line x1={x2} y1={y1} x2={rx} y2={y1} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
-        <line x1={x2} y1={y2} x2={rx} y2={y2} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
+        {/* Short tick marks */}
+        <line x1={x2} y1={y1} x2={x2+8} y2={y1} stroke={co} strokeWidth="1" />
+        <line x1={x2} y1={y2} x2={x2+8} y2={y2} stroke={co} strokeWidth="1" />
         <line x1={rx} y1={y1} x2={rx} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        <rect x={rx+2} y={my-6} width={label.length*6+4} height={ts+3} fill="#f5f5f0" opacity="0.8" />
-        <text x={rx+4} y={my+4} textAnchor="start" fill={co} fontSize={ts} fontFamily="monospace" fontWeight="bold">{label}</text>
+        <rect x={rx+3} y={my-7} width={lw} height={ts+5} fill="#f5f5f0" opacity="0.92" rx="2" />
+        <text x={rx+5} y={my+4} textAnchor="start" fill={co} fontSize={ts} fontFamily="monospace" fontWeight="bold">{label}</text>
       </g>
     );
   }
@@ -384,7 +386,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
   // Proporção real: L metros de largura, H metros de altura
   const maxW = 660; const maxDrawH = 400;
-  const padL = 50; const padR = 70; const padT = 14; const padB = 46;
+  const padL = 14; const padR = 80; const padT = 14; const padB = 46;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
@@ -624,7 +626,7 @@ function PortaoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre }) {
   const maxW = 660; const maxDrawH = 340;
-  const padL = 50; const padR = 70; const padT = 14; const padB = 46;
+  const padL = 14; const padR = 80; const padT = 14; const padB = 46;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
   const scale  = Math.min(availW / L, availH / H);
@@ -779,7 +781,7 @@ function ParapeitoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
   const maxW = 500; const maxDrawH = 420;
-  const padL = 50; const padR = 70; const padT = 14; const padB = 46;
+  const padL = 14; const padR = 80; const padT = 14; const padB = 46;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
   const scale  = Math.min(availW / L, availH / H);
