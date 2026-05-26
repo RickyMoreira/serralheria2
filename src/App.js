@@ -123,27 +123,31 @@ function Defs() {
   );
 }
 
-function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h", rightSide = false }) {
-  const co = "#f5a623"; const ts = 9;
+function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
+  const co = "#e07020"; const ts = 9;
   if (orient === "h") {
     const y = y1 + offset;
+    const mx = (x1+x2)/2;
     return (
       <g>
         <line x1={x1} y1={y1} x2={x1} y2={y} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
         <line x1={x2} y1={y1} x2={x2} y2={y} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
         <line x1={x1} y1={y} x2={x2} y2={y} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        <text x={(x1+x2)/2} y={y+ts+2} textAnchor="middle" fill={co} fontSize={ts} fontFamily="monospace">{label}</text>
+        <rect x={mx-18} y={y+2} width={36} height={ts+3} fill="#f5f5f0" opacity="0.8" />
+        <text x={mx} y={y+ts+2} textAnchor="middle" fill={co} fontSize={ts} fontFamily="monospace" fontWeight="bold">{label}</text>
       </g>
     );
   } else {
-    // vertical cota — always drawn to the RIGHT of x2 (right edge of structure)
+    // Vertical cota — drawn to the RIGHT, text inside canvas
     const rx = x2 + offset;
+    const my = (y1+y2)/2;
     return (
       <g>
         <line x1={x2} y1={y1} x2={rx} y2={y1} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
         <line x1={x2} y1={y2} x2={rx} y2={y2} stroke={co} strokeWidth="0.8" strokeDasharray="2,2" />
         <line x1={rx} y1={y1} x2={rx} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
-        <text x={rx+4} y={(y1+y2)/2+4} textAnchor="start" fill={co} fontSize={ts} fontFamily="monospace">{label}</text>
+        <rect x={rx+2} y={my-6} width={label.length*6+4} height={ts+3} fill="#f5f5f0" opacity="0.8" />
+        <text x={rx+4} y={my+4} textAnchor="start" fill={co} fontSize={ts} fontFamily="monospace" fontWeight="bold">{label}</text>
       </g>
     );
   }
@@ -170,18 +174,30 @@ function getPecaCor(nome) {
 }
 // ─── OTIMIZAÇÃO DE CORTE (First Fit Decreasing) ──────────────────────────────
 function otimizarCorte(pecas, tamanhoBarraM, kerfMm = 3) {
-  const kerf = kerfMm / 1000; // espessura do corte em metros
-  // Expandir cada peça em unidades individuais
+  const kerf = kerfMm / 1000;
   const itens = [];
+
+  // Expandir peças — se maior que a barra, dividir em segmentos emendados
   pecas.filter(p => p.qtd > 0 && p.comp > 0).forEach(p => {
     for (let i = 0; i < p.qtd; i++) {
-      itens.push({ nome: p.nome, comp: p.comp, cor: getPecaCor(p.nome).cor });
+      let restComp = p.comp;
+      let segNum = 0;
+      while (restComp > 0.001) {
+        const segComp = Math.min(restComp, tamanhoBarraM - kerf);
+        itens.push({
+          nome: p.comp > tamanhoBarraM - kerf ? `${p.nome} (seg.${segNum+1})` : p.nome,
+          comp: segComp,
+          cor: getPecaCor(p.nome).cor,
+          emenda: segNum > 0,
+        });
+        restComp -= segComp;
+        segNum++;
+      }
     }
   });
-  // Ordenar do maior para o menor
+
   itens.sort((a, b) => b.comp - a.comp);
 
-  // First Fit Decreasing: encaixa cada peça na primeira barra onde cabe
   const barras = [];
   itens.forEach(item => {
     let encaixou = false;
@@ -203,8 +219,9 @@ function otimizarCorte(pecas, tamanhoBarraM, kerfMm = 3) {
   const totalUsado = itens.reduce((s, i) => s + i.comp, 0);
   const desperdicio = totalMaterial - totalUsado;
   const aproveitamento = (totalUsado / totalMaterial * 100);
+  const nEmendas = itens.filter(i => i.emenda).length;
 
-  return { barras, totalBarras, totalMaterial, totalUsado, desperdicio, aproveitamento };
+  return { barras, totalBarras, totalMaterial, totalUsado, desperdicio, aproveitamento, nEmendas };
 }
 
 function PainelBarras({ pecas, perfil }) {
@@ -243,6 +260,7 @@ function PainelBarras({ pecas, perfil }) {
               { label: "Material usado", valor: `${resultado.totalUsado.toFixed(2)} m`, cor: "#6fcf6f" },
               { label: "Desperdício", valor: `${resultado.desperdicio.toFixed(2)} m`, cor: "#e05050" },
               { label: "Aproveitamento", valor: `${resultado.aproveitamento.toFixed(1)}%`, cor: resultado.aproveitamento > 85 ? "#6fcf6f" : "#f5a623" },
+              { label: "Emendas", valor: resultado.nEmendas > 0 ? `${resultado.nEmendas} junta${resultado.nEmendas>1?"s":""}` : "Nenhuma", cor: resultado.nEmendas > 0 ? "#e07020" : "#6fcf6f" },
             ].map((item, i) => (
               <div key={i} style={{ background: "#1a1a1a", border: `1px solid ${item.cor}33`, borderRadius: 4, padding: "10px 16px", flex: 1, minWidth: 120 }}>
                 <div style={{ fontFamily: "monospace", fontSize: 10, color: "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{item.label}</div>
