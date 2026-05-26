@@ -387,7 +387,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
   // Proporção real: L metros de largura, H metros de altura
   const maxW = 660; const maxDrawH = 400;
-  const padL = 14; const padR = 80; const padT = 14; const padB = 46;
+  const padL = 14; const padR = 90; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
@@ -465,9 +465,9 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
           );
         })}
 
-        <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={padB-10} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={padR-10} orient="v" />
-        {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={padB+12} orient="h" />}
+        <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
+        {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={38} orient="h" />}
       </svg>
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
@@ -627,7 +627,7 @@ function PortaoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre }) {
   const maxW = 660; const maxDrawH = 340;
-  const padL = 14; const padR = 80; const padT = 14; const padB = 46;
+  const padL = 14; const padR = 90; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
   const scale  = Math.min(availW / L, availH / H);
@@ -654,9 +654,9 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
         {postesX.map((px,i)=><rect key={i} x={px-3} y={oy} width={6} height={dh} fill="#4a9eff" opacity="0.9" />)}
         {elsY.map((ey,i)=><line key={i} x1={ox} y1={ey} x2={ox+dw} y2={ey} stroke="#6fcf6f" strokeWidth="1.5" />)}
         {elsX.map((ex,i)=><line key={i} x1={ex} y1={oy} x2={ex} y2={oy+dh} stroke="#6fcf6f" strokeWidth="1.5" />)}
-        <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={padB-10} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={padR-10} orient="v" />
-        {nPostes>1 && <Cota x1={postesX[0]} y1={oy+dh} x2={postesX[1]} y2={oy+dh} label={`${(L/(nPostes-1)).toFixed(2)} m`} offset={padB+12} orient="h" />}
+        <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
+        {nPostes>1 && <Cota x1={postesX[0]} y1={oy+dh} x2={postesX[1]} y2={oy+dh} label={`${(L/(nPostes-1)).toFixed(2)} m`} offset={38} orient="h" />}
       </svg>
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />Postes e travessas</div>
@@ -782,7 +782,7 @@ function ParapeitoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
   const maxW = 500; const maxDrawH = 420;
-  const padL = 14; const padR = 80; const padT = 14; const padB = 46;
+  const padL = 14; const padR = 90; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
   const scale  = Math.min(availW / L, availH / H);
@@ -810,8 +810,8 @@ function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
         <line x1={ox+dw} y1={oy} x2={ox+dw} y2={oy+dh} stroke={corLateral} strokeWidth="5" />
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke={corTopBot} strokeWidth="5" />
         <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke={corTopBot} strokeWidth="5" />
-        <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={padB-10} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={padR-10} orient="v" />
+        <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
       </svg>
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background:corLateral}} />Lateral — {descMoldura}</div>
