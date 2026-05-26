@@ -96,6 +96,48 @@ const PERFIS = {
 function perfisEstrutura() { return Object.entries(PERFIS); }
 function perfisPreenchimento() { return Object.entries(PERFIS); }
 
+// Dimensões disponíveis para seleção
+const DIMS_A  = [20,25,30,38,40,50,60,70,76,80,90,100,120,150,200]; // lado maior mm
+const DIMS_B  = [20,25,30,38,40,50,60,70,76,80,90,100,120,150,200]; // lado menor mm
+const DIMS_E  = [1.5,2,2.5,3,3.5,4,5,6];                             // espessura mm
+
+// Fórmula: Peso (kg/m) = 7,85 × (A+B−2e) × e × 0,001 × 2
+// (fator 2 porque são 4 faces: 2×(A-e) + 2×(B-e) = 2(A+B-2e))
+function calcPesoM(A, B, e) {
+  return 7.85 * 2 * (A + B - 2 * e) * e * 0.001;
+}
+
+// Constrói chave e desc do perfil customizado
+function perfilKey(A, B, e) { return `${A}x${B}x${e}`; }
+function perfilDesc(A, B, e) { return `Tubo ${A}×${B} e=${e}mm — ${calcPesoM(A,B,e).toFixed(2)} kg/m`; }
+
+// Componente seletor de perfil estrutural (3 dropdowns)
+function PerfilEstSelector({ A, B, e, onChange, label }) {
+  const peso = calcPesoM(A, B, e);
+  return (
+    <div className="field">
+      <label>{label || "Perfil estrutural"}</label>
+      <div style={{ display:"flex", gap:6 }}>
+        <select value={A} onChange={ev => onChange(parseInt(ev.target.value), B, e)}
+          style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
+          {DIMS_A.filter(a => a >= B).map(a => <option key={a} value={a}>{a}mm</option>)}
+        </select>
+        <select value={B} onChange={ev => onChange(A, parseInt(ev.target.value), e)}
+          style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
+          {DIMS_B.filter(b => b <= A).map(b => <option key={b} value={b}>{b}mm</option>)}
+        </select>
+        <select value={e} onChange={ev => onChange(A, B, parseFloat(ev.target.value))}
+          style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
+          {DIMS_E.filter(ep => ep < Math.min(A,B)/2).map(ep => <option key={ep} value={ep}>e={ep}mm</option>)}
+        </select>
+      </div>
+      <div style={{ fontFamily:"monospace", fontSize:11, color:"#f5a623", marginTop:4 }}>
+        {A}×{B} e={e}mm → <strong>{peso.toFixed(3)} kg/m</strong>
+      </div>
+    </div>
+  );
+}
+
 // Extrai a dimensão maior do perfil em metros (ex: "50x50x3" → 0.050, "100x50x3" → 0.100, "bc_25x3" → 0.025)
 function getEsp(key) {
   if (!key) return 0;
@@ -443,7 +485,8 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
 function PortaoCalc() {
   const [form, setForm] = useState({
     largura:"", altura:"", folhas:"2",
-    perfilEst:"50x50x3", perfilPre:"30x30x2",
+    estA:50, estB:50, estE:3,
+    perfilPre:"30x30x2",
     oriPreenchi:"horizontal", espacamento:"15",
     incluiDiagonal:true,
     nTravHoriz:"1",
@@ -451,6 +494,7 @@ function PortaoCalc() {
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
+  const setEst = (A,B,e) => setForm(f => ({...f, estA:A, estB:B, estE:e}));
 
   function calcular() {
     const L = parseFloat(form.largura); const H = parseFloat(form.altura);
@@ -460,9 +504,11 @@ function PortaoCalc() {
     const esp = parseFloat(form.espacamento) / 100;
 
     // Espessura do perfil estrutural em metros (ex: 50×50 → 0.05m)
-    const espEst = getEsp(form.perfilEst);
-    const nTravH = parseInt(form.nTravHoriz) || 0; // travessas horizontais internas
-    const nTravV = parseInt(form.nTravVert)  || 0; // montantes verticais internos
+    const espEst = Math.max(form.estA, form.estB) / 1000;
+    const pEst   = calcPesoM(form.estA, form.estB, form.estE);
+    const descEst = `Tubo ${form.estA}×${form.estB} e=${form.estE}mm`;
+    const nTravH = parseInt(form.nTravHoriz) || 0;
+    const nTravV = parseInt(form.nTravVert)  || 0;
 
     const compTravSupInf = Lf;                      // sup e inf: por fora
     const compMontante   = H - 2 * espEst;
@@ -491,21 +537,20 @@ function PortaoCalc() {
     const diagComp = form.incluiDiagonal ? Math.sqrt(Lf**2 + H**2) : 0;
 
     const pecas = [];
-    const pEst = PERFIS[form.perfilEst]?.pesoM||0;
     const pPre = PERFIS[form.perfilPre]?.pesoM||0;
 
-    pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
-    pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
-    pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compMontante,   qtd: 2*folhas,     compTotal: 2*folhas*compMontante,       peso: 2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
+    pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
+    pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
+    pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil: descEst, comp: compMontante,   qtd: 2*folhas,     compTotal: 2*folhas*compMontante,       peso: 2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
     if (nTravH > 0) {
-      pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravHoriz, qtd: nTravH*folhas, compTotal: nTravH*folhas*compTravHoriz, peso: nTravH*folhas*compTravHoriz*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravHoriz*100).toFixed(1)}cm` });
+      pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil: descEst, comp: compTravHoriz, qtd: nTravH*folhas, compTotal: nTravH*folhas*compTravHoriz, peso: nTravH*folhas*compTravHoriz*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravHoriz*100).toFixed(1)}cm` });
     }
     if (nTravV > 0) {
-      pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil: PERFIS[form.perfilEst]?.desc, comp: compTravVert,  qtd: nTravV*folhas, compTotal: nTravV*folhas*compTravVert,  peso: nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
+      pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil: descEst, comp: compTravVert,  qtd: nTravV*folhas, compTotal: nTravV*folhas*compTravVert,  peso: nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
     }
 
     if (form.incluiDiagonal && diagComp > 0) {
-      pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: PERFIS[form.perfilEst]?.desc, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
+      pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: descEst, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
     }
 
     if (nPreenchi > 0) {
@@ -529,7 +574,7 @@ function PortaoCalc() {
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV });
+    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst });
   }
 
   return (
@@ -552,7 +597,7 @@ function PortaoCalc() {
         <div className="section">
           <div className="section-header">🔩 Perfis</div>
           <div className="section-body">
-            <div className="field"><label>Perfil estrutural</label><select value={form.perfilEst} onChange={e=>set("perfilEst",e.target.value)}>{perfisEstrutura().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
+            <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural" />
             <div className="field"><label>Perfil de preenchimento</label><select value={form.perfilPre} onChange={e=>set("perfilPre",e.target.value)}>{perfisPreenchimento().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
             <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
             <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="100" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
@@ -564,8 +609,8 @@ function PortaoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
-        <ListaCorte pecas={result.pecas} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
+        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={form.perfilPre} />
+        <ListaCorte pecas={result.pecas} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={form.perfilPre} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
