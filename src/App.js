@@ -97,9 +97,9 @@ function perfisEstrutura() { return Object.entries(PERFIS); }
 function perfisPreenchimento() { return Object.entries(PERFIS); }
 
 // Dimensões disponíveis para seleção
-const DIMS_A  = [20,25,30,38,40,50,60,70,76,80,90,100,120,150,200]; // lado maior mm
-const DIMS_B  = [20,25,30,38,40,50,60,70,76,80,90,100,120,150,200]; // lado menor mm
-const DIMS_E  = [1.5,2,2.5,3,3.5,4,5,6];                             // espessura mm
+const DIMS_A  = [10,12,15,20,25,30,38,40,50,60,70,76,80,90,100,120,150,200];
+const DIMS_B  = [10,12,15,20,25,30,38,40,50,60,70,76,80,90,100,120,150,200];
+const DIMS_E  = [1,1.5,2,2.5,3,3.5,4,5,6];
 
 // Fórmula: Peso (kg/m) = 7,85 × (A+B−2e) × e × 0,001 × 2
 // (fator 2 porque são 4 faces: 2×(A-e) + 2×(B-e) = 2(A+B-2e))
@@ -338,6 +338,9 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
   const pecasEst = pecas.filter(p => p.tipo === "estrutura" || (p.tipo === "diagonal" && p.qtd > 0));
   const pecasPre = pecas.filter(p => p.tipo === "preenchimento");
   const temDoisPerfis = perfilEst !== perfilPre && pecasPre.length > 0;
+  const descrEst = pecasEst.length > 0 ? pecasEst[0].perfil : (PERFIS[perfilEst]?.desc || perfilEst);
+  const descrPre = pecasPre.length > 0 ? pecasPre[0].perfil : (PERFIS[perfilPre]?.desc || perfilPre);
+
   return (
     <>
     <div className="drawing-box">
@@ -384,10 +387,10 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
       </div>
     </div>
     {temDoisPerfis ? (<>
-      <PainelBarras pecas={pecasEst} perfil={PERFIS[perfilEst]?.desc || perfilEst} />
-      <PainelBarras pecas={pecasPre} perfil={PERFIS[perfilPre]?.desc || perfilPre} />
+      <PainelBarras pecas={pecasEst} perfil={descrEst} />
+      <PainelBarras pecas={pecasPre} perfil={descrPre} />
     </>) : (
-      <PainelBarras pecas={pecas} perfil={PERFIS[perfilEst]?.desc || perfilEst} />
+      <PainelBarras pecas={pecas} perfil={descrEst} />
     )}
     </>
   );
@@ -485,7 +488,7 @@ function PortaoCalc() {
   const [form, setForm] = useState({
     largura:"", altura:"", folhas:"2",
     estA:50, estB:50, estE:3,
-    perfilPre:"30x30x2",
+    preA:30, preB:30, preE:2,
     oriPreenchi:"horizontal", espacamento:"15",
     incluiDiagonal:true,
     nTravHoriz:"1",
@@ -494,6 +497,7 @@ function PortaoCalc() {
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
   const setEst = (A,B,e) => setForm(f => ({...f, estA:A, estB:B, estE:e}));
+  const setPre = (A,B,e) => setForm(f => ({...f, preA:A, preB:B, preE:e}));
 
   function calcular() {
     const L = parseFloat(form.largura); const H = parseFloat(form.altura);
@@ -536,7 +540,8 @@ function PortaoCalc() {
     const diagComp = form.incluiDiagonal ? Math.sqrt(Lf**2 + H**2) : 0;
 
     const pecas = [];
-    const pPre = PERFIS[form.perfilPre]?.pesoM||0;
+    const pPre   = calcPesoM(form.preA, form.preB, form.preE);
+    const descPre = `Tubo ${form.preA}×${form.preB} e=${form.preE}mm`;
 
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
@@ -554,26 +559,24 @@ function PortaoCalc() {
 
     if (nPreenchi > 0) {
       if (form.oriPreenchi === "horizontal") {
-        // Horizontal: interrompido pelos montantes verticais internos
         const qtdH = nPreenchi * folhas * nColunas;
         const obsH = nTravV > 0
           ? `(largInt − ${nTravV}×${(espEst*100).toFixed(1)}cm) ÷ ${nColunas} = ${(compPreHCell*100).toFixed(1)}cm`
           : `Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compPreHCell*100).toFixed(1)}cm`;
-        pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
+        pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: descPre, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
       } else {
-        // Vertical: interrompido pelas travessas horizontais internas
         const qtdV = nPreenchi * folhas * nSegmentos;
         const obsV = nTravH > 0
           ? `(altInt − ${nTravH}×${(espEst*100).toFixed(1)}cm) ÷ ${nSegmentos} = ${(compPreV*100).toFixed(1)}cm`
           : `altInterna = ${(compPreV*100).toFixed(1)}cm`;
-        pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: PERFIS[form.perfilPre]?.desc, comp: compPreV, qtd: qtdV, compTotal: qtdV*compPreV, peso: qtdV*compPreV*pPre, obs: obsV });
+        pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreV, qtd: qtdV, compTotal: qtdV*compPreV, peso: qtdV*compPreV*pPre, obs: obsV });
       }
     }
 
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst });
+    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst, descPre });
   }
 
   return (
@@ -597,7 +600,7 @@ function PortaoCalc() {
           <div className="section-header">🔩 Perfis</div>
           <div className="section-body">
             <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural" />
-            <div className="field"><label>Perfil de preenchimento</label><select value={form.perfilPre} onChange={e=>set("perfilPre",e.target.value)}>{perfisPreenchimento().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
+            <PerfilEstSelector A={form.preA} B={form.preB} e={form.preE} onChange={setPre} label="Perfil de preenchimento" />
             <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
             <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="100" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
           </div>
@@ -608,8 +611,8 @@ function PortaoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={form.perfilPre} />
-        <ListaCorte pecas={result.pecas} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={form.perfilPre} />
+        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
+        <ListaCorte pecas={result.pecas} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
