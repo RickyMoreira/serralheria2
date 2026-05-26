@@ -158,7 +158,7 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
 // ─── LISTA DE CORTE ──────────────────────────────────────────────────────────
 const PECA_CORES = {
   "Travessa superior":  { bg: "#0d1a2e", cor: "#4a9eff" },
-  "Travessa inferior":  { bg: "#0d1a2e", cor: "#74b8ff" },
+  "Travessa inferior":  { bg: "#1a1a1a", cor: "#1a1a1a" },
   "Montante vertical":  { bg: "#1a0d2e", cor: "#b47aff" },
   "Travessa horizontal":{ bg: "#0d1e2e", cor: "#40d0ff" },
   "Travessa vertical":  { bg: "#1a0a2e", cor: "#d070ff" },
@@ -265,14 +265,14 @@ function PainelBarras({ pecas, perfil }) {
               { label: "Emendas", valor: resultado.nEmendas > 0 ? `${resultado.nEmendas} junta${resultado.nEmendas>1?"s":""}` : "Nenhuma", cor: resultado.nEmendas > 0 ? "#e07020" : "#6fcf6f" },
             ].map((item, i) => (
               <div key={i} style={{ background: "#1a1a1a", border: `1px solid ${item.cor}33`, borderRadius: 4, padding: "10px 16px", flex: 1, minWidth: 120 }}>
-                <div style={{ fontFamily: "monospace", fontSize: 10, color: "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{item.label}</div>
+                <div style={{ fontFamily: "monospace", fontSize: 10, color: "#bbb", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{item.label}</div>
                 <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: item.grande ? 32 : 20, color: item.cor, letterSpacing: 2 }}>{item.valor}</div>
               </div>
             ))}
           </div>
 
           {/* Visualização das barras */}
-          <div style={{ fontFamily: "monospace", fontSize: 11, color: "#666", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
+          <div style={{ fontFamily: "monospace", fontSize: 11, color: "#bbb", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
             {perfil} — {tamanho}m por barra
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -280,7 +280,7 @@ function PainelBarras({ pecas, perfil }) {
               const t = parseFloat(tamanho);
               return (
                 <div key={bi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: "monospace", fontSize: 10, color: "#555", minWidth: 24, textAlign: "right" }}>#{bi+1}</span>
+                  <span style={{ fontFamily: "monospace", fontSize: 10, color: "#ccc", minWidth: 24, textAlign: "right" }}>#{bi+1}</span>
                   <div style={{ flex: 1, height: 22, background: "#1a1a1a", borderRadius: 2, overflow: "hidden", display: "flex", border: "1px solid #2a2a2a" }}>
                     {barra.pecas.map((peca, pi) => (
                       <div key={pi} title={`${peca.nome}: ${(peca.comp*100).toFixed(1)}cm`}
@@ -289,7 +289,7 @@ function PainelBarras({ pecas, perfil }) {
                     {/* Sobra */}
                     {barra.restante > 0.001 && (
                       <div style={{ width: `${(barra.restante/t)*100}%`, background: "#2a2a2a", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontFamily: "monospace", fontSize: 9, color: "#555" }}>{(barra.restante*100).toFixed(0)}cm</span>
+                        <span style={{ fontFamily: "monospace", fontSize: 9, color: "#ccc" }}>{(barra.restante*100).toFixed(0)}cm</span>
                       </div>
                     )}
                   </div>
@@ -299,11 +299,11 @@ function PainelBarras({ pecas, perfil }) {
           </div>
           <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10 }}>
             {Object.entries(PECA_CORES).filter(([nome]) => pecas.some(p => p.nome === nome)).map(([nome, {cor}]) => (
-              <div key={nome} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#888" }}>
+              <div key={nome} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#ccc" }}>
                 <div style={{ width: 16, height: 10, background: cor, borderRadius: 1 }} />{nome}
               </div>
             ))}
-            <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#555" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#ccc" }}>
               <div style={{ width: 16, height: 10, background: "#2a2a2a", borderRadius: 1 }} />Sobra
             </div>
           </div>
@@ -346,16 +346,17 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
           <tbody>
             {sorted.map((p, i) => {
               const { bg, cor } = getPecaCor(p.nome);
+              const isBlack = cor === "#1a1a1a";
               return (
                 <tr key={i} style={{ background: bg }}>
-                  <td style={{ color: "#555" }}>{i + 1}</td>
-                  <td><span style={{ background: bg, border: `1px solid ${cor}`, color: cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
-                  <td style={{ color: "#888" }}>{p.perfil}</td>
-                  <td style={{ color: cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(1)} cm</td>
+                  <td style={{ color: "#fff" }}>{i + 1}</td>
+                  <td><span style={{ background: isBlack ? "#1a1a1a" : bg, border: `1px solid ${isBlack ? "#aaa" : cor}`, color: isBlack ? "#fff" : cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
+                  <td style={{ color: "#ddd" }}>{p.perfil}</td>
+                  <td style={{ color: isBlack ? "#fff" : cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(1)} cm</td>
                   <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
                   <td style={{ color: "#ccc" }}>{p.compTotal.toFixed(2)}</td>
                   <td style={{ color: "#ccc" }}>{p.peso.toFixed(2)}</td>
-                  <td style={{ color: "#555", fontSize: 10 }}>{p.obs || "—"}</td>
+                  <td style={{ color: "#bbb", fontSize: 10 }}>{p.obs || "—"}</td>
                 </tr>
               );
             })}
