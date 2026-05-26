@@ -107,9 +107,8 @@ function calcPesoM(A, B, e) {
   return 7.85 * 2 * (A + B - 2 * e) * e * 0.001;
 }
 
-// Constrói chave e desc do perfil customizado
+// Constrói chave do perfil customizado
 function perfilKey(A, B, e) { return `${A}x${B}x${e}`; }
-function perfilDesc(A, B, e) { return `Tubo ${A}×${B} e=${e}mm — ${calcPesoM(A,B,e).toFixed(2)} kg/m`; }
 
 // Componente seletor de perfil estrutural (3 dropdowns)
 function PerfilEstSelector({ A, B, e, onChange, label }) {
