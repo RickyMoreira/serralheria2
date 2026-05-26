@@ -278,20 +278,52 @@ function PainelBarras({ pecas, perfil }) {
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {resultado.barras.map((barra, bi) => {
               const t = parseFloat(tamanho);
+              const sobraW = barra.restante > 0.001 ? barra.restante / t : 0;
               return (
                 <div key={bi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontFamily: "monospace", fontSize: 10, color: "#ccc", minWidth: 24, textAlign: "right" }}>#{bi+1}</span>
-                  <div style={{ flex: 1, height: 22, background: "#1a1a1a", borderRadius: 2, overflow: "hidden", display: "flex", border: "1px solid #2a2a2a" }}>
-                    {barra.pecas.map((peca, pi) => (
-                      <div key={pi} title={`${peca.nome}: ${(peca.comp*100).toFixed(1)}cm`}
-                        style={{ width: `${(peca.comp/t)*100}%`, background: peca.cor, borderRight: "1px solid #0a0a0a", height: "100%", minWidth: 1 }} />
-                    ))}
-                    {/* Sobra */}
-                    {barra.restante > 0.001 && (
-                      <div style={{ width: `${(barra.restante/t)*100}%`, background: "#2a2a2a", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontFamily: "monospace", fontSize: 9, color: "#ccc" }}>{(barra.restante*100).toFixed(0)}cm</span>
-                      </div>
-                    )}
+                  <div style={{ flex: 1, position: "relative", height: 24 }}>
+                    <svg width="100%" height="24" style={{ display: "block", borderRadius: 2, overflow: "hidden", border: "1px solid #2a2a2a" }}>
+                      <defs>
+                        <pattern id={`hatch${bi}`} width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(90)">
+                          <line x1="0" y1="0" x2="0" y2="6" stroke="#555" strokeWidth="1.5" />
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="24" fill="#1a1a1a" />
+                      {/* Peças */}
+                      {(() => {
+                        let cx = 0;
+                        return barra.pecas.map((peca, pi) => {
+                          const pw = (peca.comp / t) * 100;
+                          const el = (
+                            <g key={pi}>
+                              <rect x={`${cx}%`} y="0" width={`${pw}%`} height="24" fill={peca.cor} />
+                              <line x1={`${cx+pw}%`} y1="0" x2={`${cx+pw}%`} y2="24" stroke="#0a0a0a" strokeWidth="1" />
+                            </g>
+                          );
+                          cx += pw;
+                          return el;
+                        });
+                      })()}
+                      {/* Sobra com hachura */}
+                      {sobraW > 0 && (() => {
+                        const pecasW = barra.pecas.reduce((s, p) => s + (p.comp/t)*100, 0);
+                        return (
+                          <g>
+                            <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill={`url(#hatch${bi})`} />
+                            <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill="#2a2a2a" opacity="0.4" />
+                            <text
+                              x={`${pecasW + sobraW*50}%`}
+                              y="15"
+                              textAnchor="middle"
+                              fill="#aaa"
+                              fontSize="8"
+                              fontFamily="monospace"
+                            >{(barra.restante*100).toFixed(0)}cm</text>
+                          </g>
+                        );
+                      })()}
+                    </svg>
                   </div>
                 </div>
               );
@@ -304,7 +336,15 @@ function PainelBarras({ pecas, perfil }) {
               </div>
             ))}
             <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#ccc" }}>
-              <div style={{ width: 16, height: 10, background: "#2a2a2a", borderRadius: 1 }} />Sobra
+              <svg width="16" height="10" style={{borderRadius:1}}>
+                <defs>
+                  <pattern id="hatchLeg" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(90)">
+                    <line x1="0" y1="0" x2="0" y2="4" stroke="#555" strokeWidth="1.2" />
+                  </pattern>
+                </defs>
+                <rect width="16" height="10" fill="url(#hatchLeg)" />
+                <rect width="16" height="10" fill="#2a2a2a" opacity="0.4" />
+              </svg>Sobra
             </div>
           </div>
         </div>
