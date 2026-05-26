@@ -66,35 +66,6 @@ const styles = `
   .total-row td { color: #f5a623 !important; border-top: 2px solid #333 !important; }
 `;
 
-// ─── PERFIS ──────────────────────────────────────────────────────────────────
-const PERFIS = {
-  // Quadrados
-  "30x30x2":   { desc: "Tubo 30×30 e=2mm",   pesoM: 1.78, tipo: "quadrado" },
-  "40x40x2":   { desc: "Tubo 40×40 e=2mm",   pesoM: 2.42, tipo: "quadrado" },
-  "40x40x3":   { desc: "Tubo 40×40 e=3mm",   pesoM: 3.50, tipo: "quadrado" },
-  "50x50x2":   { desc: "Tubo 50×50 e=2mm",   pesoM: 3.07, tipo: "quadrado" },
-  "50x50x3":   { desc: "Tubo 50×50 e=3mm",   pesoM: 4.47, tipo: "quadrado" },
-  "60x60x3":   { desc: "Tubo 60×60 e=3mm",   pesoM: 5.45, tipo: "quadrado" },
-  "76x76x3":   { desc: "Tubo 76×76 e=3mm",   pesoM: 6.87, tipo: "quadrado" },
-  // Retangulares
-  "20x30x2":   { desc: "Tubo 20×30 e=2mm",   pesoM: 1.42, tipo: "retangular" },
-  "30x40x2":   { desc: "Tubo 30×40 e=2mm",   pesoM: 1.78, tipo: "retangular" },
-  "40x20x2":   { desc: "Tubo 40×20 e=2mm",   pesoM: 1.78, tipo: "retangular" },
-  "40x50x2":   { desc: "Tubo 40×50 e=2mm",   pesoM: 2.42, tipo: "retangular" },
-  "50x30x2":   { desc: "Tubo 50×30 e=2mm",   pesoM: 2.42, tipo: "retangular" },
-  "50x60x2":   { desc: "Tubo 50×60 e=2mm",   pesoM: 3.07, tipo: "retangular" },
-  "60x40x2":   { desc: "Tubo 60×40 e=2mm",   pesoM: 3.07, tipo: "retangular" },
-  "60x40x3":   { desc: "Tubo 60×40 e=3mm",   pesoM: 4.47, tipo: "retangular" },
-  "80x40x2":   { desc: "Tubo 80×40 e=2mm",   pesoM: 3.60, tipo: "retangular" },
-  "80x40x3":   { desc: "Tubo 80×40 e=3mm",   pesoM: 5.45, tipo: "retangular" },
-  "100x50x2":  { desc: "Tubo 100×50 e=2mm",  pesoM: 4.52, tipo: "retangular" },
-  "100x50x3":  { desc: "Tubo 100×50 e=3mm",  pesoM: 6.71, tipo: "retangular" },
-  "100x50x4":  { desc: "Tubo 100×50 e=4mm",  pesoM: 8.78, tipo: "retangular" },
-  "120x60x3":  { desc: "Tubo 120×60 e=3mm",  pesoM: 8.13, tipo: "retangular" },
-};
-
-function perfisEstrutura() { return Object.entries(PERFIS); }
-function perfisPreenchimento() { return Object.entries(PERFIS); }
 
 // Dimensões disponíveis para seleção
 const DIMS_A  = [10,12,15,20,25,30,38,40,50,60,70,76,80,90,100,120,150,200];
@@ -137,18 +108,9 @@ function PerfilEstSelector({ A, B, e, onChange, label }) {
   );
 }
 
-// Extrai a dimensão maior do perfil em metros (ex: "50x50x3" → 0.050, "100x50x3" → 0.100, "bc_25x3" → 0.025)
-function getEsp(key) {
-  if (!key) return 0;
-  const parts = key.replace("bc_","").split("x");
-  const vals = parts.map(p => parseFloat(p)).filter(n => !isNaN(n));
-  if (vals.length === 0) return 0;
-  return Math.max(...vals) / 1000; // mm → m
-}
 
 
-
-// ─── SVG helpers ─────────────────────────────────────────────────────────────
+// ─── SVG helpers// ─── SVG helpers ─────────────────────────────────────────────────────────────
 function Defs() {
   return (
     <defs>
@@ -338,8 +300,8 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
   const pecasEst = pecas.filter(p => p.tipo === "estrutura" || (p.tipo === "diagonal" && p.qtd > 0));
   const pecasPre = pecas.filter(p => p.tipo === "preenchimento");
   const temDoisPerfis = perfilEst !== perfilPre && pecasPre.length > 0;
-  const descrEst = pecasEst.length > 0 ? pecasEst[0].perfil : (PERFIS[perfilEst]?.desc || perfilEst);
-  const descrPre = pecasPre.length > 0 ? pecasPre[0].perfil : (PERFIS[perfilPre]?.desc || perfilPre);
+  const descrEst = pecasEst.length > 0 ? pecasEst[0].perfil : perfilEst;
+  const descrPre = pecasPre.length > 0 ? pecasPre[0].perfil : perfilPre;
 
   return (
     <>
@@ -477,7 +439,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Montante vertical"].cor}} />Montante vertical</div>
         {(nMeio||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa horizontal"].cor}} />Travessa horizontal</div>}
         {(nTravV||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa vertical"].cor}} />Travessa vertical</div>}
-        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />{PERFIS[perfilPre]?.desc} — Preenchimento</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />Preenchimento</div>
         {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Diagonal"].cor, height:3}} />Diagonal</div>}
       </div>
     </div>
@@ -658,59 +620,79 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
         {nPostes>1 && <Cota x1={postesX[0]} y1={oy+dh} x2={postesX[1]} y2={oy+dh} label={`${(L/(nPostes-1)).toFixed(2)} m`} offset={cotaH+22} orient="h" />}
       </svg>
       <div className="legend-box">
-        <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />{PERFIS[perfilEst]?.desc} — Postes e travessas</div>
-        <div className="legend-item"><div className="legend-swatch" style={{background:"#6fcf6f"}} />{PERFIS[perfilPre]?.desc} — Preenchimento {oriPreenchi}</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />Postes e travessas</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background:"#6fcf6f"}} />Preenchimento {oriPreenchi}</div>
       </div>
     </div>
   );
 }
 
 function ParapeitoCalc() {
-  const [form, setForm] = useState({ comprimento:"", altura:"", perfilEst:"50x50x3", perfilPre:"30x30x2", oriPreenchi:"horizontal", espacamento:"12", postesEsp:"200" });
+  const [form, setForm] = useState({
+    comprimento:"", altura:"",
+    estA:50, estB:50, estE:3,
+    preA:30, preB:30, preE:2,
+    oriPreenchi:"horizontal", espacamento:"12",
+    postesEsp:"200",
+    nTravHoriz:"0", nTravVert:"0",
+  });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const setEst = (A,B,e) => setForm(f=>({...f, estA:A, estB:B, estE:e}));
+  const setPre = (A,B,e) => setForm(f=>({...f, preA:A, preB:B, preE:e}));
 
   function calcular() {
     const L = parseFloat(form.comprimento); const H = parseFloat(form.altura);
     if (!L||!H||L<=0||H<=0) return;
     const espPoste = parseFloat(form.postesEsp)/100;
-    const nPostes = Math.ceil(L/espPoste)+1;
-    const esp = parseFloat(form.espacamento)/100;
-    const espEst = getEsp(form.perfilEst); // espessura do perfil estrutural em metros
+    const nPostes  = Math.ceil(L/espPoste)+1;
+    const esp      = parseFloat(form.espacamento)/100;
+    const espEst   = Math.max(form.estA, form.estB)/1000;
+    const pEst     = calcPesoM(form.estA, form.estB, form.estE);
+    const descEst  = `Tubo ${form.estA}×${form.estB} e=${form.estE}mm`;
+    const pPre     = calcPesoM(form.preA, form.preB, form.preE);
+    const descPre  = `Tubo ${form.preA}×${form.preB} e=${form.preE}mm`;
+    const nTravH   = parseInt(form.nTravHoriz)||0;
+    const nTravV   = parseInt(form.nTravVert)||0;
 
-    let nEl = 0;
-    if (form.oriPreenchi==="horizontal") nEl = Math.max(0,Math.floor(H/esp)-1);
-    else nEl = Math.max(0,Math.floor(L/esp)-1);
+    const vao         = L/(nPostes-1||1);
+    const compPoste   = H;
+    const compTravessa = L;
+    // Preenchimento horizontal: interrompido pelos postes + travessas verticais internas
+    const largVao     = vao - 2*espEst;
+    const nColVao     = nTravV+1;
+    const compPreH    = nTravV>0 ? (largVao - nTravV*espEst)/nColVao : largVao;
+    // Preenchimento vertical: interrompido pelas travessas horizontais internas
+    const altInterna  = H - 2*espEst;
+    const nSegH       = nTravH+1;
+    const compPreV    = nTravH>0 ? (altInterna - nTravH*espEst)/nSegH : altInterna;
 
-    // MONTAGEM PARAPEITO:
-    // Postes: altura total (passam por fora, travessas encaixam entre eles)
-    // Travessas sup/inf: comprimento total L (passam de posta a poste por fora)
-    // Preenchimento horizontal: por dentro dos postes (vão − 2× poste)
-    // Preenchimento vertical: por dentro das travessas (H − 2× travessa)
-    const vao = L / (nPostes - 1 || 1); // distância entre postes
-    const compPoste   = H;                      // poste: altura total
-    const compTravessa = L;                     // travessa: comprimento total
-    const compPreH    = vao - 2 * espEst;       // horizontal: vão − 2 postes
-    const compPreV    = H - 2 * espEst;         // vertical: H − sup − inf
+    let nEl=0;
+    if (form.oriPreenchi==="horizontal") nEl=Math.max(0,Math.floor(H/esp)-1);
+    else nEl=Math.max(0,Math.floor(vao/esp)-1);
 
-    const pEst = PERFIS[form.perfilEst]?.pesoM||0;
-    const pPre = PERFIS[form.perfilPre]?.pesoM||0;
-
-    const pecas = [];
-    pecas.push({ nome:"Poste vertical",   tipo:"estrutura",    perfil:PERFIS[form.perfilEst]?.desc, comp:compPoste,    qtd:nPostes, compTotal:nPostes*compPoste,    peso:nPostes*compPoste*pEst,    obs:"altura total" });
-    pecas.push({ nome:"Travessa superior", tipo:"estrutura",   perfil:PERFIS[form.perfilEst]?.desc, comp:compTravessa, qtd:1,       compTotal:compTravessa,           peso:compTravessa*pEst,         obs:"comprimento total" });
-    pecas.push({ nome:"Travessa inferior", tipo:"estrutura",   perfil:PERFIS[form.perfilEst]?.desc, comp:compTravessa, qtd:1,       compTotal:compTravessa,           peso:compTravessa*pEst,         obs:"comprimento total" });
-    if (nEl>0) {
-      const compEl = form.oriPreenchi==="horizontal" ? compPreH : compPreV;
-      const obs = form.oriPreenchi==="horizontal"
-        ? `vão − 2×${(espEst*100).toFixed(0)}cm postes`
-        : `H − 2×${(espEst*100).toFixed(0)}cm travessas`;
-      pecas.push({ nome: form.oriPreenchi==="horizontal"?"Barra horizontal":"Barra vertical", tipo:"preenchimento", perfil:PERFIS[form.perfilPre]?.desc, comp:compEl, qtd:nEl, compTotal:nEl*compEl, peso:nEl*compEl*pPre, obs });
+    const pecas=[];
+    pecas.push({nome:"Poste vertical",    tipo:"estrutura",    perfil:descEst, comp:compPoste,    qtd:nPostes,   compTotal:nPostes*compPoste,    peso:nPostes*compPoste*pEst,       obs:`${(compPoste*100).toFixed(1)}cm — altura total`});
+    pecas.push({nome:"Travessa superior", tipo:"estrutura",    perfil:descEst, comp:compTravessa, qtd:1,         compTotal:compTravessa,          peso:compTravessa*pEst,            obs:`${(compTravessa*100).toFixed(1)}cm — comprimento total`});
+    pecas.push({nome:"Travessa inferior", tipo:"estrutura",    perfil:descEst, comp:compTravessa, qtd:1,         compTotal:compTravessa,          peso:compTravessa*pEst,            obs:`${(compTravessa*100).toFixed(1)}cm — comprimento total`});
+    if(nTravH>0) pecas.push({nome:"Travessa horizontal",tipo:"estrutura",perfil:descEst,comp:compTravessa,qtd:nTravH,compTotal:nTravH*compTravessa,peso:nTravH*compTravessa*pEst,obs:`${(compTravessa*100).toFixed(1)}cm — comprimento total`});
+    if(nTravV>0) {
+      const compTravV = H - 2*espEst;
+      pecas.push({nome:"Travessa vertical",tipo:"estrutura",perfil:descEst,comp:compTravV,qtd:nTravV*(nPostes-1),compTotal:nTravV*(nPostes-1)*compTravV,peso:nTravV*(nPostes-1)*compTravV*pEst,obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravV*100).toFixed(1)}cm`});
+    }
+    if(nEl>0) {
+      if(form.oriPreenchi==="horizontal") {
+        const qtd = nEl*(nPostes-1)*nColVao;
+        pecas.push({nome:"Barra horizontal",tipo:"preenchimento",perfil:descPre,comp:compPreH,qtd,compTotal:qtd*compPreH,peso:qtd*compPreH*pPre,obs:`vão − postes${nTravV>0?` − travessas`:""} = ${(compPreH*100).toFixed(1)}cm`});
+      } else {
+        const qtd = nEl*(nPostes-1)*nSegH;
+        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`altInt${nTravH>0?` − travessas`:""} = ${(compPreV*100).toFixed(1)}cm`});
+      }
     }
 
-    const pesoTotal = pecas.reduce((s,p)=>s+p.peso,0);
-    const mTotal = pecas.reduce((s,p)=>s+p.compTotal,0);
-    setResult({ pecas, pesoTotal:pesoTotal.toFixed(1), mTotal:mTotal.toFixed(2), L, H, nPostes, nEl });
+    const pesoTotal=pecas.reduce((s,p)=>s+p.peso,0);
+    const mTotal=pecas.reduce((s,p)=>s+p.compTotal,0);
+    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nPostes,nEl,nTravH,nTravV,descEst,descPre});
   }
 
   return (
@@ -722,13 +704,15 @@ function ParapeitoCalc() {
             <div className="field"><label>Comprimento <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.comprimento} onChange={e=>set("comprimento",e.target.value)} placeholder="Ex: 10.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.8" step="0.05" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 1.10" /></div>
             <div className="field"><label>Espaçamento entre postes <span className="unit">(cm)</span></label><input type="number" min="50" max="300" step="10" value={form.postesEsp} onChange={e=>set("postesEsp",e.target.value)} /></div>
+            <div className="field"><label>Travessas horizontais internas</label><select value={form.nTravHoriz} onChange={e=>set("nTravHoriz",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
+            <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
           </div>
         </div>
         <div className="section">
           <div className="section-header">🔩 Perfis</div>
           <div className="section-body">
-            <div className="field"><label>Perfil dos postes / travessas</label><select value={form.perfilEst} onChange={e=>set("perfilEst",e.target.value)}>{perfisEstrutura().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
-            <div className="field"><label>Perfil de preenchimento</label><select value={form.perfilPre} onChange={e=>set("perfilPre",e.target.value)}>{perfisPreenchimento().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
+            <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural (postes/travessas)" />
+            <PerfilEstSelector A={form.preA} B={form.preB} e={form.preE} onChange={setPre} label="Perfil de preenchimento" />
             <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
             <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="50" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
           </div>
@@ -739,8 +723,8 @@ function ParapeitoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,comprimento:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoParapeito L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
-        <ListaCorte pecas={result.pecas} perfilEst={form.perfilEst} perfilPre={form.perfilPre} />
+        <DesenhoParapeito L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
+        <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
@@ -757,14 +741,19 @@ function ParapeitoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 // GRADE
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoGrade({ L, H, nV, nH, perfilMoldura, perfilBarra }) {
+function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
   const W = 480; const SH = 340;
   const cotaV = 50; const cotaH = 36; const pad = 14; const padR = 70;
   const dw = W - cotaV - pad - padR; const dh = SH - cotaH - pad - 20;
   const ox = cotaV; const oy = 20;
 
-  const barrasV = []; for(let i=1;i<=Math.min(nV,30);i++) barrasV.push(ox+(i/(nV+1))*dw);
-  const barrasH = []; for(let i=1;i<=Math.min(nH,25);i++) barrasH.push(oy+(i/(nH+1))*dh);
+  const barrasV=[]; for(let i=1;i<=Math.min(nV,30);i++) barrasV.push(ox+(i/(nV+1))*dw);
+  const barrasH=[]; for(let i=1;i<=Math.min(nH,25);i++) barrasH.push(oy+(i/(nH+1))*dh);
+
+  const corLateral = PECA_CORES["Moldura lateral"].cor;
+  const corTopBot  = PECA_CORES["Moldura superior"].cor;
+  const corBarraV  = PECA_CORES["Barra vertical"].cor;
+  const corTravH   = PECA_CORES["Travessa horizontal"].cor;
 
   return (
     <div className="drawing-box">
@@ -772,58 +761,67 @@ function DesenhoGrade({ L, H, nV, nH, perfilMoldura, perfilBarra }) {
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
         <rect width={W} height={SH} fill="#f5f5f0" />
-        {barrasV.map((bx,i)=><line key={i} x1={bx} y1={oy+3} x2={bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="2" />)}
-        {barrasH.map((by,i)=><line key={i} x1={ox+3} y1={by} x2={ox+dw-3} y2={by} stroke="#6fcf6f" strokeWidth="1.5" opacity="0.7" />)}
-        <rect x={ox} y={oy} width={dw} height={dh} fill="none" stroke="#4a9eff" strokeWidth="4" />
+        {barrasV.map((bx,i)=><line key={i} x1={bx} y1={oy+4} x2={bx} y2={oy+dh-4} stroke={corBarraV} strokeWidth="2" />)}
+        {barrasH.map((by,i)=><line key={i} x1={ox+4} y1={by} x2={ox+dw-4} y2={by} stroke={corTravH} strokeWidth="1.5" />)}
+        <line x1={ox} y1={oy} x2={ox} y2={oy+dh} stroke={corLateral} strokeWidth="5" />
+        <line x1={ox+dw} y1={oy} x2={ox+dw} y2={oy+dh} stroke={corLateral} strokeWidth="5" />
+        <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke={corTopBot} strokeWidth="5" />
+        <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke={corTopBot} strokeWidth="5" />
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={cotaH} orient="h" />
         <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={cotaV} orient="v" />
       </svg>
       <div className="legend-box">
-        <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />{PERFIS[perfilMoldura]?.desc} — Moldura</div>
-        <div className="legend-item"><div className="legend-swatch" style={{background:"#6fcf6f"}} />{PERFIS[perfilBarra]?.desc} — Barras internas</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background:corLateral}} />Lateral — {descMoldura}</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background:corTopBot}} />Sup/Inf — {descMoldura}</div>
+        {nV>0 && <div className="legend-item"><div className="legend-swatch" style={{background:corBarraV}} />Barra vertical — {descBarra}</div>}
+        {nH>0 && <div className="legend-item"><div className="legend-swatch" style={{background:corTravH}} />Travessa horizontal — {descBarra}</div>}
       </div>
     </div>
   );
 }
 
 function GradeCalc() {
-  const [form, setForm] = useState({ largura:"", altura:"", perfilMoldura:"40x40x3", perfilBarra:"30x30x2", oriPreenchi:"vertical", espacamentoV:"10", espacamentoH:"0", temMontanteH:false });
+  const [form, setForm] = useState({
+    largura:"", altura:"",
+    molA:40, molB:40, molE:3,
+    barA:30, barB:30, barE:2,
+    espacamentoV:"10", nTravH:"0",
+  });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
+  const setMol = (A,B,e) => setForm(f=>({...f, molA:A, molB:B, molE:e}));
+  const setBar = (A,B,e) => setForm(f=>({...f, barA:A, barB:B, barE:e}));
 
   function calcular() {
-    const L = parseFloat(form.largura); const H = parseFloat(form.altura);
+    const L=parseFloat(form.largura); const H=parseFloat(form.altura);
     if (!L||!H||L<=0||H<=0) return;
-    const espV = parseFloat(form.espacamentoV)/100;
-    const nV = Math.max(0,Math.floor(L/espV)-1);
-    let nH=0;
-    if (form.temMontanteH&&form.espacamentoH) { const espH=parseFloat(form.espacamentoH)/100; nH=Math.max(0,Math.floor(H/espH)-1); }
+    const espV=parseFloat(form.espacamentoV)/100;
+    const nV=Math.max(0,Math.floor(L/espV)-1);
+    const nH=parseInt(form.nTravH)||0;
 
-    const espMoldura = getEsp(form.perfilMoldura);
-    // MONTAGEM GRADE:
-    // Laterais: altura total (passam por fora, sup/inf encaixam entre elas)
-    // Sup/inf: L − 2× lateral (por dentro das laterais)
-    // Barras verticais: H − 2× moldura sup/inf
-    // Travessas horizontais internas: L − 2× lateral
-    const compLateral   = H;                        // lateral: altura total
-    const compTopBot    = L - 2 * espMoldura;       // sup/inf: por dentro das laterais
-    const compBarraV    = H - 2 * espMoldura;       // vertical: por dentro de sup e inf
-    const compTraversaH = L - 2 * espMoldura;       // travessa interna: por dentro das laterais
+    const espMol   = Math.max(form.molA, form.molB)/1000;
+    const pMol     = calcPesoM(form.molA, form.molB, form.molE);
+    const descMol  = `Tubo ${form.molA}×${form.molB} e=${form.molE}mm`;
+    const pBar     = calcPesoM(form.barA, form.barB, form.barE);
+    const descBar  = `Tubo ${form.barA}×${form.barB} e=${form.barE}mm`;
 
-    const pMol = PERFIS[form.perfilMoldura]?.pesoM||0;
-    const pBar = PERFIS[form.perfilBarra]?.pesoM||0;
-
-    const pecas = [];
-    pecas.push({ nome:"Moldura lateral",   tipo:"estrutura",    perfil:PERFIS[form.perfilMoldura]?.desc, comp:compLateral,   qtd:2,  compTotal:2*compLateral,       peso:2*compLateral*pMol,       obs:"altura total" });
-    pecas.push({ nome:"Moldura superior",  tipo:"estrutura",    perfil:PERFIS[form.perfilMoldura]?.desc, comp:compTopBot,    qtd:1,  compTotal:compTopBot,           peso:compTopBot*pMol,           obs:`L − 2×${(espMoldura*100).toFixed(0)}cm laterais` });
-    pecas.push({ nome:"Moldura inferior",  tipo:"estrutura",    perfil:PERFIS[form.perfilMoldura]?.desc, comp:compTopBot,    qtd:1,  compTotal:compTopBot,           peso:compTopBot*pMol,           obs:`L − 2×${(espMoldura*100).toFixed(0)}cm laterais` });
-    if (nV>0) pecas.push({ nome:"Barra vertical",     tipo:"preenchimento", perfil:PERFIS[form.perfilBarra]?.desc,   comp:compBarraV,    qtd:nV, compTotal:nV*compBarraV,       peso:nV*compBarraV*pBar,       obs:`H − 2×${(espMoldura*100).toFixed(0)}cm moldura` });
-    if (nH>0) pecas.push({ nome:"Travessa horizontal", tipo:"preenchimento", perfil:PERFIS[form.perfilBarra]?.desc,  comp:compTraversaH, qtd:nH, compTotal:nH*compTraversaH,    peso:nH*compTraversaH*pBar,    obs:`L − 2×${(espMoldura*100).toFixed(0)}cm laterais` });
+    const compLateral   = H;
+    const compTopBot    = L - 2*espMol;
+    const compBarraV    = H - 2*espMol;
+    const compTraversaH = L - 2*espMol;
 
     const aberturaOk = espV<=0.11;
-    const pesoTotal = pecas.reduce((s,p)=>s+p.peso,0);
-    const mTotal = pecas.reduce((s,p)=>s+p.compTotal,0);
-    setResult({ pecas, pesoTotal:pesoTotal.toFixed(1), mTotal:mTotal.toFixed(2), L, H, nV, nH, aberturaOk, espVcm:(espV*100).toFixed(0) });
+
+    const pecas=[];
+    pecas.push({nome:"Moldura lateral",    tipo:"estrutura",    perfil:descMol, comp:compLateral,   qtd:2,  compTotal:2*compLateral,        peso:2*compLateral*pMol,        obs:`${(compLateral*100).toFixed(1)}cm — altura total`});
+    pecas.push({nome:"Moldura superior",   tipo:"estrutura",    perfil:descMol, comp:compTopBot,    qtd:1,  compTotal:compTopBot,            peso:compTopBot*pMol,            obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTopBot*100).toFixed(1)}cm`});
+    pecas.push({nome:"Moldura inferior",   tipo:"estrutura",    perfil:descMol, comp:compTopBot,    qtd:1,  compTotal:compTopBot,            peso:compTopBot*pMol,            obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTopBot*100).toFixed(1)}cm`});
+    if(nV>0) pecas.push({nome:"Barra vertical",     tipo:"preenchimento", perfil:descBar, comp:compBarraV,    qtd:nV, compTotal:nV*compBarraV,        peso:nV*compBarraV*pBar,        obs:`H − 2×${(espMol*100).toFixed(1)}cm = ${(compBarraV*100).toFixed(1)}cm`});
+    if(nH>0) pecas.push({nome:"Travessa horizontal", tipo:"preenchimento", perfil:descBar, comp:compTraversaH, qtd:nH, compTotal:nH*compTraversaH,     peso:nH*compTraversaH*pBar,     obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTraversaH*100).toFixed(1)}cm`});
+
+    const pesoTotal=pecas.reduce((s,p)=>s+p.peso,0);
+    const mTotal=pecas.reduce((s,p)=>s+p.compTotal,0);
+    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nV,nH,aberturaOk,espVcm:(espV*100).toFixed(1),descMol,descBar});
   }
 
   return (
@@ -835,18 +833,14 @@ function GradeCalc() {
             <div className="field"><label>Largura <span className="unit">(m)</span></label><input type="number" min="0.2" step="0.05" value={form.largura} onChange={e=>set("largura",e.target.value)} placeholder="Ex: 1.20" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.2" step="0.05" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 2.10" /></div>
             <div className="field"><label>Espaçamento barras verticais <span className="unit">(cm)</span></label><input type="number" min="3" max="30" step="0.5" value={form.espacamentoV} onChange={e=>set("espacamentoV",e.target.value)} /></div>
-            <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
-              <input type="checkbox" id="mh" checked={form.temMontanteH} onChange={e=>set("temMontanteH",e.target.checked)} style={{width:"auto"}} />
-              <label htmlFor="mh" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Adicionar travessas horizontais</label>
-            </div>
-            {form.temMontanteH && <div className="field"><label>Espaçamento travessas <span className="unit">(cm)</span></label><input type="number" min="10" max="100" step="5" value={form.espacamentoH} onChange={e=>set("espacamentoH",e.target.value)} /></div>}
+            <div className="field"><label>Travessas horizontais internas</label><select value={form.nTravH} onChange={e=>set("nTravH",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
           </div>
         </div>
         <div className="section">
           <div className="section-header">🔩 Perfis</div>
           <div className="section-body">
-            <div className="field"><label>Perfil da moldura</label><select value={form.perfilMoldura} onChange={e=>set("perfilMoldura",e.target.value)}>{perfisEstrutura().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
-            <div className="field"><label>Perfil das barras internas</label><select value={form.perfilBarra} onChange={e=>set("perfilBarra",e.target.value)}>{perfisPreenchimento().map(([k,v])=><option key={k} value={k}>{v.desc} — {v.pesoM} kg/m</option>)}</select></div>
+            <PerfilEstSelector A={form.molA} B={form.molB} e={form.molE} onChange={setMol} label="Perfil da moldura" />
+            <PerfilEstSelector A={form.barA} B={form.barB} e={form.barE} onChange={setBar} label="Perfil das barras internas" />
           </div>
         </div>
       </div>
@@ -855,8 +849,8 @@ function GradeCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} perfilMoldura={form.perfilMoldura} perfilBarra={form.perfilBarra} />
-        <ListaCorte pecas={result.pecas} perfilEst={form.perfilMoldura} perfilPre={form.perfilBarra} />
+        <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
+        <ListaCorte pecas={result.pecas} perfilEst={`${form.molA}x${form.molB}x${form.molE}`} perfilPre={`${form.barA}x${form.barB}x${form.barE}`} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
