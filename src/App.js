@@ -552,6 +552,7 @@ function PortaoCalc() {
     nTravVert:"0",
     barraDeslocada: false,
     espacamentoVInf:"8",
+    posBarraDesl:"50",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
@@ -604,7 +605,7 @@ function PortaoCalc() {
 
     // Barra deslocada — posicionada no 1º quarto da altura (de cima para baixo)
     const usaBarraDeslocada = form.barraDeslocada && form.oriPreenchi === "vertical";
-    const posBarraDeslocada = H * 0.25; // 1/4 do topo
+    const posBarraDeslocada = parseFloat(form.posBarraDesl) / 100 || H * 0.25;
     const espInf = parseFloat(form.espacamentoVInf) / 100;
 
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
@@ -681,11 +682,12 @@ function PortaoCalc() {
             </div>
             <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
               <input type="checkbox" id="barraDesl" checked={form.barraDeslocada} onChange={e=>{set("barraDeslocada",e.target.checked); if(e.target.checked) set("oriPreenchi","vertical"); setResult(null);}} style={{width:"auto"}} />
-              <label htmlFor="barraDesl" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Barra horizontal deslocada (1/4 superior)</label>
+              <label htmlFor="barraDesl" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Barra horizontal inferior deslocada</label>
             </div>
-            {form.barraDeslocada && (
+            {form.barraDeslocada && (<>
+              <div className="field"><label>Posição da barra (do topo) <span className="unit">(cm)</span></label><input type="number" min="5" max="200" step="1" value={form.posBarraDesl} onChange={e=>set("posBarraDesl",e.target.value)} placeholder="Ex: 50" /></div>
               <div className="field"><label>Espaçamento barras verticais inferiores <span className="unit">(cm)</span></label><input type="number" min="3" max="30" step="1" value={form.espacamentoVInf} onChange={e=>set("espacamentoVInf",e.target.value)} /></div>
-            )}
+            </>)}
           </div>
         </div>
         <div className="section">
