@@ -81,20 +81,22 @@ function calcPesoM(A, B, e) {
 // Constrói chave do perfil customizado
 function perfilKey(A, B, e) { return `${A}x${B}x${e}`; }
 
-// Componente seletor de perfil estrutural (3 dropdowns)
+// Componente seletor de perfil (3 dropdowns — A, B livres, espessura filtrada)
 function PerfilEstSelector({ A, B, e, onChange, label }) {
-  const peso = calcPesoM(A, B, e);
+  const maior = Math.max(A, B);
+  const menor = Math.min(A, B);
+  const peso = calcPesoM(maior, menor, e);
   return (
     <div className="field">
-      <label>{label || "Perfil estrutural"}</label>
+      <label>{label || "Perfil"}</label>
       <div style={{ display:"flex", gap:6 }}>
         <select value={A} onChange={ev => onChange(parseInt(ev.target.value), B, e)}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
-          {DIMS_A.filter(a => a >= B).map(a => <option key={a} value={a}>{a}mm</option>)}
+          {DIMS_A.map(a => <option key={a} value={a}>{a}mm</option>)}
         </select>
         <select value={B} onChange={ev => onChange(A, parseInt(ev.target.value), e)}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
-          {DIMS_B.filter(b => b <= A).map(b => <option key={b} value={b}>{b}mm</option>)}
+          {DIMS_B.map(b => <option key={b} value={b}>{b}mm</option>)}
         </select>
         <select value={e} onChange={ev => onChange(A, B, parseFloat(ev.target.value))}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
@@ -102,7 +104,7 @@ function PerfilEstSelector({ A, B, e, onChange, label }) {
         </select>
       </div>
       <div style={{ fontFamily:"monospace", fontSize:11, color:"#f5a623", marginTop:4 }}>
-        {A}×{B} e={e}mm → <strong>{peso.toFixed(3)} kg/m</strong>
+        {maior}×{menor} e={e}mm → <strong>{peso.toFixed(3)} kg/m</strong>
       </div>
     </div>
   );
@@ -471,7 +473,7 @@ function PortaoCalc() {
     // Espessura do perfil estrutural em metros (ex: 50×50 → 0.05m)
     const espEst = Math.max(form.estA, form.estB) / 1000;
     const pEst   = calcPesoM(form.estA, form.estB, form.estE);
-    const descEst = `Tubo ${form.estA}×${form.estB} e=${form.estE}mm`;
+    const descEst = `Tubo ${Math.max(form.estA,form.estB)}×${Math.min(form.estA,form.estB)} e=${form.estE}mm`;
     const nTravH = parseInt(form.nTravHoriz) || 0;
     const nTravV = parseInt(form.nTravVert)  || 0;
 
@@ -503,7 +505,7 @@ function PortaoCalc() {
 
     const pecas = [];
     const pPre   = calcPesoM(form.preA, form.preB, form.preE);
-    const descPre = `Tubo ${form.preA}×${form.preB} e=${form.preE}mm`;
+    const descPre = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
 
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
@@ -649,9 +651,9 @@ function ParapeitoCalc() {
     const esp      = parseFloat(form.espacamento)/100;
     const espEst   = Math.max(form.estA, form.estB)/1000;
     const pEst     = calcPesoM(form.estA, form.estB, form.estE);
-    const descEst  = `Tubo ${form.estA}×${form.estB} e=${form.estE}mm`;
+    const descEst  = `Tubo ${Math.max(form.estA,form.estB)}×${Math.min(form.estA,form.estB)} e=${form.estE}mm`;
     const pPre     = calcPesoM(form.preA, form.preB, form.preE);
-    const descPre  = `Tubo ${form.preA}×${form.preB} e=${form.preE}mm`;
+    const descPre  = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
     const nTravH   = parseInt(form.nTravHoriz)||0;
     const nTravV   = parseInt(form.nTravVert)||0;
 
@@ -801,9 +803,9 @@ function GradeCalc() {
 
     const espMol   = Math.max(form.molA, form.molB)/1000;
     const pMol     = calcPesoM(form.molA, form.molB, form.molE);
-    const descMol  = `Tubo ${form.molA}×${form.molB} e=${form.molE}mm`;
+    const descMol  = `Tubo ${Math.max(form.molA,form.molB)}×${Math.min(form.molA,form.molB)} e=${form.molE}mm`;
     const pBar     = calcPesoM(form.barA, form.barB, form.barE);
-    const descBar  = `Tubo ${form.barA}×${form.barB} e=${form.barE}mm`;
+    const descBar  = `Tubo ${Math.max(form.barA,form.barB)}×${Math.min(form.barA,form.barB)} e=${form.barE}mm`;
 
     const compLateral   = H;
     const compTopBot    = L - 2*espMol;
