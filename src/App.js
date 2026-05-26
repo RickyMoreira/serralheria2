@@ -424,7 +424,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
+function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre, usaBarraDeslocada, posBarraDeslocada, espInf, espSup }) {
   // Proporção real: L metros de largura, H metros de altura
   const maxW = 660; const maxDrawH = 400;
   const padL = 14; const padR = 90; const padT = 14; const padB = 52;
@@ -491,7 +491,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
                 <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPreH} strokeWidth="1.5" />
               ))}
               {/* Preenchimento vertical - segmentos interrompidos pelas travessas do meio */}
-              {oriPreenchi === "vertical" && barrasV.map((bx,bi) => {
+              {oriPreenchi === "vertical" && !usaBarraDeslocada && barrasV.map((bx,bi) => {
                 const nSeg = (nMeio||0) + 1;
                 return [...Array(nSeg)].map((_,si) => {
                   const y1seg = oy + (si / nSeg) * dh + 4;
@@ -499,6 +499,26 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
                   return <line key={`${bi}-${si}`} x1={fx+bx} y1={y1seg} x2={fx+bx} y2={y2seg} stroke={corPreV} strokeWidth="1.5" />;
                 });
               })}
+              {/* Preenchimento vertical com barra deslocada */}
+              {oriPreenchi === "vertical" && usaBarraDeslocada && (() => {
+                const yBD = oy + (posBarraDeslocada / H) * dh; // posição da barra deslocada em px
+                // Barras superiores (acima da barra deslocada) — espaçamento normal
+                const nVSup = Math.max(0, Math.floor(fw / (espSup * scale)) - 1);
+                const supBars = []; for(let i=1;i<=nVSup;i++) supBars.push(i * fw/(nVSup+1));
+                // Barras inferiores (abaixo da barra deslocada) — espaçamento menor
+                const nVInf = Math.max(0, Math.floor(fw / (espInf * scale)) - 1);
+                const infBars = []; for(let i=1;i<=nVInf;i++) infBars.push(i * fw/(nVInf+1));
+                return (
+                  <g>
+                    {/* Barra deslocada horizontal */}
+                    <line x1={fx+4} y1={yBD} x2={fx+fw-4} y2={yBD} stroke={corTravH} strokeWidth="3" />
+                    {/* Barras verticais superiores */}
+                    {supBars.map((bx,i)=><line key={`sup-${i}`} x1={fx+bx} y1={oy+4} x2={fx+bx} y2={yBD-2} stroke={corPreV} strokeWidth="1.5" />)}
+                    {/* Barras verticais inferiores — mais densas */}
+                    {infBars.map((bx,i)=><line key={`inf-${i}`} x1={fx+bx} y1={yBD+2} x2={fx+bx} y2={oy+dh-4} stroke={corPreV} strokeWidth="1.5" />)}
+                  </g>
+                );
+              })()}
               {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
               <text x={fx+fw/2} y={oy+dh/2-10} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
             </g>
@@ -530,6 +550,8 @@ function PortaoCalc() {
     incluiDiagonal:true,
     nTravHoriz:"1",
     nTravVert:"0",
+    barraDeslocada: false,
+    espacamentoVInf:"8",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
@@ -580,6 +602,11 @@ function PortaoCalc() {
     const pPre   = calcPesoM(form.preA, form.preB, form.preE);
     const descPre = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
 
+    // Barra deslocada — posicionada no 1º quarto da altura (de cima para baixo)
+    const usaBarraDeslocada = form.barraDeslocada && form.oriPreenchi === "vertical";
+    const posBarraDeslocada = H * 0.25; // 1/4 do topo
+    const espInf = parseFloat(form.espacamentoVInf) / 100;
+
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil: descEst, comp: compMontante,   qtd: 2*folhas,     compTotal: 2*folhas*compMontante,       peso: 2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
@@ -588,6 +615,12 @@ function PortaoCalc() {
     }
     if (nTravV > 0) {
       pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil: descEst, comp: compTravVert,  qtd: nTravV*folhas, compTotal: nTravV*folhas*compTravVert,  peso: nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
+    }
+
+    // Barra deslocada horizontal (estrutura) — no 1/4 superior
+    if (usaBarraDeslocada) {
+      const compBD = Lf - 2*espEst;
+      pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil: descEst, comp: compBD, qtd: folhas, compTotal: folhas*compBD, peso: folhas*compBD*pEst, obs:`Barra deslocada — 1/4 sup. (${(posBarraDeslocada*100).toFixed(1)}cm do topo)` });
     }
 
     if (form.incluiDiagonal && diagComp > 0) {
@@ -601,6 +634,21 @@ function PortaoCalc() {
           ? `(largInt − ${nTravV}×${(espEst*100).toFixed(1)}cm) ÷ ${nColunas} = ${(compPreHCell*100).toFixed(1)}cm`
           : `Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compPreHCell*100).toFixed(1)}cm`;
         pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: descPre, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
+      } else if (usaBarraDeslocada) {
+        // Parte superior (acima da barra deslocada) — espaçamento normal
+        const altSup = posBarraDeslocada - 2*espEst; // do topo até barra deslocada
+        const compPreVSup = altSup; // barras corridas na parte superior
+        const nVSup = Math.max(0, Math.floor(Lf/esp) - 1);
+        if (nVSup > 0 && compPreVSup > 0) {
+          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVSup, qtd: nVSup*folhas, compTotal: nVSup*folhas*compPreVSup, peso: nVSup*folhas*compPreVSup*pPre, obs:`Parte superior — ${(compPreVSup*100).toFixed(1)}cm` });
+        }
+        // Parte inferior (abaixo da barra deslocada) — espaçamento menor
+        const altInf = H - posBarraDeslocada - 2*espEst;
+        const compPreVInf = altInf;
+        const nVInf = Math.max(0, Math.floor(Lf/espInf) - 1);
+        if (nVInf > 0 && compPreVInf > 0) {
+          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVInf, qtd: nVInf*folhas, compTotal: nVInf*folhas*compPreVInf, peso: nVInf*folhas*compPreVInf*pPre, obs:`Parte inferior — esp. ${(espInf*100).toFixed(1)}cm — ${(compPreVInf*100).toFixed(1)}cm` });
+        }
       } else {
         const qtdV = nPreenchi * folhas * nSegmentos;
         const obsV = nTravH > 0
@@ -613,7 +661,7 @@ function PortaoCalc() {
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst, descPre });
+    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst, descPre, usaBarraDeslocada, posBarraDeslocada, espInf, espSup: esp });
   }
 
   return (
@@ -631,6 +679,13 @@ function PortaoCalc() {
               <input type="checkbox" id="diag" checked={form.incluiDiagonal} onChange={e=>set("incluiDiagonal",e.target.checked)} style={{width:"auto"}} />
               <label htmlFor="diag" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Incluir diagonal (contraventamento)</label>
             </div>
+            <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
+              <input type="checkbox" id="barraDesl" checked={form.barraDeslocada} onChange={e=>{set("barraDeslocada",e.target.checked); if(e.target.checked) set("oriPreenchi","vertical"); setResult(null);}} style={{width:"auto"}} />
+              <label htmlFor="barraDesl" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Barra horizontal deslocada (1/4 superior)</label>
+            </div>
+            {form.barraDeslocada && (
+              <div className="field"><label>Espaçamento barras verticais inferiores <span className="unit">(cm)</span></label><input type="number" min="3" max="30" step="1" value={form.espacamentoVInf} onChange={e=>set("espacamentoVInf",e.target.value)} /></div>
+            )}
           </div>
         </div>
         <div className="section">
@@ -648,7 +703,7 @@ function PortaoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
+        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} usaBarraDeslocada={result.usaBarraDeslocada} posBarraDeslocada={result.posBarraDeslocada} espInf={result.espInf} espSup={result.espSup} />
         <ListaCorte pecas={result.pecas} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
@@ -869,6 +924,8 @@ function GradeCalc() {
     molA:40, molB:40, molE:3,
     barA:30, barB:30, barE:2,
     espacamentoV:"10", nTravH:"0",
+    barraDeslocada: false,
+    espacamentoVInf:"6",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
