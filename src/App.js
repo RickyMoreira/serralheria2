@@ -597,7 +597,29 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
   );
 }
 
-// ─── Defaults para uma região de preenchimento ────────────────────────────────
+// Componente isolado para o input de espaçamento da região
+function RegiaoEspInput({ value, onChange }) {
+  return (
+    <input type="number" min="3" max="100" step="1" value={value}
+      onChange={ev => { ev.stopPropagation(); onChange(ev.target.value); }}
+      style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}} />
+  );
+}
+
+// Componente isolado para o input de posição da travessa
+function TravessaPosInput({ value, max, onChange }) {
+  return (
+    <input
+      type="number"
+      min="1"
+      max={max}
+      step="1"
+      value={value}
+      onChange={ev => { ev.stopPropagation(); onChange(ev.target.value); }}
+      style={{background:"#111",border:"1px solid #40d0ff",color:"#40d0ff",fontFamily:"monospace",fontSize:13,padding:"6px 10px",borderRadius:3,width:"100%"}}
+    />
+  );
+}
 function regiaoDefault(id) {
   return { id, ori:"vertical", esp:"10", preA:30, preB:30, preE:2 };
 }
@@ -807,9 +829,7 @@ function PortaoCalc() {
                   </div>
                   <div className="field">
                     <label>Espaçamento <span className="unit">(cm)</span></label>
-                    <input type="number" min="3" max="100" step="1" value={reg.esp}
-                      onChange={ev=>setRegiao(ri,"esp",ev.target.value)}
-                      style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}} />
+                    <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
                   </div>
                 </div>
                 <div style={{marginTop:10}}>
@@ -822,9 +842,11 @@ function PortaoCalc() {
                   <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,letterSpacing:2,color:"#40d0ff",minWidth:120}}>TRAVESSA HORIZ. {ri+1}</div>
                   <div className="field" style={{flex:1,margin:0}}>
                     <label>Posição desde o topo <span className="unit">(cm)</span></label>
-                    <input type="number" min="1" max={altNum*100-1} step="1" value={form.travHoriz[ri]?.pos || ""}
-                      onChange={ev=>setTravPos(ri,ev.target.value)}
-                      style={{background:"#111",border:"1px solid #40d0ff",color:"#40d0ff",fontFamily:"monospace",fontSize:13,padding:"6px 10px",borderRadius:3,width:"100%"}} />
+                    <TravessaPosInput
+                      value={form.travHoriz[ri]?.pos || ""}
+                      max={altNum*100-1}
+                      onChange={val => setTravPos(ri, val)}
+                    />
                   </div>
                   <button onClick={()=>removeTravH(ri)}
                     style={{background:"transparent",border:"1px solid #e05050",color:"#e05050",borderRadius:3,padding:"6px 12px",cursor:"pointer",fontFamily:"monospace",fontSize:12}}>
