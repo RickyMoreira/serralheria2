@@ -494,7 +494,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
+function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiagonal, perfilEst }) {
   // Proporção real: L metros de largura, H metros de altura
   const maxW = 660; const maxDrawH = 400;
   const padL = 14; const padR = 90; const padT = 14; const padB = 52;
@@ -513,12 +513,6 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
   const ox = padL; const oy = padT;
   const fw = dw / folhas;
 
-  const barrasH = []; const espacH = dh / (nBarrasH + 1);
-  for (let i = 1; i <= nBarrasH; i++) barrasH.push(oy + i * espacH);
-
-  const barrasV = []; const espacV = fw / (nBarrasV + 1);
-  for (let i = 1; i <= nBarrasV; i++) barrasV.push(i * espacV);
-
   return (
     <div className="drawing-box">
       <div className="drawing-header">📐 VISTA FRONTAL — PORTÃO</div>
@@ -534,21 +528,19 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
           const corMontante = PECA_CORES["Montante vertical"].cor;
           const corTravH    = PECA_CORES["Travessa horizontal"].cor;
           const corTravV    = PECA_CORES["Travessa vertical"].cor;
-          const corPreV     = PECA_CORES["Barra vertical"].cor;
-          const corPreH     = PECA_CORES["Barra horizontal"].cor;
           const corDiag     = PECA_CORES["Diagonal"].cor;
+          const travRatios  = travPosRatio || [];
           return (
             <g key={fi}>
-              {/* Travessa superior */}
+              {/* Travessa superior e inferior */}
               <line x1={fx+1} y1={oy} x2={fx+fw-1} y2={oy} stroke={corTravSup} strokeWidth="4" />
-              {/* Travessa inferior */}
               <line x1={fx+1} y1={oy+dh} x2={fx+fw-1} y2={oy+dh} stroke={corTravInf} strokeWidth="4" />
-              {/* Montantes verticais (esquerdo e direito) */}
+              {/* Montantes laterais */}
               <line x1={fx+2} y1={oy+4} x2={fx+2} y2={oy+dh-4} stroke={corMontante} strokeWidth="4" />
               <line x1={fx+fw-2} y1={oy+4} x2={fx+fw-2} y2={oy+dh-4} stroke={corMontante} strokeWidth="4" />
-              {/* Travessas horizontais internas */}
-              {[...Array(nMeio||0)].map((_,mi) => {
-                const my = oy + ((mi+1)/((nMeio||0)+1)) * dh;
+              {/* Travessas horizontais nas posições configuradas */}
+              {travRatios.map((ratio, mi) => {
+                const my = oy + ratio * dh;
                 return <line key={mi} x1={fx+6} y1={my} x2={fx+fw-6} y2={my} stroke={corTravH} strokeWidth="3" />;
               })}
               {/* Travessas verticais internas */}
@@ -556,21 +548,35 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
                 const vx = fx + ((vi+1)/((nTravV||0)+1)) * fw;
                 return <line key={vi} x1={vx} y1={oy+4} x2={vx} y2={oy+dh-4} stroke={corTravV} strokeWidth="3" />;
               })}
-              {/* Preenchimento horizontal */}
-              {oriPreenchi === "horizontal" && barrasH.map((by,bi) => (
-                <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPreH} strokeWidth="1.5" />
-              ))}
-              {/* Preenchimento vertical - segmentos interrompidos pelas travessas do meio */}
-              {oriPreenchi === "vertical" && barrasV.map((bx,bi) => {
-                const nSeg = (nMeio||0) + 1;
-                return [...Array(nSeg)].map((_,si) => {
-                  const y1seg = oy + (si / nSeg) * dh + 4;
-                  const y2seg = oy + ((si+1) / nSeg) * dh - 4;
-                  return <line key={`${bi}-${si}`} x1={fx+bx} y1={y1seg} x2={fx+bx} y2={y2seg} stroke={corPreV} strokeWidth="1.5" />;
-                });
+              {/* Preenchimento por região */}
+              {(regioes||[]).map((reg, ri) => {
+                const ratios = [0, ...travRatios, 1];
+                const y1r = oy + ratios[ri] * dh + 4;
+                const y2r = oy + ratios[ri+1] * dh - 4;
+                const altR = y2r - y1r;
+                if (altR <= 0) return null;
+                const corPre = reg.ori === "horizontal"
+                  ? PECA_CORES["Barra horizontal"].cor
+                  : PECA_CORES["Barra vertical"].cor;
+                const espPx = (parseFloat(reg.esp) / (H * 100)) * dh;
+                const nBars = Math.max(0, Math.floor(altR / espPx) - 1);
+                return (
+                  <g key={ri}>
+                    {reg.ori === "horizontal"
+                      ? [...Array(nBars)].map((_,bi) => {
+                          const by = y1r + ((bi+1)/(nBars+1)) * altR;
+                          return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
+                        })
+                      : [...Array(Math.min(nBars,40))].map((_,bi) => {
+                          const bx = fx + ((bi+1)/(nBars+1)) * fw;
+                          return <line key={bi} x1={bx} y1={y1r} x2={bx} y2={y2r} stroke={corPre} strokeWidth="1.5" />;
+                        })
+                    }
+                  </g>
+                );
               })}
               {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
-              <text x={fx+fw/2} y={oy+dh/2-10} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
+              <text x={fx+fw/2} y={oy+dh/2} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
             </g>
           );
         })}
@@ -582,109 +588,167 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Montante vertical"].cor}} />Montante vertical</div>
-        {(nMeio||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa horizontal"].cor}} />Travessa horizontal</div>}
+        {(travPosRatio||[]).length > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa horizontal"].cor}} />Travessa horizontal</div>}
         {(nTravV||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa vertical"].cor}} />Travessa vertical</div>}
-        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />Preenchimento</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />Preenchimento vertical</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra horizontal"].cor}} />Preenchimento horizontal</div>
         {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Diagonal"].cor, height:3}} />Diagonal</div>}
       </div>
     </div>
   );
 }
 
+// ─── Defaults para uma região de preenchimento ────────────────────────────────
+function regiaoDefault(id) {
+  return { id, ori:"vertical", esp:"10", preA:30, preB:30, preE:2 };
+}
+
 function PortaoCalc() {
+  const H_DEFAULT = "";
   const [form, setForm] = useState({
     largura:"", altura:"", folhas:"2",
     estA:50, estB:50, estE:3,
-    preA:30, preB:30, preE:2,
-    oriPreenchi:"horizontal", espacamento:"15",
     incluiDiagonal:true,
-    nTravHoriz:"1",
     nTravVert:"0",
+    // Travessas horizontais: array de posições em cm
+    travHoriz:[],   // ex: [{id:0, pos:"80"}]
+    // Regiões: uma por espaço entre travessas (nTravH+1)
+    regioes:[regiaoDefault(0)], // começa com 1 região (sem travessas)
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
   const setEst = (A,B,e) => setForm(f => ({...f, estA:A, estB:B, estE:e}));
-  const setPre = (A,B,e) => setForm(f => ({...f, preA:A, preB:B, preE:e}));
+
+  // Adicionar travessa horizontal
+  function addTravH() {
+    setForm(f => {
+      const newId = Date.now();
+      const nTrav = f.travHoriz.length;
+      // Posição padrão: divide igualmente
+      const altAtual = parseFloat(f.altura) || 200;
+      const pos = Math.round(altAtual / (nTrav + 2) * (nTrav + 1));
+      return {
+        ...f,
+        travHoriz: [...f.travHoriz, { id: newId, pos: String(pos) }],
+        regioes: [...f.regioes, regiaoDefault(newId)],
+      };
+    });
+    setResult(null);
+  }
+
+  function removeTravH(idx) {
+    setForm(f => ({
+      ...f,
+      travHoriz: f.travHoriz.filter((_,i) => i !== idx),
+      regioes: f.regioes.filter((_,i) => i !== idx + 1), // remove a região acima da travessa removida
+    }));
+    setResult(null);
+  }
+
+  function setTravPos(idx, val) {
+    setForm(f => ({
+      ...f,
+      travHoriz: f.travHoriz.map((t,i) => i === idx ? {...t, pos: val} : t),
+    }));
+  }
+
+  function setRegiao(idx, key, val) {
+    setForm(f => ({
+      ...f,
+      regioes: f.regioes.map((r,i) => i === idx ? {...r, [key]: val} : r),
+    }));
+    setResult(null);
+  }
+
+  function setRegiaoPre(idx, A, B, e) {
+    setForm(f => ({
+      ...f,
+      regioes: f.regioes.map((r,i) => i === idx ? {...r, preA:A, preB:B, preE:e} : r),
+    }));
+  }
 
   function calcular() {
-    const L = parseFloat(form.largura); const H = parseFloat(form.altura);
+    const L = parseFloat(form.largura);
+    const H = parseFloat(form.altura);
     const folhas = parseInt(form.folhas);
     if (!L||!H||L<=0||H<=0) return;
-    const Lf = L / folhas;
-    const esp = parseFloat(form.espacamento) / 100;
 
-    // Espessura do perfil estrutural em metros (ex: 50×50 → 0.05m)
+    const Lf = L / folhas;
     const espEst = Math.max(form.estA, form.estB) / 1000;
     const pEst   = calcPesoM(form.estA, form.estB, form.estE);
     const descEst = `Tubo ${Math.max(form.estA,form.estB)}×${Math.min(form.estA,form.estB)} e=${form.estE}mm`;
-    const nTravH = parseInt(form.nTravHoriz) || 0;
-    const nTravV = parseInt(form.nTravVert)  || 0;
+    const nTravV = parseInt(form.nTravVert) || 0;
 
-    const compTravSupInf = Lf;                      // sup e inf: por fora
+    // Ordenar travessas por posição
+    const travOrdenadas = [...form.travHoriz]
+      .map(t => ({ ...t, posCm: parseFloat(t.pos) || 0 }))
+      .filter(t => t.posCm > 0 && t.posCm < H * 100)
+      .sort((a, b) => a.posCm - b.posCm);
+
+    const nTravH = travOrdenadas.length;
+
+    // Comprimentos estruturais
+    const compTravSupInf = Lf;
     const compMontante   = H - 2 * espEst;
     const compTravHoriz  = Lf - 2 * espEst;
     const compTravVert   = H - 2 * espEst;
-
-    // Preenchimento vertical: interrompido por cada travessa horizontal interna
-    const altInterna = H - 2 * espEst;
-    const compPreV   = nTravH > 0
-      ? (altInterna - nTravH * espEst) / (nTravH + 1)
-      : altInterna;
-    const nSegmentos = nTravH + 1;
-
-    // Preenchimento horizontal: interrompido por cada montante vertical interno
-    // largura de cada célula = (Lf - 2×montLateral - nTravV×espEst) / (nTravV+1)
-    const largInterna = Lf - 2 * espEst;
-    const compPreHCell = nTravV > 0
-      ? (largInterna - nTravV * espEst) / (nTravV + 1)
-      : largInterna;
-    const nColunas = nTravV + 1;
-
-    let nPreenchi = 0;
-    if (form.oriPreenchi === "horizontal") nPreenchi = Math.max(0, Math.floor(H/esp) - 1);
-    else nPreenchi = Math.max(0, Math.floor(Lf/esp) - 1);
-
-    const diagComp = form.incluiDiagonal ? Math.sqrt(Lf**2 + H**2) : 0;
+    const diagComp       = form.incluiDiagonal ? Math.sqrt(Lf**2 + H**2) : 0;
 
     const pecas = [];
-    const pPre   = calcPesoM(form.preA, form.preB, form.preE);
-    const descPre = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
 
-    pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
-    pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
-    pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil: descEst, comp: compMontante,   qtd: 2*folhas,     compTotal: 2*folhas*compMontante,       peso: 2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
-    if (nTravH > 0) {
-      pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil: descEst, comp: compTravHoriz, qtd: nTravH*folhas, compTotal: nTravH*folhas*compTravHoriz, peso: nTravH*folhas*compTravHoriz*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravHoriz*100).toFixed(1)}cm` });
-    }
-    if (nTravV > 0) {
-      pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil: descEst, comp: compTravVert,  qtd: nTravV*folhas, compTotal: nTravV*folhas*compTravVert,  peso: nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
-    }
+    // Estrutura
+    pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil:descEst, comp:compTravSupInf, qtd:folhas,      compTotal:folhas*compTravSupInf,       peso:folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
+    pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil:descEst, comp:compTravSupInf, qtd:folhas,      compTotal:folhas*compTravSupInf,       peso:folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
+    pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil:descEst, comp:compMontante,   qtd:2*folhas,    compTotal:2*folhas*compMontante,       peso:2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
+    if (nTravH > 0) pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil:descEst, comp:compTravHoriz, qtd:nTravH*folhas, compTotal:nTravH*folhas*compTravHoriz, peso:nTravH*folhas*compTravHoriz*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravHoriz*100).toFixed(1)}cm` });
+    if (nTravV > 0) pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil:descEst, comp:compTravVert,  qtd:nTravV*folhas, compTotal:nTravV*folhas*compTravVert,  peso:nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
+    if (form.incluiDiagonal && diagComp > 0) pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil:descEst, comp:diagComp, qtd:folhas, compTotal:folhas*diagComp, peso:folhas*diagComp*pEst });
 
-    if (form.incluiDiagonal && diagComp > 0) {
-      pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil: descEst, comp: diagComp, qtd: folhas, compTotal: folhas*diagComp, peso: folhas*diagComp*pEst });
-    }
+    // Preenchimento por região
+    const altInterna = H - 2 * espEst;
+    const limites = [0, ...travOrdenadas.map(t => t.posCm / 100), H]; // em metros
 
-    if (nPreenchi > 0) {
-      if (form.oriPreenchi === "horizontal") {
-        const qtdH = nPreenchi * folhas * nColunas;
-        const obsH = nTravV > 0
-          ? `(largInt − ${nTravV}×${(espEst*100).toFixed(1)}cm) ÷ ${nColunas} = ${(compPreHCell*100).toFixed(1)}cm`
-          : `Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compPreHCell*100).toFixed(1)}cm`;
-        pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: descPre, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
+    form.regioes.forEach((reg, ri) => {
+      if (ri >= limites.length - 1) return;
+      const yTop = limites[ri];
+      const yBot = limites[ri + 1];
+      // Altura da região, descontando espessura das travessas adjacentes
+      const descontoTop = ri === 0 ? espEst : espEst / 2;
+      const descontoBot = ri === limites.length - 2 ? espEst : espEst / 2;
+      const altRegiao = (yBot - yTop) - descontoTop - descontoBot;
+      if (altRegiao <= 0) return;
+
+      const esp = parseFloat(reg.esp) / 100;
+      const pPre = calcPesoM(reg.preA, reg.preB, reg.preE);
+      const descPre = `Tubo ${Math.max(reg.preA,reg.preB)}×${Math.min(reg.preA,reg.preB)} e=${reg.preE}mm`;
+      const largInterna = Lf - 2 * espEst;
+      const nColunas = nTravV + 1;
+
+      if (reg.ori === "horizontal") {
+        const nBarras = Math.max(0, Math.floor(altRegiao / esp) - 1);
+        if (nBarras > 0) {
+          const compPre = nTravV > 0 ? (largInterna - nTravV*espEst) / nColunas : largInterna;
+          const qtd = nBarras * folhas * nColunas;
+          pecas.push({ nome:`Barra horizontal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`Região ${ri+1}: ${(altRegiao*100).toFixed(1)}cm alt` });
+        }
       } else {
-        const qtdV = nPreenchi * folhas * nSegmentos;
-        const obsV = nTravH > 0
-          ? `(altInt − ${nTravH}×${(espEst*100).toFixed(1)}cm) ÷ ${nSegmentos} = ${(compPreV*100).toFixed(1)}cm`
-          : `altInterna = ${(compPreV*100).toFixed(1)}cm`;
-        pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreV, qtd: qtdV, compTotal: qtdV*compPreV, peso: qtdV*compPreV*pPre, obs: obsV });
+        const nBarras = Math.max(0, Math.floor(largInterna / esp) - 1);
+        if (nBarras > 0) {
+          const compPre = altRegiao;
+          const qtd = nBarras * folhas;
+          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`Região ${ri+1}: ${(altRegiao*100).toFixed(1)}cm` });
+        }
       }
-    }
+    });
 
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst, descPre });
+    setResult({ pecas, pesoTotal:pesoTotal.toFixed(1), mTotal:mTotal.toFixed(2), L, H, folhas, nMeio:nTravH, nTravV, travOrdenadas, regioes:form.regioes, descEst });
   }
+
+  const nTravH = form.travHoriz.length;
+  const altNum = parseFloat(form.altura) || 0;
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:24}}>
@@ -695,31 +759,97 @@ function PortaoCalc() {
             <div className="field"><label>Largura total <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.largura} onChange={e=>set("largura",e.target.value)} placeholder="Ex: 4.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 2.00" /></div>
             <div className="field"><label>Nº de folhas</label><select value={form.folhas} onChange={e=>set("folhas",e.target.value)}><option value="1">1 folha</option><option value="2">2 folhas</option><option value="4">4 folhas</option></select></div>
-            <div className="field"><label>Travessas horizontais internas</label><select value={form.nTravHoriz} onChange={e=>set("nTravHoriz",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i === 0 ? "Nenhuma" : `${i} travessa${i>1?"s":""}`}</option>)}</select></div>
-            <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i === 0 ? "Nenhuma" : `${i} travessa${i>1?"s":""}`}</option>)}</select></div>
+            <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
             <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
               <input type="checkbox" id="diag" checked={form.incluiDiagonal} onChange={e=>set("incluiDiagonal",e.target.checked)} style={{width:"auto"}} />
-              <label htmlFor="diag" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Incluir diagonal (contraventamento)</label>
+              <label htmlFor="diag" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Incluir diagonal</label>
             </div>
           </div>
         </div>
         <div className="section">
-          <div className="section-header">🔩 Perfis</div>
+          <div className="section-header">🔩 Perfil Estrutural</div>
           <div className="section-body">
             <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural" />
-            <PerfilEstSelector A={form.preA} B={form.preB} e={form.preE} onChange={setPre} label="Perfil de preenchimento" />
-            <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
-            <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="100" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
           </div>
         </div>
       </div>
+
+      {/* Travessas horizontais e regiões */}
+      <div className="section">
+        <div className="section-header" style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <span>⬛ TRAVESSAS HORIZONTAIS E REGIÕES</span>
+          <button onClick={addTravH} style={{background:"#f5a623",border:"none",borderRadius:3,padding:"4px 14px",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:2,cursor:"pointer",color:"#111"}}>+ TRAVESSA</button>
+        </div>
+        <div className="section-body" style={{gap:0,padding:0}}>
+          {form.regioes.map((reg, ri) => (
+            <div key={reg.id}>
+              {/* Região ri */}
+              <div style={{padding:"14px 20px",background: ri%2===0?"#1a1a1a":"#161616",borderBottom:"1px solid #2a2a2a"}}>
+                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:2,color:"#6fcf6f",marginBottom:10}}>
+                  REGIÃO {ri+1}
+                  {altNum > 0 && (() => {
+                    const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
+                    const h = limites[ri+1] - limites[ri];
+                    return <span style={{color:"#888",fontWeight:"normal",marginLeft:8,fontSize:11}}>{h.toFixed(0)}cm de altura</span>;
+                  })()}
+                </div>
+                <div className="grid-2" style={{gap:12}}>
+                  <div className="field">
+                    <label>Orientação</label>
+                    <select value={reg.ori} onChange={e=>setRegiao(ri,"ori",e.target.value)}
+                      style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}}>
+                      <option value="vertical">Barras verticais</option>
+                      <option value="horizontal">Barras horizontais</option>
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Espaçamento <span className="unit">(cm)</span></label>
+                    <input type="number" min="3" max="100" step="1" value={reg.esp}
+                      onChange={e=>setRegiao(ri,"esp",e.target.value)}
+                      style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}} />
+                  </div>
+                </div>
+                <div style={{marginTop:10}}>
+                  <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,e)=>setRegiaoPre(ri,A,B,e)} label="Perfil do preenchimento" />
+                </div>
+              </div>
+              {/* Travessa entre regiões ri e ri+1 */}
+              {ri < form.travHoriz.length && (
+                <div style={{padding:"10px 20px",background:"#0d1e0d",borderBottom:"1px solid #2a2a2a",display:"flex",alignItems:"center",gap:12}}>
+                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,letterSpacing:2,color:"#40d0ff",minWidth:120}}>TRAVESSA HORIZ. {ri+1}</div>
+                  <div className="field" style={{flex:1,margin:0}}>
+                    <label>Posição desde o topo <span className="unit">(cm)</span></label>
+                    <input type="number" min="1" max={altNum*100-1} step="1" value={form.travHoriz[ri]?.pos || ""}
+                      onChange={e=>setTravPos(ri,e.target.value)}
+                      style={{background:"#111",border:"1px solid #40d0ff",color:"#40d0ff",fontFamily:"monospace",fontSize:13,padding:"6px 10px",borderRadius:3,width:"100%"}} />
+                  </div>
+                  <button onClick={()=>removeTravH(ri)}
+                    style={{background:"transparent",border:"1px solid #e05050",color:"#e05050",borderRadius:3,padding:"6px 12px",cursor:"pointer",fontFamily:"monospace",fontSize:12}}>
+                    ✕
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div style={{display:"flex",gap:12}}>
         <button className="btn-calc" onClick={calcular}>CALCULAR PORTÃO</button>
-        <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
+        <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:"",travHoriz:[],regioes:[regiaoDefault(0)]}));setResult(null);}}>LIMPAR</button>
       </div>
+
       {result && (<>
-        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
-        <ListaCorte pecas={result.pecas} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
+        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas}
+          nBarrasH={0} nBarrasV={0}
+          nMeio={result.nMeio} nTravV={result.nTravV}
+          travPosRatio={result.travOrdenadas.map(t => t.posCm / (result.H*100))}
+          regioes={result.regioes}
+          oriPreenchi="vertical"
+          incluiDiagonal={form.incluiDiagonal}
+          perfilEst={`${form.estA}x${form.estB}x${form.estE}`}
+          perfilPre={`${form.estA}x${form.estB}x${form.estE}`} />
+        <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.estA}x${form.estB}x${form.estE}`} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
