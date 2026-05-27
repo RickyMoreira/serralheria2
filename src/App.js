@@ -711,9 +711,13 @@ function PortaoCalc() {
       const yBot = limites[ri + 1];
       const altBruta = yBot - yTop; // altura bruta da região em metros
 
-      // Altura real das barras (descontando espessura das travessas adjacentes)
+      // Descontos:
+      // topo da região 1: espessura da travessa superior (por fora, mas montante interno começa depois)
+      // topo das outras regiões: metade da travessa horizontal (ela está centrada na posição)
+      // base da última região: 0 (travessa inferior é por fora, barras vão até o montante)
+      // base das outras regiões: metade da travessa horizontal
       const descontoTop = ri === 0 ? espEst : espEst / 2;
-      const descontoBot = ri === limites.length - 2 ? espEst : espEst / 2;
+      const descontoBot = ri === limites.length - 2 ? 0 : espEst / 2;
       const altRegiao = altBruta - descontoTop - descontoBot;
       if (altRegiao <= 0) return;
 
