@@ -96,7 +96,6 @@ function calcPesoRed(D) {
 }
 
 // Constrói chave do perfil
-function perfilKey(A, B, e) { return `${A}x${B}x${e}`; }
 
 // Seletor para BARRAS MACIÇAS (chata, quadrada, redonda)
 function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
@@ -604,7 +603,6 @@ function regiaoDefault(id) {
 }
 
 function PortaoCalc() {
-  const H_DEFAULT = "";
   const [form, setForm] = useState({
     largura:"", altura:"", folhas:"2",
     estA:50, estB:50, estE:3,
@@ -705,7 +703,6 @@ function PortaoCalc() {
     if (form.incluiDiagonal && diagComp > 0) pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil:descEst, comp:diagComp, qtd:folhas, compTotal:folhas*diagComp, peso:folhas*diagComp*pEst });
 
     // Preenchimento por região
-    const altInterna = H - 2 * espEst;
     const limites = [0, ...travOrdenadas.map(t => t.posCm / 100), H]; // em metros
 
     form.regioes.forEach((reg, ri) => {
@@ -747,7 +744,6 @@ function PortaoCalc() {
     setResult({ pecas, pesoTotal:pesoTotal.toFixed(1), mTotal:mTotal.toFixed(2), L, H, folhas, nMeio:nTravH, nTravV, travOrdenadas, regioes:form.regioes, descEst });
   }
 
-  const nTravH = form.travHoriz.length;
   const altNum = parseFloat(form.altura) || 0;
 
   return (
