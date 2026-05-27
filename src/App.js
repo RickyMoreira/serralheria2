@@ -557,19 +557,29 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                 const corPre = reg.ori === "horizontal"
                   ? PECA_CORES["Barra horizontal"].cor
                   : PECA_CORES["Barra vertical"].cor;
-                const espPx = (parseFloat(reg.esp) / (H * 100)) * dh;
-                const nBars = Math.max(0, Math.floor(altR / espPx) - 1);
+
+                // Espaçamento em pixels proporcional ao desenho
+                const espMetros = parseFloat(reg.esp) / 100;
+                const espPxH = (espMetros / H) * dh; // px por espaço horizontal (altura)
+                const espPxV = (espMetros / (L/folhas)) * fw; // px por espaço vertical (largura)
+
                 return (
                   <g key={ri}>
                     {reg.ori === "horizontal"
-                      ? [...Array(nBars)].map((_,bi) => {
-                          const by = y1r + ((bi+1)/(nBars+1)) * altR;
-                          return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
-                        })
-                      : [...Array(Math.min(nBars,40))].map((_,bi) => {
-                          const bx = fx + ((bi+1)/(nBars+1)) * fw;
-                          return <line key={bi} x1={bx} y1={y1r} x2={bx} y2={y2r} stroke={corPre} strokeWidth="1.5" />;
-                        })
+                      ? (() => {
+                          const nBars = Math.max(0, Math.ceil(altR / espPxH) - 1);
+                          return [...Array(Math.min(nBars,60))].map((_,bi) => {
+                            const by = y1r + ((bi+1)/(nBars+1)) * altR;
+                            return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
+                          });
+                        })()
+                      : (() => {
+                          const nBars = Math.max(0, Math.ceil((fw-4) / espPxV) - 1);
+                          return [...Array(Math.min(nBars,60))].map((_,bi) => {
+                            const bx = fx + ((bi+1)/(nBars+1)) * fw;
+                            return <line key={bi} x1={bx} y1={y1r} x2={bx} y2={y2r} stroke={corPre} strokeWidth="1.5" />;
+                          });
+                        })()
                     }
                   </g>
                 );
@@ -725,7 +735,7 @@ function PortaoCalc() {
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil:descEst, comp:compTravSupInf, qtd:folhas,      compTotal:folhas*compTravSupInf,       peso:folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil:descEst, comp:compTravSupInf, qtd:folhas,      compTotal:folhas*compTravSupInf,       peso:folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil:descEst, comp:compMontante,   qtd:2*folhas,    compTotal:2*folhas*compMontante,       peso:2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
-    if (nTravH > 0) pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil:descEst, comp:compTravHoriz, qtd:nTravH*folhas, compTotal:nTravH*folhas*compTravHoriz, peso:nTravH*folhas*compTravHoriz*pEst, obs:`pos=${travOrdenadas.map(t=>t.posCm).join(",")}cm` });
+    if (nTravH > 0) pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil:descEst, comp:compTravHoriz, qtd:nTravH*folhas, compTotal:nTravH*folhas*compTravHoriz, peso:nTravH*folhas*compTravHoriz*pEst, obs:`Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compTravHoriz*100).toFixed(1)}cm` });
     if (nTravV > 0) pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil:descEst, comp:compTravVert,  qtd:nTravV*folhas, compTotal:nTravV*folhas*compTravVert,  peso:nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
     if (form.incluiDiagonal && diagComp > 0) pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil:descEst, comp:diagComp, qtd:folhas, compTotal:folhas*diagComp, peso:folhas*diagComp*pEst });
 
@@ -760,14 +770,14 @@ function PortaoCalc() {
         if (nBarras > 0) {
           const compPre = nTravV > 0 ? (largInterna - nTravV*espEst) / nColunas : largInterna;
           const qtd = nBarras * folhas * nColunas;
-          pecas.push({ nome:`Barra horizontal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`R${ri+1}: ${(altBruta*100).toFixed(0)}cm ÷ ${(esp*100).toFixed(0)}cm = ${nBarras} barras` });
+          pecas.push({ nome:`Barra horizontal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`R${ri+1}: ${nBarras} barras` });
         }
       } else {
         // Número de barras verticais: quantas cabem na LARGURA da folha
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
           const qtd = nBarras * folhas;
-          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: larg=${(largInterna*100).toFixed(0)}cm ÷ ${(esp*100).toFixed(0)}cm = ${nBarras}un | alt=${(altRegiao*100).toFixed(1)}cm (bruta=${(altBruta*100).toFixed(1)}cm)` });
+          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(altRegiao*100).toFixed(1)}cm` });
         }
       }
     });
