@@ -111,7 +111,7 @@ function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
     <div className="field">
       <label>{label || "Barra maciça"}</label>
       <div style={{ display:"flex", gap:6, marginBottom:6 }}>
-        <select value={tipo} onChange={ev => onChange(ev.target.value, L, e, D)} style={sel}>
+        <select value={tipo} onChange={ev => { ev.stopPropagation(); onChange(ev.target.value, L, e, D); }} style={sel}>
           <option value="chata">Barra chata</option>
           <option value="quadrada">Quadrada maciça</option>
           <option value="redonda">Redonda maciça</option>
@@ -119,21 +119,21 @@ function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
       </div>
       {tipo === "chata" && (
         <div style={{ display:"flex", gap:6 }}>
-          <select value={L} onChange={ev => onChange(tipo, parseInt(ev.target.value), e, D)} style={sel}>
+          <select value={L} onChange={ev => { ev.stopPropagation(); onChange(tipo, parseInt(ev.target.value), e, D); }} style={sel}>
             {DIMS_CHATA_L.map(v => <option key={v} value={v}>{v}mm larg.</option>)}
           </select>
-          <select value={e} onChange={ev => onChange(tipo, L, parseInt(ev.target.value), D)} style={sel}>
+          <select value={e} onChange={ev => { ev.stopPropagation(); onChange(tipo, L, parseInt(ev.target.value), D); }} style={sel}>
             {DIMS_CHATA_E.map(v => <option key={v} value={v}>{v}mm esp.</option>)}
           </select>
         </div>
       )}
       {tipo === "quadrada" && (
-        <select value={L} onChange={ev => onChange(tipo, parseInt(ev.target.value), e, D)} style={sel}>
+        <select value={L} onChange={ev => { ev.stopPropagation(); onChange(tipo, parseInt(ev.target.value), e, D); }} style={sel}>
           {DIMS_QUAD.map(v => <option key={v} value={v}>{v}×{v}mm</option>)}
         </select>
       )}
       {tipo === "redonda" && (
-        <select value={D} onChange={ev => onChange(tipo, L, e, parseInt(ev.target.value))} style={sel}>
+        <select value={D} onChange={ev => { ev.stopPropagation(); onChange(tipo, L, e, parseInt(ev.target.value)); }} style={sel}>
           {DIMS_RED.map(v => <option key={v} value={v}>Ø{v}mm</option>)}
         </select>
       )}
@@ -161,15 +161,15 @@ function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
     <div className="field">
       <label>{label || "Perfil"}</label>
       <div style={{ display:"flex", gap:6 }}>
-        <select value={A} onChange={ev => onChange(parseInt(ev.target.value), B, espessura)}
+        <select value={A} onChange={ev => { ev.stopPropagation(); onChange(parseInt(ev.target.value), B, espessura); }}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_A.map(a => <option key={a} value={a}>{a}mm</option>)}
         </select>
-        <select value={B} onChange={ev => onChange(A, parseInt(ev.target.value), espessura)}
+        <select value={B} onChange={ev => { ev.stopPropagation(); onChange(A, parseInt(ev.target.value), espessura); }}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_B.map(b => <option key={b} value={b}>{b}mm</option>)}
         </select>
-        <select value={espessura} onChange={ev => onChange(A, B, parseFloat(ev.target.value))}
+        <select value={espessura} onChange={ev => { ev.stopPropagation(); onChange(A, B, parseFloat(ev.target.value)); }}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_E.filter(ep => ep < Math.min(A,B)/2).map(ep => <option key={ep} value={ep}>e={ep}mm</option>)}
         </select>
