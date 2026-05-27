@@ -709,10 +709,12 @@ function PortaoCalc() {
       if (ri >= limites.length - 1) return;
       const yTop = limites[ri];
       const yBot = limites[ri + 1];
-      // Altura da região, descontando espessura das travessas adjacentes
+      const altBruta = yBot - yTop; // altura bruta da região em metros
+
+      // Altura real das barras (descontando espessura das travessas adjacentes)
       const descontoTop = ri === 0 ? espEst : espEst / 2;
       const descontoBot = ri === limites.length - 2 ? espEst : espEst / 2;
-      const altRegiao = (yBot - yTop) - descontoTop - descontoBot;
+      const altRegiao = altBruta - descontoTop - descontoBot;
       if (altRegiao <= 0) return;
 
       const esp = parseFloat(reg.esp) / 100;
@@ -722,18 +724,19 @@ function PortaoCalc() {
       const nColunas = nTravV + 1;
 
       if (reg.ori === "horizontal") {
-        const nBarras = Math.max(0, Math.floor(altRegiao / esp) - 1);
+        // Número de barras horizontais: quantas cabem dentro da região com o espaçamento dado
+        const nBarras = Math.max(0, Math.ceil(altBruta / esp) - 1);
         if (nBarras > 0) {
           const compPre = nTravV > 0 ? (largInterna - nTravV*espEst) / nColunas : largInterna;
           const qtd = nBarras * folhas * nColunas;
-          pecas.push({ nome:`Barra horizontal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`Região ${ri+1}: ${(altRegiao*100).toFixed(1)}cm alt` });
+          pecas.push({ nome:`Barra horizontal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`R${ri+1}: ${(altBruta*100).toFixed(0)}cm ÷ ${(esp*100).toFixed(0)}cm = ${nBarras} barras` });
         }
       } else {
-        const nBarras = Math.max(0, Math.floor(largInterna / esp) - 1);
+        // Número de barras verticais: quantas cabem na LARGURA da folha
+        const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
-          const compPre = altRegiao;
           const qtd = nBarras * folhas;
-          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`Região ${ri+1}: ${(altRegiao*100).toFixed(1)}cm` });
+          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(altRegiao*100).toFixed(1)}cm` });
         }
       }
     });
