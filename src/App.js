@@ -936,14 +936,28 @@ function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
 function GradeCalc() {
   const [form, setForm] = useState({
     largura:"", altura:"",
-    molA:40, molB:40, molE:3,
+    molTipo:"tubo", molA:40, molB:40, molE:3, molL:40, molEsp:3, molD:20,
     barTipo:"chata", barL:25, barE:3, barD:12,
     espacamentoV:"10", nTravH:"0",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
-  const setMol = (A,B,e) => setForm(f=>({...f, molA:A, molB:B, molE:e}));
-  const setBar = (tipo,L,e,D) => setForm(f=>({...f, barTipo:tipo, barL:L, barE:e, barD:D}));
+  const setMolTubo = (A,B,e) => setForm(f=>({...f, molA:A, molB:B, molE:e}));
+  const setMolMac  = (tipo,L,e,D) => setForm(f=>({...f, molTipo:tipo, molL:L, molEsp:e, molD:D}));
+  const setBar     = (tipo,L,e,D) => setForm(f=>({...f, barTipo:tipo, barL:L, barE:e, barD:D}));
+
+  function getMolInfo() {
+    if (form.molTipo === "tubo") {
+      const maior = Math.max(form.molA, form.molB);
+      const menor = Math.min(form.molA, form.molB);
+      return {
+        peso: calcPesoM(maior, menor, form.molE),
+        desc: `Tubo ${maior}×${menor} e=${form.molE}mm`,
+        espMm: maior,
+      };
+    }
+    return barraInfo(form.molTipo, form.molL, form.molEsp, form.molD);
+  }
 
   function calcular() {
     const L=parseFloat(form.largura); const H=parseFloat(form.altura);
@@ -952,34 +966,32 @@ function GradeCalc() {
     const nV=Math.max(0,Math.floor(L/espV)-1);
     const nH=parseInt(form.nTravH)||0;
 
-    const espMol   = Math.max(form.molA, form.molB)/1000;
-    const pMol     = calcPesoM(form.molA, form.molB, form.molE);
-    const descMol  = `Tubo ${Math.max(form.molA,form.molB)}×${Math.min(form.molA,form.molB)} e=${form.molE}mm`;
+    const molInfo = getMolInfo();
+    const espMol  = molInfo.espMm / 1000;
+    const pMol    = molInfo.peso;
+    const descMol = molInfo.desc;
 
-    const { peso: pBar, desc: descBar, espMm: espBarMm } = barraInfo(form.barTipo, form.barL, form.barE, form.barD);
-    const espBar = espBarMm / 1000; // espessura da barra em metros (para descontos)
+    const { peso: pBar, desc: descBar } = barraInfo(form.barTipo, form.barL, form.barE, form.barD);
 
     const compLateral   = H;
     const compTopBot    = L - 2*espMol;
-    // Barras verticais: descontam moldura sup + inf
     const compBarraV    = H - 2*espMol;
-    // Travessas horizontais: descontam as laterais, mas também a espessura das barras verticais
-    // Simplificado: descontam apenas as laterais
     const compTraversaH = L - 2*espMol;
-
-    const aberturaOk = espV<=0.11;
+    const aberturaOk    = espV<=0.11;
 
     const pecas=[];
-    pecas.push({nome:"Moldura lateral",    tipo:"estrutura",    perfil:descMol, comp:compLateral,   qtd:2,  compTotal:2*compLateral,        peso:2*compLateral*pMol,        obs:`${(compLateral*100).toFixed(1)}cm — altura total`});
-    pecas.push({nome:"Moldura superior",   tipo:"estrutura",    perfil:descMol, comp:compTopBot,    qtd:1,  compTotal:compTopBot,            peso:compTopBot*pMol,            obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTopBot*100).toFixed(1)}cm`});
-    pecas.push({nome:"Moldura inferior",   tipo:"estrutura",    perfil:descMol, comp:compTopBot,    qtd:1,  compTotal:compTopBot,            peso:compTopBot*pMol,            obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTopBot*100).toFixed(1)}cm`});
-    if(nV>0) pecas.push({nome:"Barra vertical",     tipo:"preenchimento", perfil:descBar, comp:compBarraV,    qtd:nV, compTotal:nV*compBarraV,        peso:nV*compBarraV*pBar,        obs:`H − 2×${(espMol*100).toFixed(1)}cm = ${(compBarraV*100).toFixed(1)}cm`});
-    if(nH>0) pecas.push({nome:"Travessa horizontal", tipo:"preenchimento", perfil:descBar, comp:compTraversaH, qtd:nH, compTotal:nH*compTraversaH,     peso:nH*compTraversaH*pBar,     obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTraversaH*100).toFixed(1)}cm`});
+    pecas.push({nome:"Moldura lateral",    tipo:"estrutura",    perfil:descMol, comp:compLateral,   qtd:2,  compTotal:2*compLateral,     peso:2*compLateral*pMol,     obs:`${(compLateral*100).toFixed(1)}cm — altura total`});
+    pecas.push({nome:"Moldura superior",   tipo:"estrutura",    perfil:descMol, comp:compTopBot,    qtd:1,  compTotal:compTopBot,         peso:compTopBot*pMol,         obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTopBot*100).toFixed(1)}cm`});
+    pecas.push({nome:"Moldura inferior",   tipo:"estrutura",    perfil:descMol, comp:compTopBot,    qtd:1,  compTotal:compTopBot,         peso:compTopBot*pMol,         obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTopBot*100).toFixed(1)}cm`});
+    if(nV>0) pecas.push({nome:"Barra vertical",      tipo:"preenchimento", perfil:descBar, comp:compBarraV,    qtd:nV, compTotal:nV*compBarraV,     peso:nV*compBarraV*pBar,     obs:`H − 2×${(espMol*100).toFixed(1)}cm = ${(compBarraV*100).toFixed(1)}cm`});
+    if(nH>0) pecas.push({nome:"Travessa horizontal", tipo:"preenchimento", perfil:descBar, comp:compTraversaH, qtd:nH, compTotal:nH*compTraversaH,  peso:nH*compTraversaH*pBar,  obs:`L − 2×${(espMol*100).toFixed(1)}cm = ${(compTraversaH*100).toFixed(1)}cm`});
 
     const pesoTotal=pecas.reduce((s,p)=>s+p.peso,0);
     const mTotal=pecas.reduce((s,p)=>s+p.compTotal,0);
-    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nV,nH,aberturaOk,espVcm:(espV*100).toFixed(1),descMol,descBar,espBar});
+    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nV,nH,aberturaOk,espVcm:(espV*100).toFixed(1),descMol,descBar});
   }
+
+  const molInfo = getMolInfo();
 
   return (
     <div style={{display:"flex",flexDirection:"column",gap:24}}>
@@ -996,7 +1008,24 @@ function GradeCalc() {
         <div className="section">
           <div className="section-header">🔩 Perfis</div>
           <div className="section-body">
-            <PerfilEstSelector A={form.molA} B={form.molB} e={form.molE} onChange={setMol} label="Perfil da moldura (tubo)" />
+            {/* Moldura — tubo ou maciça */}
+            <div className="field">
+              <label>Tipo da moldura</label>
+              <select value={form.molTipo} onChange={e=>set("molTipo",e.target.value)}
+                style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px 6px",borderRadius:3,width:"100%"}}>
+                <option value="tubo">Tubo</option>
+                <option value="chata">Barra chata</option>
+                <option value="quadrada">Quadrada maciça</option>
+                <option value="redonda">Redonda maciça</option>
+              </select>
+            </div>
+            {form.molTipo === "tubo"
+              ? <PerfilEstSelector A={form.molA} B={form.molB} e={form.molE} onChange={setMolTubo} label="Dimensões da moldura" />
+              : <BarraMacicoSelector tipo={form.molTipo} L={form.molL} e={form.molEsp} D={form.molD} onChange={setMolMac} label="Dimensões da moldura" />
+            }
+            <div style={{fontFamily:"monospace",fontSize:11,color:"#f5a623",marginTop:-8}}>
+              {molInfo.desc} → {molInfo.peso.toFixed(3)} kg/m
+            </div>
             <BarraMacicoSelector tipo={form.barTipo} L={form.barL} e={form.barE} D={form.barD} onChange={setBar} label="Barra de preenchimento" />
           </div>
         </div>
@@ -1007,7 +1036,7 @@ function GradeCalc() {
       </div>
       {result && (<>
         <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
-        <ListaCorte pecas={result.pecas} perfilEst={`${form.molA}x${form.molB}x${form.molE}`} perfilPre={`${form.barTipo}_${form.barL}_${form.barE}_${form.barD}`} />
+        <ListaCorte pecas={result.pecas} perfilEst={`mol_${form.molTipo}`} perfilPre={`bar_${form.barTipo}`} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
