@@ -228,7 +228,7 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
 // ─── LISTA DE CORTE ──────────────────────────────────────────────────────────
 const PECA_CORES = {
   "Travessa superior":  { bg: "#0d1a2e", cor: "#4a9eff" },
-  "Travessa inferior":  { bg: "#1a1a1a", cor: "#1a1a1a" },
+  "Travessa inferior":  { bg: "#111", cor: "#111111" },
   "Montante vertical":  { bg: "#1a0d2e", cor: "#b47aff" },
   "Travessa horizontal":{ bg: "#0d1e2e", cor: "#40d0ff" },
   "Travessa vertical":  { bg: "#1a0a2e", cor: "#d070ff" },
@@ -456,7 +456,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
           <tbody>
             {sorted.map((p, i) => {
               const { bg, cor } = getPecaCor(p.nome);
-              const isBlack = cor === "#1a1a1a";
+              const isBlack = cor === "#111111";
               return (
                 <tr key={i} style={{ background: bg }}>
                   <td style={{ color: "#fff" }}>{i + 1}</td>
