@@ -153,29 +153,29 @@ function barraInfo(tipo, L, e, D) {
 }
 
 // Componente seletor de perfil tubular (3 dropdowns)
-function PerfilEstSelector({ A, B, e, onChange, label }) {
+function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
   const maior = Math.max(A, B);
   const menor = Math.min(A, B);
-  const peso = calcPesoM(maior, menor, e);
+  const peso = calcPesoM(maior, menor, espessura);
   return (
     <div className="field">
       <label>{label || "Perfil"}</label>
       <div style={{ display:"flex", gap:6 }}>
-        <select value={A} onChange={ev => onChange(parseInt(ev.target.value), B, e)}
+        <select value={A} onChange={ev => onChange(parseInt(ev.target.value), B, espessura)}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_A.map(a => <option key={a} value={a}>{a}mm</option>)}
         </select>
-        <select value={B} onChange={ev => onChange(A, parseInt(ev.target.value), e)}
+        <select value={B} onChange={ev => onChange(A, parseInt(ev.target.value), espessura)}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_B.map(b => <option key={b} value={b}>{b}mm</option>)}
         </select>
-        <select value={e} onChange={ev => onChange(A, B, parseFloat(ev.target.value))}
+        <select value={espessura} onChange={ev => onChange(A, B, parseFloat(ev.target.value))}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_E.filter(ep => ep < Math.min(A,B)/2).map(ep => <option key={ep} value={ep}>e={ep}mm</option>)}
         </select>
       </div>
       <div style={{ fontFamily:"monospace", fontSize:11, color:"#f5a623", marginTop:4 }}>
-        {maior}×{menor} e={e}mm → <strong>{peso.toFixed(3)} kg/m</strong>
+        {maior}×{menor} e={espessura}mm → <strong>{peso.toFixed(3)} kg/m</strong>
       </div>
     </div>
   );
@@ -813,7 +813,7 @@ function PortaoCalc() {
                   </div>
                 </div>
                 <div style={{marginTop:10}}>
-                  <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,e)=>setRegiaoPre(ri,A,B,e)} label="Perfil do preenchimento" />
+                  <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil do preenchimento" />
                 </div>
               </div>
               {/* Travessa entre regiões ri e ri+1 */}
