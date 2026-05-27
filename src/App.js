@@ -736,7 +736,7 @@ function PortaoCalc() {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
           const qtd = nBarras * folhas;
-          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(altRegiao*100).toFixed(1)}cm` });
+          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: larg=${(largInterna*100).toFixed(0)}cm ÷ esp=${(esp*100).toFixed(0)}cm = ${nBarras} barras` });
         }
       }
     });
