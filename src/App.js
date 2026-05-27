@@ -566,17 +566,10 @@ const PECA_CORES = {
 function getPecaCor(nome) {
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
-function ListaCorte({ pecas, perfilEst, perfilPre }) {
+function ListaCorte({ pecas }) {
   const sorted = [...pecas].sort((a, b) => b.comp - a.comp);
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
-
-  // Separar peças por perfil para calcular barras independentemente
-  const pecasEst = pecas.filter(p => p.tipo === "estrutura" || (p.tipo === "diagonal" && p.qtd > 0));
-  const pecasPre = pecas.filter(p => p.tipo === "preenchimento");
-  const temDoisPerfis = perfilEst !== perfilPre && pecasPre.length > 0;
-  const descrEst = pecasEst.length > 0 ? pecasEst[0].perfil : perfilEst;
-  const descrPre = pecasPre.length > 0 ? pecasPre[0].perfil : perfilPre;
 
   return (
     <>
@@ -624,9 +617,6 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
         </table>
       </div>
     </div>
-    {temDoisPerfis ? (<>
-    </>) : (
-    )}
     </>
   );
 }
