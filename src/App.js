@@ -740,7 +740,7 @@ function PortaoCalc() {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
           const qtd = nBarras * folhas;
-          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: larg=${(largInterna*100).toFixed(0)}cm ÷ esp=${(esp*100).toFixed(0)}cm = ${nBarras} barras` });
+          pecas.push({ nome:`Barra vertical R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:altRegiao, qtd, compTotal:qtd*altRegiao, peso:qtd*altRegiao*pPre, obs:`R${ri+1}: larg=${(largInterna*100).toFixed(0)}cm ÷ ${(esp*100).toFixed(0)}cm = ${nBarras}un | alt=${(altRegiao*100).toFixed(1)}cm (bruta=${(altBruta*100).toFixed(1)}cm)` });
         }
       }
     });
@@ -799,7 +799,7 @@ function PortaoCalc() {
                 <div className="grid-2" style={{gap:12}}>
                   <div className="field">
                     <label>Orientação</label>
-                    <select value={reg.ori} onChange={e=>setRegiao(ri,"ori",e.target.value)}
+                    <select value={reg.ori} onChange={ev=>setRegiao(ri,"ori",ev.target.value)}
                       style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}}>
                       <option value="vertical">Barras verticais</option>
                       <option value="horizontal">Barras horizontais</option>
@@ -808,7 +808,7 @@ function PortaoCalc() {
                   <div className="field">
                     <label>Espaçamento <span className="unit">(cm)</span></label>
                     <input type="number" min="3" max="100" step="1" value={reg.esp}
-                      onChange={e=>setRegiao(ri,"esp",e.target.value)}
+                      onChange={ev=>setRegiao(ri,"esp",ev.target.value)}
                       style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}} />
                   </div>
                 </div>
