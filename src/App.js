@@ -945,63 +945,120 @@ function PortaoCalc() {
         </div>
       </div>
 
-      {/* Travessas horizontais e regiões */}
+
+      {/* ── PREENCHIMENTO POR REGIÃO ── */}
       <div className="card">
-        <div className="card-header" style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span>⬛ TRAVESSAS HORIZONTAIS E REGIÕES</span>
-          <button onClick={addTravH} className="btn-add">+ TRAVESSA</button>
+        <div className="card-header">
+          <span>PREENCHIMENTO POR REGIÃO</span>
+          <button onClick={addTravH} className="btn-add">+ Travessa horizontal</button>
         </div>
-        <div className="card-body" style={{gap:0,padding:0}}>
-          {form.regioes.map((reg, ri) => (
-            <div key={reg.id}>
-              {/* Região ri */}
-              <div className="region-block" style={{marginBottom:0,borderRadius:0,border:"none",borderBottom:"1px solid var(--border)"}}>
-                <div className="region-header" style={{background:"rgba(74,222,128,0.05)",color:"var(--green)"}}>
-                  REGIÃO {ri+1}
-                  {altNum > 0 && (() => {
-                    const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
-                    const h = limites[ri+1] - limites[ri];
-                    return <span style={{color:"#888",fontWeight:"normal",marginLeft:8,fontSize:11}}>{h.toFixed(0)}cm de altura</span>;
-                  })()}
+        <div style={{padding:"20px 18px",display:"flex",gap:16}}>
+
+          {/* Coluna esquerda: linha do tempo visual */}
+          <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:20,flexShrink:0,paddingTop:6}}>
+            <div style={{width:10,height:10,borderRadius:"50%",background:"var(--accent)",marginBottom:0}} />
+            {form.regioes.map((_, ri) => {
+              const hasTrav = ri < form.travHoriz.length;
+              return (
+                <div key={ri} style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1,width:"100%"}}>
+                  <div style={{width:2,flex:1,background:"var(--border2)",minHeight:60}} />
+                  {hasTrav && <div style={{width:14,height:14,borderRadius:"50%",background:"var(--cyan)",border:"2px solid var(--bg)",flexShrink:0,marginBlock:2}} />}
+                  {!hasTrav && <div style={{width:10,height:10,borderRadius:"50%",background:"var(--text3)",marginTop:2}} />}
                 </div>
-                <div className="grid-2" style={{gap:12}}>
-                  <div className="field">
-                    <label>Orientação</label>
-                    <select value={reg.ori} onChange={ev=>setRegiao(ri,"ori",ev.target.value)}
-                      style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}}>
-                      <option value="vertical">Barras verticais</option>
-                      <option value="horizontal">Barras horizontais</option>
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label>Espaçamento <span className="unit">(cm)</span></label>
-                    <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
-                  </div>
-                </div>
-                <div style={{marginTop:10}}>
-                  <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil do preenchimento" />
-                </div>
-              </div>
-              {/* Travessa entre regiões ri e ri+1 */}
-              {ri < form.travHoriz.length && (
-                <div className="travessa-row">
-                  <div className="travessa-label">TRAVESSA HORIZ. {ri+1}</div>
-                  <div className="field" style={{flex:1,margin:0}}>
-                    <label>Posição desde o topo <span className="unit">(cm)</span></label>
-                    <TravessaPosInput
-                      value={form.travHoriz[ri]?.pos || ""}
-                      max={altNum*100-1}
-                      onChange={val => setTravPos(ri, val)}
-                    />
-                  </div>
-                  <button onClick={()=>removeTravH(ri)}
-                    className="btn-remove">
-                    ✕
-                  </button>
-                </div>
-              )}
+              );
+            })}
+          </div>
+
+          {/* Coluna direita: regiões e travessas */}
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:0}}>
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--accent)",letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>
+              Topo {altNum > 0 ? `— 0 cm` : ""}
             </div>
-          ))}
+
+            {form.regioes.map((reg, ri) => {
+              const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
+              const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
+              const hasTrav = ri < form.travHoriz.length;
+              return (
+                <div key={reg.id}>
+                  {/* Região */}
+                  <div style={{
+                    background:"var(--bg3)",
+                    border:"1px solid var(--border)",
+                    borderRadius:6,
+                    marginBottom: hasTrav ? 0 : 0,
+                    borderBottomLeftRadius: hasTrav ? 0 : 6,
+                    borderBottomRightRadius: hasTrav ? 0 : 6,
+                    overflow:"hidden",
+                  }}>
+                    {/* Cabeçalho da região */}
+                    <div style={{
+                      display:"flex",alignItems:"center",justifyContent:"space-between",
+                      padding:"8px 14px",
+                      borderBottom:"1px solid var(--border)",
+                      background:"rgba(74,222,128,0.04)",
+                    }}>
+                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"var(--green)",letterSpacing:1.5,textTransform:"uppercase"}}>
+                        Região {ri+1}
+                      </span>
+                      {altRegiao && (
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)"}}>
+                          {altRegiao} cm
+                        </span>
+                      )}
+                    </div>
+                    {/* Campos */}
+                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
+                      <div className="grid-2" style={{gap:10}}>
+                        <div className="field">
+                          <label>Orientação</label>
+                          <select value={reg.ori} onChange={ev=>setRegiao(ri,"ori",ev.target.value)}>
+                            <option value="vertical">↕ Vertical</option>
+                            <option value="horizontal">↔ Horizontal</option>
+                          </select>
+                        </div>
+                        <div className="field">
+                          <label>Espaçamento <span className="unit">(cm)</span></label>
+                          <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
+                        </div>
+                      </div>
+                      <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil" />
+                    </div>
+                  </div>
+
+                  {/* Travessa abaixo desta região */}
+                  {hasTrav && (
+                    <div style={{
+                      display:"flex",alignItems:"center",gap:10,
+                      padding:"7px 14px",
+                      background:"rgba(34,211,238,0.06)",
+                      border:"1px solid rgba(34,211,238,0.2)",
+                      borderTop:"none",
+                      borderRadius:"0 0 6px 6px",
+                      marginBottom:8,
+                    }}>
+                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>
+                        Travessa {ri+1}
+                      </span>
+                      <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
+                        <TravessaPosInput
+                          value={form.travHoriz[ri]?.pos || ""}
+                          max={altNum*100-1}
+                          onChange={val => setTravPos(ri, val)}
+                        />
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
+                      </div>
+                      <button onClick={()=>removeTravH(ri)} className="btn-remove" title="Remover">✕</button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--text3)",letterSpacing:1,marginTop:4,textTransform:"uppercase"}}>
+              Base {altNum > 0 ? `— ${(altNum*100).toFixed(0)} cm` : ""}
+            </div>
+          </div>
         </div>
       </div>
 
