@@ -823,7 +823,7 @@ function PortaoCalc() {
                   <div className="field" style={{flex:1,margin:0}}>
                     <label>Posição desde o topo <span className="unit">(cm)</span></label>
                     <input type="number" min="1" max={altNum*100-1} step="1" value={form.travHoriz[ri]?.pos || ""}
-                      onChange={e=>setTravPos(ri,e.target.value)}
+                      onChange={ev=>setTravPos(ri,ev.target.value)}
                       style={{background:"#111",border:"1px solid #40d0ff",color:"#40d0ff",fontFamily:"monospace",fontSize:13,padding:"6px 10px",borderRadius:3,width:"100%"}} />
                   </div>
                   <button onClick={()=>removeTravH(ri)}
