@@ -1,70 +1,394 @@
 import { useState } from "react";
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #0f0f0f; }
-  .app { min-height: 100vh; background: #111; color: #e8e0d0; font-family: 'IBM Plex Sans', sans-serif; }
-  .header { background: #1a1a1a; border-bottom: 3px solid #f5a623; padding: 20px 32px; display: flex; align-items: center; gap: 16px; }
-  .header-icon { font-size: 36px; line-height: 1; }
-  .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 38px; letter-spacing: 3px; color: #f5a623; line-height: 1; }
-  .header-sub { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #888; letter-spacing: 2px; margin-top: 4px; text-transform: uppercase; }
-  .tabs { display: flex; background: #1a1a1a; border-bottom: 2px solid #2a2a2a; padding: 0 32px; gap: 4px; }
-  .tab { padding: 14px 28px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; border: none; background: transparent; color: #666; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
-  .tab:hover { color: #ccc; }
-  .tab.active { color: #f5a623; border-bottom-color: #f5a623; }
-  .content { padding: 32px; max-width: 1000px; margin: 0 auto; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-  @media (max-width: 680px) {
-    .grid-2 { grid-template-columns: 1fr; }
-    .tabs { padding: 0 16px; }
-    .tab { padding: 12px 16px; font-size: 11px; }
-    .content { padding: 20px 16px; }
+  @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0e0f11;
+    --bg2:       #151619;
+    --bg3:       #1c1e23;
+    --bg4:       #23262d;
+    --border:    #2a2d35;
+    --border2:   #353942;
+    --text:      #e2e4ea;
+    --text2:     #9ea3b0;
+    --text3:     #5a5f6e;
+    --accent:    #f0a500;
+    --accent2:   #ffbe3d;
+    --green:     #4ade80;
+    --green2:    #86efac;
+    --blue:      #60a5fa;
+    --red:       #f87171;
+    --cyan:      #22d3ee;
+    --purple:    #a78bfa;
+    --radius:    6px;
+    --shadow:    0 4px 24px rgba(0,0,0,0.4);
   }
-  .section { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; overflow: hidden; }
-  .section-header { background: #222; padding: 14px 20px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: #f5a623; border-bottom: 1px solid #2a2a2a; }
-  .section-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
-  .field { display: flex; flex-direction: column; gap: 6px; }
-  label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #888; }
-  input, select { background: #111; border: 1px solid #333; border-radius: 3px; color: #e8e0d0; font-family: 'IBM Plex Mono', monospace; font-size: 14px; padding: 10px 12px; outline: none; transition: border-color 0.2s; width: 100%; }
-  input:focus, select:focus { border-color: #f5a623; }
-  select option { background: #1a1a1a; }
-  .unit { font-size: 10px; color: #555; margin-left: 4px; }
-  .btn-calc { background: #f5a623; color: #111; border: none; border-radius: 3px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; padding: 14px 32px; cursor: pointer; width: 100%; margin-top: 8px; transition: background 0.2s, transform 0.1s; }
-  .btn-calc:hover { background: #ffc04a; }
+
+  body { background: var(--bg); font-family: 'Barlow', sans-serif; }
+
+  .app { min-height: 100vh; background: var(--bg); color: var(--text); }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0;
+    border-right: 1px solid var(--border);
+    padding-right: 24px;
+    margin-right: 24px;
+  }
+  .header-icon {
+    width: 38px; height: 38px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .header-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text);
+    line-height: 1.1;
+  }
+  .header-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    flex: 1;
+  }
+  .tab {
+    padding: 0 22px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    border-bottom: 2px solid transparent;
+    transition: all 0.18s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tab:hover { color: var(--text2); background: var(--bg3); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg3); }
+  .tab-icon { font-size: 16px; }
+
+  /* ── LAYOUT ── */
+  .content { padding: 28px 32px; max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .header { padding: 0 16px; flex-wrap: wrap; }
+    .content { padding: 16px; }
+    .tab { padding: 0 14px; font-size: 12px; }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .card-header {
+    padding: 12px 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+  .card-header-accent { color: var(--accent); }
+  .card-body { padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* ── FIELDS ── */
+  .field { display: flex; flex-direction: column; gap: 5px; }
+
+  label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  input, select {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+    appearance: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(240,165,0,0.12);
+  }
+  input:hover, select:hover { border-color: var(--border2); }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5f6e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  select option { background: var(--bg3); }
+
+  .unit { font-size: 9px; color: var(--text3); margin-left: 3px; font-family: 'JetBrains Mono', monospace; }
+
+  .checkbox-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .checkbox-row input[type=checkbox] { width: auto; cursor: pointer; accent-color: var(--accent); width: 16px; height: 16px; }
+  .checkbox-row label { text-transform: none; font-size: 12px; color: var(--text2); cursor: pointer; letter-spacing: 0; font-family: 'Barlow', sans-serif; font-weight: 500; }
+
+  /* ── BUTTONS ── */
+  .btn-calc {
+    background: var(--accent);
+    color: #111;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px; font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 13px 28px;
+    cursor: pointer;
+    flex: 1;
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 2px 12px rgba(240,165,0,0.25);
+  }
+  .btn-calc:hover { background: var(--accent2); box-shadow: 0 4px 20px rgba(240,165,0,0.35); }
   .btn-calc:active { transform: scale(0.98); }
-  .btn-reset { background: transparent; color: #666; border: 1px solid #333; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 10px 20px; cursor: pointer; width: 100%; transition: all 0.2s; }
-  .btn-reset:hover { color: #ccc; border-color: #666; }
-  .results { background: #0d1a0d; border: 1px solid #2d4a2d; border-radius: 4px; overflow: hidden; }
-  .results-header { background: #1a2e1a; padding: 14px 20px; font-family: 'Bebas Neue', sans-serif; font-size: 20px; letter-spacing: 2px; color: #6fcf6f; border-bottom: 1px solid #2d4a2d; }
-  .results-body { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-  .result-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid #1a2e1a; }
+
+  .btn-reset {
+    background: transparent;
+    color: var(--text3);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 13px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-reset:hover { color: var(--text); border-color: var(--text3); }
+
+  .btn-add {
+    background: rgba(240,165,0,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(240,165,0,0.3);
+    border-radius: 5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1px;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-add:hover { background: rgba(240,165,0,0.2); }
+
+  .btn-remove {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 5px;
+    font-size: 13px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-remove:hover { background: rgba(248,113,113,0.1); }
+
+  /* ── RESULTS ── */
+  .results-card {
+    background: linear-gradient(135deg, #0a1a0a 0%, #0d1a0d 100%);
+    border: 1px solid #1e3a1e;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .results-header {
+    padding: 14px 20px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--green);
+    border-bottom: 1px solid #1e3a1e;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .results-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 2px; }
+  .result-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
   .result-row:last-child { border-bottom: none; }
-  .result-label { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #888; letter-spacing: 1px; }
-  .result-value { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 600; color: #6fcf6f; }
-  .result-value.warn { color: #f5a623; }
-  .result-value.danger { color: #e05050; }
-  .alert { background: #2a1a0a; border: 1px solid #f5a623; border-radius: 3px; padding: 12px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #f5a623; }
-  .divider { border: none; border-top: 1px solid #2a2a2a; margin: 4px 0; }
-  .result-group-title { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 2px; color: #f5a623; margin-top: 6px; }
-  .drawing-box { background: #f5f5f0; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; }
-  .drawing-header { background: #e8e8e0; padding: 12px 20px; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: #333; border-bottom: 1px solid #ddd; }
-  .drawing-svg { width: 100%; display: block; background: #f5f5f0; }
-  .legend-box { background: #eeeee8; border-top: 1px solid #ddd; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 14px; }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #555; }
-  .legend-swatch { width: 28px; height: 5px; border-radius: 2px; }
-  .corte-table { width: 100%; border-collapse: collapse; font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
-  .corte-table th { background: #222; color: #f5a623; padding: 8px 12px; text-align: left; letter-spacing: 1px; font-size: 11px; border-bottom: 2px solid #333; }
-  .corte-table td { padding: 7px 12px; border-bottom: 1px solid #1e1e1e; color: #ccc; }
+  .result-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text3); }
+  .result-value { font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700; color: var(--green); }
+  .result-value.big { font-size: 22px; color: var(--green2); }
+  .result-value.warn { color: var(--accent); }
+  .result-value.danger { color: var(--red); }
+
+  /* ── SUMMARY BADGES ── */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+  .summary-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .summary-badge-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; }
+  .summary-badge-value { font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+  .summary-badge-unit { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text3); }
+  .summary-badge.highlight { background: rgba(240,165,0,0.08); border-color: rgba(240,165,0,0.3); }
+  .summary-badge.highlight .summary-badge-value { color: var(--accent); }
+
+  /* ── ALERT ── */
+  .alert {
+    background: rgba(240,165,0,0.08);
+    border: 1px solid rgba(240,165,0,0.3);
+    border-radius: 5px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .alert.danger { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.3); color: var(--red); }
+
+  /* ── DRAWING ── */
+  .drawing-box {
+    background: #fafaf8;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .drawing-header {
+    background: #f0f0eb;
+    padding: 10px 18px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: #444;
+    border-bottom: 1px solid #ddd;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .drawing-svg { width: 100%; display: block; }
+  .legend-box {
+    background: #f5f5f0;
+    border-top: 1px solid #e0e0d8;
+    padding: 12px 18px;
+    display: flex; flex-wrap: wrap; gap: 16px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #666; }
+  .legend-swatch { width: 24px; height: 4px; border-radius: 2px; }
+
+  /* ── CUT LIST TABLE ── */
+  .corte-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .corte-table th {
+    background: var(--bg3);
+    color: var(--text3);
+    padding: 9px 14px;
+    text-align: left;
+    letter-spacing: 1px; font-size: 10px;
+    border-bottom: 1px solid var(--border2);
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .corte-table td { padding: 8px 14px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
   .corte-table tr:last-child td { border-bottom: none; }
-  .corte-table tr:hover td { background: #1a1a1a; }
-  .corte-tag { display: inline-block; padding: 2px 7px; border-radius: 2px; font-size: 10px; font-weight: 600; }
-  .corte-est { background: #1a2a4a; color: #4a9eff; }
-  .corte-pre { background: #1a2e1a; color: #6fcf6f; }
-  .corte-diag { background: #2a220a; color: #e0a020; }
-  .total-row { background: #1a1a0a; font-weight: 600; }
-  .total-row td { color: #f5a623 !important; border-top: 2px solid #333 !important; }
+  .corte-table tbody tr:hover td { background: var(--bg3); }
+  .total-row td { font-weight: 700; color: var(--accent) !important; border-top: 1px solid var(--border2) !important; background: var(--bg3) !important; }
+
+  /* ── REGION BUILDER ── */
+  .region-block {
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .region-header {
+    padding: 10px 16px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .region-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .travessa-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: rgba(34, 211, 238, 0.05);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .travessa-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--cyan);
+    min-width: 130px;
+  }
+
+  /* ── PERFIL SELECTOR ── */
+  .perfil-dims { display: flex; gap: 6px; }
+  .perfil-dims select { font-size: 12px; padding: 8px 28px 8px 10px; }
+  .perfil-info {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    margin-top: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .perfil-info strong { font-size: 12px; }
+
+  /* ── TIPO SELECTOR ── */
+  .tipo-select { font-size: 12px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-in { animation: fadeIn 0.25s ease-out; }
 `;
+
 
 
 // Dimensões disponíveis para seleção
@@ -118,7 +442,7 @@ function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
         </select>
       </div>
       {tipo === "chata" && (
-        <div style={{ display:"flex", gap:6 }}>
+        <div className="perfil-dims">
           <select value={L} onChange={ev => { ev.stopPropagation(); onChange(tipo, parseInt(ev.target.value), e, D); }} style={sel}>
             {DIMS_CHATA_L.map(v => <option key={v} value={v}>{v}mm larg.</option>)}
           </select>
@@ -137,7 +461,7 @@ function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
           {DIMS_RED.map(v => <option key={v} value={v}>Ø{v}mm</option>)}
         </select>
       )}
-      <div style={{ fontFamily:"monospace", fontSize:11, color:"#f5a623", marginTop:4 }}>
+      <div className="perfil-info">
         {desc} → <strong>{peso.toFixed(3)} kg/m</strong>
       </div>
     </div>
@@ -160,7 +484,7 @@ function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
   return (
     <div className="field">
       <label>{label || "Perfil"}</label>
-      <div style={{ display:"flex", gap:6 }}>
+      <div className="perfil-dims">
         <select value={A} onChange={ev => { ev.stopPropagation(); onChange(parseInt(ev.target.value), B, espessura); }}
           style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
           {DIMS_A.map(a => <option key={a} value={a}>{a}mm</option>)}
@@ -174,8 +498,7 @@ function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
           {DIMS_E.filter(ep => ep < Math.min(A,B)/2).map(ep => <option key={ep} value={ep}>e={ep}mm</option>)}
         </select>
       </div>
-      <div style={{ fontFamily:"monospace", fontSize:11, color:"#f5a623", marginTop:4 }}>
-        {maior}×{menor} e={espessura}mm → <strong>{peso.toFixed(3)} kg/m</strong>
+      <div className="perfil-info"><span>{maior}×{menor} e={espessura}mm</span> → <strong>{peso.toFixed(3)} kg/m</strong>
       </div>
     </div>
   );
@@ -186,7 +509,7 @@ function Defs() {
   return (
     <defs>
       <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-        <path d="M0,0 L0,6 L6,3 z" fill="#f5a623" />
+        <path d="M0,0 L0,6 L6,3 z" fill="#e07020" />
       </marker>
     </defs>
   );
@@ -243,185 +566,6 @@ const PECA_CORES = {
 function getPecaCor(nome) {
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
-// ─── OTIMIZAÇÃO DE CORTE (First Fit Decreasing) ──────────────────────────────
-function otimizarCorte(pecas, tamanhoBarraM, kerfMm = 3) {
-  const kerf = kerfMm / 1000;
-  const itens = [];
-
-  // Expandir peças — se maior que a barra, dividir em segmentos emendados
-  pecas.filter(p => p.qtd > 0 && p.comp > 0).forEach(p => {
-    for (let i = 0; i < p.qtd; i++) {
-      let restComp = p.comp;
-      let segNum = 0;
-      while (restComp > 0.001) {
-        const segComp = Math.min(restComp, tamanhoBarraM - kerf);
-        itens.push({
-          nome: p.comp > tamanhoBarraM - kerf ? `${p.nome} (seg.${segNum+1})` : p.nome,
-          comp: segComp,
-          cor: getPecaCor(p.nome).cor,
-          emenda: segNum > 0,
-        });
-        restComp -= segComp;
-        segNum++;
-      }
-    }
-  });
-
-  itens.sort((a, b) => b.comp - a.comp);
-
-  const barras = [];
-  itens.forEach(item => {
-    let encaixou = false;
-    for (let b of barras) {
-      if (b.restante >= item.comp + kerf) {
-        b.pecas.push(item);
-        b.restante -= (item.comp + kerf);
-        encaixou = true;
-        break;
-      }
-    }
-    if (!encaixou) {
-      barras.push({ pecas: [item], restante: tamanhoBarraM - item.comp - kerf });
-    }
-  });
-
-  const totalBarras = barras.length;
-  const totalMaterial = totalBarras * tamanhoBarraM;
-  const totalUsado = itens.reduce((s, i) => s + i.comp, 0);
-  const desperdicio = totalMaterial - totalUsado;
-  const aproveitamento = (totalUsado / totalMaterial * 100);
-  const nEmendas = itens.filter(i => i.emenda).length;
-
-  return { barras, totalBarras, totalMaterial, totalUsado, desperdicio, aproveitamento, nEmendas };
-}
-
-function PainelBarras({ pecas, perfil }) {
-  const [tamanho, setTamanho] = useState("6");
-  const [resultado, setResultado] = useState(null);
-
-  function calcular() {
-    const t = parseFloat(tamanho);
-    if (!t || t <= 0) return;
-    setResultado(otimizarCorte(pecas, t));
-  }
-
-  return (
-    <div className="drawing-box">
-      <div className="drawing-header">📦 BARRAS COMERCIAIS — {perfil}{resultado ? ` — ${tamanho}m` : ""}</div>
-      <div style={{ padding: "16px 20px", display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", background: "#111" }}>
-        <div className="field" style={{ flex: 1, minWidth: 180 }}>
-          <label>Tamanho da barra comercial <span className="unit">(m)</span></label>
-          <select value={tamanho} onChange={e => setTamanho(e.target.value)} style={{ background: "#111", border: "1px solid #333", color: "#e8e0d0", fontFamily: "monospace", fontSize: 14, padding: "10px 12px", borderRadius: 3 }}>
-            <option value="6">6 metros (padrão)</option>
-            <option value="6.4">6,40 metros</option>
-            <option value="7.5">7,5 metros</option>
-            <option value="12">12 metros</option>
-          </select>
-        </div>
-        <button className="btn-calc" style={{ width: "auto", padding: "10px 28px", fontSize: 18, marginTop: 0 }} onClick={calcular}>CALCULAR</button>
-      </div>
-
-      {resultado && (
-        <div style={{ padding: "0 20px 20px" }}>
-          {/* Resumo */}
-          <div style={{ display: "flex", gap: 16, flexWrap: "wrap", margin: "16px 0" }}>
-            {[
-              { label: "Barras necessárias", valor: resultado.totalBarras, cor: "#f5a623", grande: true },
-              { label: "Material total", valor: `${resultado.totalMaterial.toFixed(1)} m`, cor: "#4a9eff" },
-              { label: "Material usado", valor: `${resultado.totalUsado.toFixed(2)} m`, cor: "#6fcf6f" },
-              { label: "Desperdício", valor: `${resultado.desperdicio.toFixed(2)} m`, cor: "#e05050" },
-              { label: "Aproveitamento", valor: `${resultado.aproveitamento.toFixed(1)}%`, cor: resultado.aproveitamento > 85 ? "#6fcf6f" : "#f5a623" },
-              { label: "Emendas", valor: resultado.nEmendas > 0 ? `${resultado.nEmendas} junta${resultado.nEmendas>1?"s":""}` : "Nenhuma", cor: resultado.nEmendas > 0 ? "#e07020" : "#6fcf6f" },
-            ].map((item, i) => (
-              <div key={i} style={{ background: "#1a1a1a", border: `1px solid ${item.cor}33`, borderRadius: 4, padding: "10px 16px", flex: 1, minWidth: 120 }}>
-                <div style={{ fontFamily: "monospace", fontSize: 10, color: "#bbb", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 }}>{item.label}</div>
-                <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: item.grande ? 32 : 20, color: item.cor, letterSpacing: 2 }}>{item.valor}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Visualização das barras */}
-          <div style={{ fontFamily: "monospace", fontSize: 11, color: "#bbb", letterSpacing: 1, textTransform: "uppercase", marginBottom: 8 }}>
-            {perfil} — {tamanho}m por barra
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {resultado.barras.map((barra, bi) => {
-              const t = parseFloat(tamanho);
-              const sobraW = barra.restante > 0.001 ? barra.restante / t : 0;
-              return (
-                <div key={bi} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: "monospace", fontSize: 10, color: "#ccc", minWidth: 24, textAlign: "right" }}>#{bi+1}</span>
-                  <div style={{ flex: 1, position: "relative", height: 24 }}>
-                    <svg width="100%" height="24" style={{ display: "block", borderRadius: 2, overflow: "hidden", border: "1px solid #2a2a2a" }}>
-                      <defs>
-                        <pattern id={`hatch${bi}`} width="6" height="6" patternUnits="userSpaceOnUse">
-                          <line x1="0" y1="6" x2="6" y2="0" stroke="#888" strokeWidth="1" />
-                        </pattern>
-                      </defs>
-                      <rect width="100%" height="24" fill="#1a1a1a" />
-                      {/* Peças */}
-                      {(() => {
-                        let cx = 0;
-                        return barra.pecas.map((peca, pi) => {
-                          const pw = (peca.comp / t) * 100;
-                          const el = (
-                            <g key={pi}>
-                              <rect x={`${cx}%`} y="0" width={`${pw}%`} height="24" fill={peca.cor} />
-                              <line x1={`${cx+pw}%`} y1="0" x2={`${cx+pw}%`} y2="24" stroke="#0a0a0a" strokeWidth="1" />
-                            </g>
-                          );
-                          cx += pw;
-                          return el;
-                        });
-                      })()}
-                      {/* Sobra com hachura */}
-                      {sobraW > 0 && (() => {
-                        const pecasW = barra.pecas.reduce((s, p) => s + (p.comp/t)*100, 0);
-                        return (
-                          <g>
-                            <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill="#555" />
-                            <rect x={`${pecasW}%`} y="0" width={`${sobraW*100}%`} height="24" fill={`url(#hatch${bi})`} />
-                            <text
-                              x={`${pecasW + sobraW*50}%`}
-                              y="15"
-                              textAnchor="middle"
-                              fill="#fff"
-                              fontSize="8"
-                              fontFamily="monospace"
-                            >{(barra.restante*100).toFixed(0)}cm</text>
-                          </g>
-                        );
-                      })()}
-                    </svg>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {Object.entries(PECA_CORES).filter(([nome]) => pecas.some(p => p.nome === nome)).map(([nome, {cor}]) => (
-              <div key={nome} style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#ccc" }}>
-                <div style={{ width: 16, height: 10, background: cor, borderRadius: 1 }} />{nome}
-              </div>
-            ))}
-            <div style={{ display: "flex", alignItems: "center", gap: 5, fontFamily: "monospace", fontSize: 10, color: "#ccc" }}>
-              <svg width="16" height="10" style={{borderRadius:1}}>
-                <defs>
-                  <pattern id="hatchLeg" width="4" height="4" patternUnits="userSpaceOnUse">
-                    <line x1="0" y1="4" x2="4" y2="0" stroke="#888" strokeWidth="1" />
-                  </pattern>
-                </defs>
-                <rect width="16" height="10" fill="#555" />
-                <rect width="16" height="10" fill="url(#hatchLeg)" />
-              </svg>Sobra
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function ListaCorte({ pecas, perfilEst, perfilPre }) {
   const sorted = [...pecas].sort((a, b) => b.comp - a.comp);
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
@@ -481,10 +625,7 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
       </div>
     </div>
     {temDoisPerfis ? (<>
-      <PainelBarras pecas={pecasEst} perfil={descrEst} />
-      <PainelBarras pecas={pecasPre} perfil={descrPre} />
     </>) : (
-      <PainelBarras pecas={pecas} perfil={descrEst} />
     )}
     </>
   );
@@ -791,41 +932,41 @@ function PortaoCalc() {
   const altNum = parseFloat(form.altura) || 0;
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:24}}>
+    <div className="content" style={{padding:0}}>
       <div className="grid-2">
-        <div className="section">
-          <div className="section-header">⚙ Dimensões</div>
-          <div className="section-body">
+        <div className="card">
+          <div className="card-header">⚙ Dimensões</div>
+          <div className="card-body">
             <div className="field"><label>Largura total <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.largura} onChange={e=>set("largura",e.target.value)} placeholder="Ex: 4.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 2.00" /></div>
             <div className="field"><label>Nº de folhas</label><select value={form.folhas} onChange={e=>set("folhas",e.target.value)}><option value="1">1 folha</option><option value="2">2 folhas</option><option value="4">4 folhas</option></select></div>
             <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
-            <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
+            <div className="field" className="checkbox-row">
               <input type="checkbox" id="diag" checked={form.incluiDiagonal} onChange={e=>set("incluiDiagonal",e.target.checked)} style={{width:"auto"}} />
               <label htmlFor="diag" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Incluir diagonal</label>
             </div>
           </div>
         </div>
-        <div className="section">
-          <div className="section-header">🔩 Perfil Estrutural</div>
-          <div className="section-body">
+        <div className="card">
+          <div className="card-header">🔩 Perfil Estrutural</div>
+          <div className="card-body">
             <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural" />
           </div>
         </div>
       </div>
 
       {/* Travessas horizontais e regiões */}
-      <div className="section">
-        <div className="section-header" style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <div className="card">
+        <div className="card-header" style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <span>⬛ TRAVESSAS HORIZONTAIS E REGIÕES</span>
-          <button onClick={addTravH} style={{background:"#f5a623",border:"none",borderRadius:3,padding:"4px 14px",fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:2,cursor:"pointer",color:"#111"}}>+ TRAVESSA</button>
+          <button onClick={addTravH} className="btn-add">+ TRAVESSA</button>
         </div>
-        <div className="section-body" style={{gap:0,padding:0}}>
+        <div className="card-body" style={{gap:0,padding:0}}>
           {form.regioes.map((reg, ri) => (
             <div key={reg.id}>
               {/* Região ri */}
-              <div style={{padding:"14px 20px",background: ri%2===0?"#1a1a1a":"#161616",borderBottom:"1px solid #2a2a2a"}}>
-                <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:2,color:"#6fcf6f",marginBottom:10}}>
+              <div className="region-block" style={{marginBottom:0,borderRadius:0,border:"none",borderBottom:"1px solid var(--border)"}}>
+                <div className="region-header" style={{background:"rgba(74,222,128,0.05)",color:"var(--green)"}}>
                   REGIÃO {ri+1}
                   {altNum > 0 && (() => {
                     const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
@@ -853,8 +994,8 @@ function PortaoCalc() {
               </div>
               {/* Travessa entre regiões ri e ri+1 */}
               {ri < form.travHoriz.length && (
-                <div style={{padding:"10px 20px",background:"#0d1e0d",borderBottom:"1px solid #2a2a2a",display:"flex",alignItems:"center",gap:12}}>
-                  <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,letterSpacing:2,color:"#40d0ff",minWidth:120}}>TRAVESSA HORIZ. {ri+1}</div>
+                <div className="travessa-row">
+                  <div className="travessa-label">TRAVESSA HORIZ. {ri+1}</div>
                   <div className="field" style={{flex:1,margin:0}}>
                     <label>Posição desde o topo <span className="unit">(cm)</span></label>
                     <TravessaPosInput
@@ -864,7 +1005,7 @@ function PortaoCalc() {
                     />
                   </div>
                   <button onClick={()=>removeTravH(ri)}
-                    style={{background:"transparent",border:"1px solid #e05050",color:"#e05050",borderRadius:3,padding:"6px 12px",cursor:"pointer",fontFamily:"monospace",fontSize:12}}>
+                    className="btn-remove">
                     ✕
                   </button>
                 </div>
@@ -874,7 +1015,7 @@ function PortaoCalc() {
         </div>
       </div>
 
-      <div style={{display:"flex",gap:12}}>
+      <div style={{display:"flex",gap:10}}>
         <button className="btn-calc" onClick={calcular}>CALCULAR PORTÃO</button>
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:"",travHoriz:[],regioes:[regiaoDefault(0)]}));setResult(null);}}>LIMPAR</button>
       </div>
@@ -890,11 +1031,11 @@ function PortaoCalc() {
           perfilEst={`${form.estA}x${form.estB}x${form.estE}`}
           perfilPre={`${form.estA}x${form.estB}x${form.estE}`} />
         <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.estA}x${form.estB}x${form.estE}`} />
-        <div className="results">
+        <div className="results-card">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
             <div className="result-row"><span className="result-label">Total de material</span><span className="result-value">{result.mTotal} m</span></div>
-            <div className="result-row"><span className="result-label">Peso total estimado</span><span className="result-value" style={{fontSize:18}}>{result.pesoTotal} kg</span></div>
+            <div className="result-row"><span className="result-label">Peso total estimado</span><span className="result-value big">{result.pesoTotal} kg</span></div>
           </div>
         </div>
       </>)}
@@ -1015,11 +1156,11 @@ function ParapeitoCalc() {
   }
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:24}}>
+    <div className="content" style={{padding:0}}>
       <div className="grid-2">
-        <div className="section">
-          <div className="section-header">⚙ Dimensões</div>
-          <div className="section-body">
+        <div className="card">
+          <div className="card-header">⚙ Dimensões</div>
+          <div className="card-body">
             <div className="field"><label>Comprimento <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.comprimento} onChange={e=>set("comprimento",e.target.value)} placeholder="Ex: 10.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.8" step="0.05" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 1.10" /></div>
             <div className="field"><label>Espaçamento entre postes <span className="unit">(cm)</span></label><input type="number" min="50" max="300" step="10" value={form.postesEsp} onChange={e=>set("postesEsp",e.target.value)} /></div>
@@ -1027,9 +1168,9 @@ function ParapeitoCalc() {
             <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
           </div>
         </div>
-        <div className="section">
-          <div className="section-header">🔩 Perfis</div>
-          <div className="section-body">
+        <div className="card">
+          <div className="card-header">🔩 Perfis</div>
+          <div className="card-body">
             <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural (postes/travessas)" />
             <PerfilEstSelector A={form.preA} B={form.preB} e={form.preE} onChange={setPre} label="Perfil de preenchimento" />
             <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
@@ -1037,18 +1178,18 @@ function ParapeitoCalc() {
           </div>
         </div>
       </div>
-      <div style={{display:"flex",gap:12}}>
+      <div style={{display:"flex",gap:10}}>
         <button className="btn-calc" onClick={calcular}>CALCULAR PARAPEITO</button>
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,comprimento:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
         <DesenhoParapeito L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
         <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
-        <div className="results">
+        <div className="results-card">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
             <div className="result-row"><span className="result-label">Total de material</span><span className="result-value">{result.mTotal} m</span></div>
-            <div className="result-row"><span className="result-label">Peso total estimado</span><span className="result-value" style={{fontSize:18}}>{result.pesoTotal} kg</span></div>
+            <div className="result-row"><span className="result-label">Peso total estimado</span><span className="result-value big">{result.pesoTotal} kg</span></div>
             {parseFloat(form.altura)<1.05 && <div className="alert">⚠ Altura abaixo de 1,05m. NBR 9050 exige mínimo de 1,05m em locais públicos.</div>}
           </div>
         </div>
@@ -1164,20 +1305,20 @@ function GradeCalc() {
   const molInfo = getMolInfo();
 
   return (
-    <div style={{display:"flex",flexDirection:"column",gap:24}}>
+    <div className="content" style={{padding:0}}>
       <div className="grid-2">
-        <div className="section">
-          <div className="section-header">⚙ Dimensões</div>
-          <div className="section-body">
+        <div className="card">
+          <div className="card-header">⚙ Dimensões</div>
+          <div className="card-body">
             <div className="field"><label>Largura <span className="unit">(m)</span></label><input type="number" min="0.2" step="0.05" value={form.largura} onChange={e=>set("largura",e.target.value)} placeholder="Ex: 1.20" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.2" step="0.05" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 2.10" /></div>
             <div className="field"><label>Espaçamento barras verticais <span className="unit">(cm)</span></label><input type="number" min="3" max="30" step="0.5" value={form.espacamentoV} onChange={e=>set("espacamentoV",e.target.value)} /></div>
             <div className="field"><label>Travessas horizontais internas</label><select value={form.nTravH} onChange={e=>set("nTravH",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
           </div>
         </div>
-        <div className="section">
-          <div className="section-header">🔩 Perfis</div>
-          <div className="section-body">
+        <div className="card">
+          <div className="card-header">🔩 Perfis</div>
+          <div className="card-body">
             {/* Moldura — tubo ou maciça */}
             <div className="field">
               <label>Tipo da moldura</label>
@@ -1200,18 +1341,18 @@ function GradeCalc() {
           </div>
         </div>
       </div>
-      <div style={{display:"flex",gap:12}}>
+      <div style={{display:"flex",gap:10}}>
         <button className="btn-calc" onClick={calcular}>CALCULAR GRADE</button>
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
         <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
         <ListaCorte pecas={result.pecas} perfilEst={`mol_${form.molTipo}`} perfilPre={`bar_${form.barTipo}`} />
-        <div className="results">
+        <div className="results-card">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
             <div className="result-row"><span className="result-label">Total de material</span><span className="result-value">{result.mTotal} m</span></div>
-            <div className="result-row"><span className="result-label">Peso total estimado</span><span className="result-value" style={{fontSize:18}}>{result.pesoTotal} kg</span></div>
+            <div className="result-row"><span className="result-label">Peso total estimado</span><span className="result-value big">{result.pesoTotal} kg</span></div>
             <div className="result-row"><span className="result-label">Abertura livre entre barras</span><span className={`result-value ${result.aberturaOk?"":"danger"}`}>{result.espVcm} cm {result.aberturaOk?"✔":"✘"}</span></div>
             {!result.aberturaOk && <div className="alert">⚠ Abertura maior que 11cm. NBR 9050 recomenda máx. 11cm para segurança infantil.</div>}
           </div>
@@ -1224,32 +1365,41 @@ function GradeCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 // ROOT
 // ══════════════════════════════════════════════════════════════════════════════
+
 const TABS = [
-  { id:"portao", label:"🚪 Portão", comp:PortaoCalc },
-  { id:"parapeito", label:"🏗 Parapeito", comp:ParapeitoCalc },
-  { id:"grade", label:"⊞ Grade", comp:GradeCalc },
+  { id:"portao",   label:"Portão",   icon:"🚪" },
+  { id:"parapeito",label:"Parapeito",icon:"🏗" },
+  { id:"grade",    label:"Grade",    icon:"⊞"  },
 ];
+
+const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc };
 
 export default function App() {
   const [tab, setTab] = useState("portao");
-  const Active = TABS.find(t => t.id === tab).comp;
+  const Active = COMPS[tab];
   return (
     <>
       <style>{styles}</style>
       <div className="app">
-        <div className="header">
-          <div className="header-icon">🔧</div>
-          <div>
-            <div className="header-title">SerCalc Pro</div>
-            <div className="header-sub">Calculadora para Serralheiros · Portões · Parapeitos · Grades</div>
+        <header className="header">
+          <div className="header-brand">
+            <div className="header-icon">⚙</div>
+            <div>
+              <div className="header-title">SerCalc Pro</div>
+              <div className="header-sub">Serralheria · Cálculo Estrutural</div>
+            </div>
           </div>
-        </div>
-        <div className="tabs">
-          {TABS.map(t => (
-            <button key={t.id} className={`tab ${tab===t.id?"active":""}`} onClick={()=>setTab(t.id)}>{t.label}</button>
-          ))}
-        </div>
-        <div className="content"><Active /></div>
+          <nav className="tabs">
+            {TABS.map(t => (
+              <button key={t.id} className={`tab ${tab===t.id?"active":""}`} onClick={()=>setTab(t.id)}>
+                <span className="tab-icon">{t.icon}</span>{t.label}
+              </button>
+            ))}
+          </nav>
+        </header>
+        <main className="content">
+          <Active />
+        </main>
       </div>
     </>
   );
