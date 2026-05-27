@@ -597,16 +597,19 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
   );
 }
 
-// Componente isolado para o input de espaçamento da região
+// Componente isolado para o input de espaçamento da região - usa uncontrolled input
 function RegiaoEspInput({ value, onChange }) {
   return (
-    <input type="number" min="3" max="100" step="1" value={value}
-      onChange={ev => { ev.stopPropagation(); onChange(ev.target.value); }}
+    <input type="number" min="3" max="100" step="1"
+      defaultValue={value}
+      key={value}
+      onBlur={ev => onChange(ev.target.value)}
+      onKeyDown={ev => { if (ev.key === 'Enter') onChange(ev.target.value); }}
       style={{background:"#111",border:"1px solid #333",color:"#e8e0d0",fontFamily:"monospace",fontSize:13,padding:"8px",borderRadius:3,width:"100%"}} />
   );
 }
 
-// Componente isolado para o input de posição da travessa
+// Componente isolado para o input de posição da travessa - usa uncontrolled input
 function TravessaPosInput({ value, max, onChange }) {
   return (
     <input
@@ -614,8 +617,10 @@ function TravessaPosInput({ value, max, onChange }) {
       min="1"
       max={max}
       step="1"
-      value={value}
-      onChange={ev => { ev.stopPropagation(); onChange(ev.target.value); }}
+      defaultValue={value}
+      key={value}
+      onBlur={ev => onChange(ev.target.value)}
+      onKeyDown={ev => { if (ev.key === 'Enter') onChange(ev.target.value); }}
       style={{background:"#111",border:"1px solid #40d0ff",color:"#40d0ff",fontFamily:"monospace",fontSize:13,padding:"6px 10px",borderRadius:3,width:"100%"}}
     />
   );
