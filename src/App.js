@@ -72,16 +72,88 @@ const DIMS_A  = [10,12,15,20,25,30,38,40,50,60,70,76,80,90,100,120,150,200];
 const DIMS_B  = [10,12,15,20,25,30,38,40,50,60,70,76,80,90,100,120,150,200];
 const DIMS_E  = [1,1.5,2,2.5,3,3.5,4,5,6];
 
-// Fórmula: Peso (kg/m) = 7,85 × (A+B−2e) × e × 0,001 × 2
-// (fator 2 porque são 4 faces: 2×(A-e) + 2×(B-e) = 2(A+B-2e))
+// Dimensões para barras maciças
+const DIMS_CHATA_L = [12,19,25,30,32,38,40,50,60,75,100]; // largura mm
+const DIMS_CHATA_E = [2,3,4,5,6,8,10,12];                 // espessura mm
+const DIMS_QUAD    = [5,6,8,10,12,16,20,25,32,40,50];     // lado mm
+const DIMS_RED     = [5,6,8,10,12,16,20,25,32,38,50];     // diâmetro mm
+
+// Peso kg/m para tubo: 7,85 × 2 × (A+B-2e) × e × 0,001
 function calcPesoM(A, B, e) {
   return 7.85 * 2 * (A + B - 2 * e) * e * 0.001;
 }
+// Peso kg/m para barra chata: 7,85 × L × e × 0,001
+function calcPesoChata(L, e) {
+  return 7.85 * L * e * 0.001;
+}
+// Peso kg/m para barra quadrada maciça: 7,85 × L² × 0,001
+function calcPesoQuad(L) {
+  return 7.85 * L * L * 0.001;
+}
+// Peso kg/m para barra redonda maciça: 7,85 × π/4 × D² × 0,001
+function calcPesoRed(D) {
+  return 7.85 * Math.PI / 4 * D * D * 0.001;
+}
 
-// Constrói chave do perfil customizado
+// Constrói chave do perfil
 function perfilKey(A, B, e) { return `${A}x${B}x${e}`; }
 
-// Componente seletor de perfil (3 dropdowns — A, B livres, espessura filtrada)
+// Seletor para BARRAS MACIÇAS (chata, quadrada, redonda)
+function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
+  // tipo: "chata" | "quadrada" | "redonda"
+  let peso = 0; let desc = "";
+  if (tipo === "chata")    { peso = calcPesoChata(L, e); desc = `Chata ${L}×${e}mm`; }
+  if (tipo === "quadrada") { peso = calcPesoQuad(L);     desc = `Quadrada ${L}×${L}mm`; }
+  if (tipo === "redonda")  { peso = calcPesoRed(D);      desc = `Redonda Ø${D}mm`; }
+
+  const sel = { flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 };
+
+  return (
+    <div className="field">
+      <label>{label || "Barra maciça"}</label>
+      <div style={{ display:"flex", gap:6, marginBottom:6 }}>
+        <select value={tipo} onChange={ev => onChange(ev.target.value, L, e, D)} style={sel}>
+          <option value="chata">Barra chata</option>
+          <option value="quadrada">Quadrada maciça</option>
+          <option value="redonda">Redonda maciça</option>
+        </select>
+      </div>
+      {tipo === "chata" && (
+        <div style={{ display:"flex", gap:6 }}>
+          <select value={L} onChange={ev => onChange(tipo, parseInt(ev.target.value), e, D)} style={sel}>
+            {DIMS_CHATA_L.map(v => <option key={v} value={v}>{v}mm larg.</option>)}
+          </select>
+          <select value={e} onChange={ev => onChange(tipo, L, parseInt(ev.target.value), D)} style={sel}>
+            {DIMS_CHATA_E.map(v => <option key={v} value={v}>{v}mm esp.</option>)}
+          </select>
+        </div>
+      )}
+      {tipo === "quadrada" && (
+        <select value={L} onChange={ev => onChange(tipo, parseInt(ev.target.value), e, D)} style={sel}>
+          {DIMS_QUAD.map(v => <option key={v} value={v}>{v}×{v}mm</option>)}
+        </select>
+      )}
+      {tipo === "redonda" && (
+        <select value={D} onChange={ev => onChange(tipo, L, e, parseInt(ev.target.value))} style={sel}>
+          {DIMS_RED.map(v => <option key={v} value={v}>Ø{v}mm</option>)}
+        </select>
+      )}
+      <div style={{ fontFamily:"monospace", fontSize:11, color:"#f5a623", marginTop:4 }}>
+        {desc} → <strong>{peso.toFixed(3)} kg/m</strong>
+      </div>
+    </div>
+  );
+}
+
+// Retorna peso e desc de uma barra maciça
+function barraInfo(tipo, L, e, D) {
+  if (tipo === "chata")    return { peso: calcPesoChata(L, e), desc: `Barra chata ${L}×${e}mm`, espMm: e };
+  if (tipo === "quadrada") return { peso: calcPesoQuad(L),     desc: `Quadrada ${L}×${L}mm`,    espMm: L };
+  if (tipo === "redonda")  return { peso: calcPesoRed(D),      desc: `Redonda Ø${D}mm`,          espMm: D };
+  return { peso: 0, desc: "", espMm: 0 };
+}
+
+// Componente seletor de perfil tubular (3 dropdowns)
 function PerfilEstSelector({ A, B, e, onChange, label }) {
   const maior = Math.max(A, B);
   const menor = Math.min(A, B);
@@ -109,8 +181,6 @@ function PerfilEstSelector({ A, B, e, onChange, label }) {
     </div>
   );
 }
-
-
 
 // ─── SVG helpers// ─── SVG helpers ─────────────────────────────────────────────────────────────
 function Defs() {
@@ -424,10 +494,10 @@ function ListaCorte({ pecas, perfilEst, perfilPre }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre, usaBarraDeslocada, posBarraDeslocada, espInf, espSup }) {
+function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPreenchi, incluiDiagonal, perfilEst, perfilPre }) {
   // Proporção real: L metros de largura, H metros de altura
   const maxW = 660; const maxDrawH = 400;
-  const padL = 14; const padR = usaBarraDeslocada ? 130 : 90; const padT = 14; const padB = 52;
+  const padL = 14; const padR = 90; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
@@ -491,7 +561,7 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
                 <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPreH} strokeWidth="1.5" />
               ))}
               {/* Preenchimento vertical - segmentos interrompidos pelas travessas do meio */}
-              {oriPreenchi === "vertical" && !usaBarraDeslocada && barrasV.map((bx,bi) => {
+              {oriPreenchi === "vertical" && barrasV.map((bx,bi) => {
                 const nSeg = (nMeio||0) + 1;
                 return [...Array(nSeg)].map((_,si) => {
                   const y1seg = oy + (si / nSeg) * dh + 4;
@@ -499,26 +569,6 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
                   return <line key={`${bi}-${si}`} x1={fx+bx} y1={y1seg} x2={fx+bx} y2={y2seg} stroke={corPreV} strokeWidth="1.5" />;
                 });
               })}
-              {/* Preenchimento vertical com barra deslocada */}
-              {oriPreenchi === "vertical" && usaBarraDeslocada && (() => {
-                const yBD = oy + (posBarraDeslocada / H) * dh; // posição da barra deslocada em px
-                // Barras superiores (acima da barra deslocada) — espaçamento normal
-                const nVSup = Math.max(0, Math.floor(fw / (espSup * scale)) - 1);
-                const supBars = []; for(let i=1;i<=nVSup;i++) supBars.push(i * fw/(nVSup+1));
-                // Barras inferiores (abaixo da barra deslocada) — espaçamento menor
-                const nVInf = Math.max(0, Math.floor(fw / (espInf * scale)) - 1);
-                const infBars = []; for(let i=1;i<=nVInf;i++) infBars.push(i * fw/(nVInf+1));
-                return (
-                  <g>
-                    {/* Barra deslocada horizontal */}
-                    <line x1={fx+4} y1={yBD} x2={fx+fw-4} y2={yBD} stroke={corTravH} strokeWidth="3" />
-                    {/* Barras verticais superiores */}
-                    {supBars.map((bx,i)=><line key={`sup-${i}`} x1={fx+bx} y1={oy+4} x2={fx+bx} y2={yBD-2} stroke={corPreV} strokeWidth="1.5" />)}
-                    {/* Barras verticais inferiores — mais densas */}
-                    {infBars.map((bx,i)=><line key={`inf-${i}`} x1={fx+bx} y1={yBD+2} x2={fx+bx} y2={oy+dh-4} stroke={corPreV} strokeWidth="1.5" />)}
-                  </g>
-                );
-              })()}
               {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
               <text x={fx+fw/2} y={oy+dh/2-10} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
             </g>
@@ -528,15 +578,6 @@ function DesenhoPortao({ L, H, folhas, nBarrasH, nBarrasV, nMeio, nTravV, oriPre
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
         <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
         {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={38} orient="h" />}
-        {usaBarraDeslocada && (() => {
-          const yBD = oy + (posBarraDeslocada / H) * dh;
-          const altInf = H - posBarraDeslocada;
-          return (
-            <g>
-              <Cota x1={ox} y1={yBD} x2={ox+dw} y2={oy+dh} label={`${(altInf*100).toFixed(0)}cm`} offset={44} orient="v" />
-            </g>
-          );
-        })()}
       </svg>
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
@@ -559,9 +600,6 @@ function PortaoCalc() {
     incluiDiagonal:true,
     nTravHoriz:"1",
     nTravVert:"0",
-    barraDeslocada: false,
-    espacamentoVInf:"8",
-    posBarraDesl:"50",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
@@ -612,11 +650,6 @@ function PortaoCalc() {
     const pPre   = calcPesoM(form.preA, form.preB, form.preE);
     const descPre = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
 
-    // Barra deslocada — posicionada no 1º quarto da altura (de cima para baixo)
-    const usaBarraDeslocada = form.barraDeslocada && form.oriPreenchi === "vertical";
-    const posBarraDeslocada = parseFloat(form.posBarraDesl) / 100 || H * 0.25;
-    const espInf = parseFloat(form.espacamentoVInf) / 100;
-
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil: descEst, comp: compTravSupInf, qtd: folhas,       compTotal: folhas*compTravSupInf,       peso: folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil: descEst, comp: compMontante,   qtd: 2*folhas,     compTotal: 2*folhas*compMontante,       peso: 2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
@@ -625,12 +658,6 @@ function PortaoCalc() {
     }
     if (nTravV > 0) {
       pecas.push({ nome:"Travessa vertical",   tipo:"estrutura", perfil: descEst, comp: compTravVert,  qtd: nTravV*folhas, compTotal: nTravV*folhas*compTravVert,  peso: nTravV*folhas*compTravVert*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravVert*100).toFixed(1)}cm` });
-    }
-
-    // Barra deslocada horizontal (estrutura) — no 1/4 superior
-    if (usaBarraDeslocada) {
-      const compBD = Lf - 2*espEst;
-      pecas.push({ nome:"Travessa horizontal", tipo:"estrutura", perfil: descEst, comp: compBD, qtd: folhas, compTotal: folhas*compBD, peso: folhas*compBD*pEst, obs:`Barra deslocada — 1/4 sup. (${(posBarraDeslocada*100).toFixed(1)}cm do topo)` });
     }
 
     if (form.incluiDiagonal && diagComp > 0) {
@@ -644,21 +671,6 @@ function PortaoCalc() {
           ? `(largInt − ${nTravV}×${(espEst*100).toFixed(1)}cm) ÷ ${nColunas} = ${(compPreHCell*100).toFixed(1)}cm`
           : `Lf − 2×${(espEst*100).toFixed(1)}cm = ${(compPreHCell*100).toFixed(1)}cm`;
         pecas.push({ nome:"Barra horizontal", tipo:"preenchimento", perfil: descPre, comp: compPreHCell, qtd: qtdH, compTotal: qtdH*compPreHCell, peso: qtdH*compPreHCell*pPre, obs: obsH });
-      } else if (usaBarraDeslocada) {
-        // Parte superior (acima da barra deslocada)
-        // desconta: 1×espEst (montante topo) + 0.5×espEst (meia barra deslocada) = 1.5×espEst
-        const compPreVSup = posBarraDeslocada - 1.5*espEst;
-        const nVSup = Math.max(0, Math.floor(Lf/esp) - 1);
-        if (nVSup > 0 && compPreVSup > 0) {
-          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVSup, qtd: nVSup*folhas, compTotal: nVSup*folhas*compPreVSup, peso: nVSup*folhas*compPreVSup*pPre, obs:`Sup: H_sup − 1.5×${(espEst*100).toFixed(1)}cm = ${(compPreVSup*100).toFixed(1)}cm` });
-        }
-        // Parte inferior (abaixo da barra deslocada)
-        // desconta: 0.5×espEst (meia barra deslocada) + 1×espEst (montante fundo) = 1.5×espEst
-        const compPreVInf = H - posBarraDeslocada - 1.5*espEst;
-        const nVInf = Math.max(0, Math.floor(Lf/espInf) - 1);
-        if (nVInf > 0 && compPreVInf > 0) {
-          pecas.push({ nome:"Barra vertical", tipo:"preenchimento", perfil: descPre, comp: compPreVInf, qtd: nVInf*folhas, compTotal: nVInf*folhas*compPreVInf, peso: nVInf*folhas*compPreVInf*pPre, obs:`Inf: H_inf − 1.5×${(espEst*100).toFixed(1)}cm = ${(compPreVInf*100).toFixed(1)}cm` });
-        }
       } else {
         const qtdV = nPreenchi * folhas * nSegmentos;
         const obsV = nTravH > 0
@@ -671,7 +683,7 @@ function PortaoCalc() {
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst, descPre, usaBarraDeslocada, posBarraDeslocada, espInf, espSup: esp });
+    setResult({ pecas, pesoTotal: pesoTotal.toFixed(1), mTotal: mTotal.toFixed(2), L, H, folhas, nPreenchi, nMeio: nTravH, nTravV, descEst, descPre });
   }
 
   return (
@@ -689,14 +701,6 @@ function PortaoCalc() {
               <input type="checkbox" id="diag" checked={form.incluiDiagonal} onChange={e=>set("incluiDiagonal",e.target.checked)} style={{width:"auto"}} />
               <label htmlFor="diag" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Incluir diagonal (contraventamento)</label>
             </div>
-            <div className="field" style={{flexDirection:"row",alignItems:"center",gap:10}}>
-              <input type="checkbox" id="barraDesl" checked={form.barraDeslocada} onChange={e=>{set("barraDeslocada",e.target.checked); if(e.target.checked) set("oriPreenchi","vertical"); setResult(null);}} style={{width:"auto"}} />
-              <label htmlFor="barraDesl" style={{textTransform:"none",fontSize:13,cursor:"pointer"}}>Barra horizontal inferior deslocada</label>
-            </div>
-            {form.barraDeslocada && (<>
-              <div className="field"><label>Posição da barra (do topo) <span className="unit">(cm)</span></label><input type="number" min="5" max="200" step="1" value={form.posBarraDesl} onChange={e=>set("posBarraDesl",e.target.value)} placeholder="Ex: 50" /></div>
-              <div className="field"><label>Espaçamento barras verticais inferiores <span className="unit">(cm)</span></label><input type="number" min="3" max="30" step="1" value={form.espacamentoVInf} onChange={e=>set("espacamentoVInf",e.target.value)} /></div>
-            </>)}
           </div>
         </div>
         <div className="section">
@@ -714,7 +718,7 @@ function PortaoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
       {result && (<>
-        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} usaBarraDeslocada={result.usaBarraDeslocada} posBarraDeslocada={result.posBarraDeslocada} espInf={result.espInf} espSup={result.espSup} />
+        <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas} nBarrasH={form.oriPreenchi==="horizontal"?result.nPreenchi:0} nBarrasV={form.oriPreenchi==="vertical"?result.nPreenchi:0} nMeio={result.nMeio} nTravV={result.nTravV} oriPreenchi={form.oriPreenchi} incluiDiagonal={form.incluiDiagonal} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
         <ListaCorte pecas={result.pecas} perfilEst={perfilKey(form.estA,form.estB,form.estE)} perfilPre={perfilKey(form.preA,form.preB,form.preE)} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
@@ -933,15 +937,13 @@ function GradeCalc() {
   const [form, setForm] = useState({
     largura:"", altura:"",
     molA:40, molB:40, molE:3,
-    barA:30, barB:30, barE:2,
+    barTipo:"chata", barL:25, barE:3, barD:12,
     espacamentoV:"10", nTravH:"0",
-    barraDeslocada: false,
-    espacamentoVInf:"6",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const setMol = (A,B,e) => setForm(f=>({...f, molA:A, molB:B, molE:e}));
-  const setBar = (A,B,e) => setForm(f=>({...f, barA:A, barB:B, barE:e}));
+  const setBar = (tipo,L,e,D) => setForm(f=>({...f, barTipo:tipo, barL:L, barE:e, barD:D}));
 
   function calcular() {
     const L=parseFloat(form.largura); const H=parseFloat(form.altura);
@@ -953,12 +955,16 @@ function GradeCalc() {
     const espMol   = Math.max(form.molA, form.molB)/1000;
     const pMol     = calcPesoM(form.molA, form.molB, form.molE);
     const descMol  = `Tubo ${Math.max(form.molA,form.molB)}×${Math.min(form.molA,form.molB)} e=${form.molE}mm`;
-    const pBar     = calcPesoM(form.barA, form.barB, form.barE);
-    const descBar  = `Tubo ${Math.max(form.barA,form.barB)}×${Math.min(form.barA,form.barB)} e=${form.barE}mm`;
+
+    const { peso: pBar, desc: descBar, espMm: espBarMm } = barraInfo(form.barTipo, form.barL, form.barE, form.barD);
+    const espBar = espBarMm / 1000; // espessura da barra em metros (para descontos)
 
     const compLateral   = H;
     const compTopBot    = L - 2*espMol;
+    // Barras verticais: descontam moldura sup + inf
     const compBarraV    = H - 2*espMol;
+    // Travessas horizontais: descontam as laterais, mas também a espessura das barras verticais
+    // Simplificado: descontam apenas as laterais
     const compTraversaH = L - 2*espMol;
 
     const aberturaOk = espV<=0.11;
@@ -972,7 +978,7 @@ function GradeCalc() {
 
     const pesoTotal=pecas.reduce((s,p)=>s+p.peso,0);
     const mTotal=pecas.reduce((s,p)=>s+p.compTotal,0);
-    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nV,nH,aberturaOk,espVcm:(espV*100).toFixed(1),descMol,descBar});
+    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nV,nH,aberturaOk,espVcm:(espV*100).toFixed(1),descMol,descBar,espBar});
   }
 
   return (
@@ -990,8 +996,8 @@ function GradeCalc() {
         <div className="section">
           <div className="section-header">🔩 Perfis</div>
           <div className="section-body">
-            <PerfilEstSelector A={form.molA} B={form.molB} e={form.molE} onChange={setMol} label="Perfil da moldura" />
-            <PerfilEstSelector A={form.barA} B={form.barB} e={form.barE} onChange={setBar} label="Perfil das barras internas" />
+            <PerfilEstSelector A={form.molA} B={form.molB} e={form.molE} onChange={setMol} label="Perfil da moldura (tubo)" />
+            <BarraMacicoSelector tipo={form.barTipo} L={form.barL} e={form.barE} D={form.barD} onChange={setBar} label="Barra de preenchimento" />
           </div>
         </div>
       </div>
@@ -1001,7 +1007,7 @@ function GradeCalc() {
       </div>
       {result && (<>
         <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
-        <ListaCorte pecas={result.pecas} perfilEst={`${form.molA}x${form.molB}x${form.molE}`} perfilPre={`${form.barA}x${form.barB}x${form.barE}`} />
+        <ListaCorte pecas={result.pecas} perfilEst={`${form.molA}x${form.molB}x${form.molE}`} perfilPre={`${form.barTipo}_${form.barL}_${form.barE}_${form.barD}`} />
         <div className="results">
           <div className="results-header">✔ Resumo</div>
           <div className="results-body">
