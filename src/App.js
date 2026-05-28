@@ -1229,7 +1229,6 @@ function ParapeitoCalc() {
     preA:30, preB:30, preE:2,
     oriPreenchi:"horizontal", espacamento:"12",
     postesEsp:"200",
-    nTravHoriz:"0", nTravVert:"0",
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
@@ -1247,47 +1246,36 @@ function ParapeitoCalc() {
     const descEst  = `Tubo ${Math.max(form.estA,form.estB)}×${Math.min(form.estA,form.estB)} e=${form.estE}mm`;
     const pPre     = calcPesoM(form.preA, form.preB, form.preE);
     const descPre  = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
-    const nTravH   = parseInt(form.nTravHoriz)||0;
-    const nTravV   = parseInt(form.nTravVert)||0;
 
-    const vao         = L/(nPostes-1||1);
-    const compPoste   = H;
-    const compTravessa = L;
-    // Preenchimento horizontal: interrompido pelos postes + travessas verticais internas
-    const largVao     = vao - 2*espEst;
-    const nColVao     = nTravV+1;
-    const compPreH    = nTravV>0 ? (largVao - nTravV*espEst)/nColVao : largVao;
-    // Preenchimento vertical: interrompido pelas travessas horizontais internas
-    const altInterna  = H - 2*espEst;
-    const nSegH       = nTravH+1;
-    const compPreV    = nTravH>0 ? (altInterna - nTravH*espEst)/nSegH : altInterna;
+    const vao        = L/(nPostes-1||1);
+    const compPoste  = H - 2*espEst;        // postes por dentro das travessas sup/inf
+    const compTravessa = L;                  // travessas por fora (comprimento total)
+    const largVao    = vao - 2*espEst;       // largura interna entre postes
+    const compPreH   = largVao;              // horizontal: entre postes
+    const altInterna = H - 2*espEst;        // altura interna entre travessas
+    const compPreV   = altInterna;           // vertical: entre travessas
 
     let nEl=0;
     if (form.oriPreenchi==="horizontal") nEl=Math.max(0,Math.floor(H/esp)-1);
     else nEl=Math.max(0,Math.floor(vao/esp)-1);
 
     const pecas=[];
-    pecas.push({nome:"Poste vertical",    tipo:"estrutura",    perfil:descEst, comp:compPoste,    qtd:nPostes,   compTotal:nPostes*compPoste,    peso:nPostes*compPoste*pEst,       obs:`${(compPoste*100).toFixed(1)}cm — altura total`});
-    pecas.push({nome:"Travessa superior", tipo:"estrutura",    perfil:descEst, comp:compTravessa, qtd:1,         compTotal:compTravessa,          peso:compTravessa*pEst,            obs:`${(compTravessa*100).toFixed(1)}cm — comprimento total`});
-    pecas.push({nome:"Travessa inferior", tipo:"estrutura",    perfil:descEst, comp:compTravessa, qtd:1,         compTotal:compTravessa,          peso:compTravessa*pEst,            obs:`${(compTravessa*100).toFixed(1)}cm — comprimento total`});
-    if(nTravH>0) pecas.push({nome:"Travessa horizontal",tipo:"estrutura",perfil:descEst,comp:compTravessa,qtd:nTravH,compTotal:nTravH*compTravessa,peso:nTravH*compTravessa*pEst,obs:`${(compTravessa*100).toFixed(1)}cm — comprimento total`});
-    if(nTravV>0) {
-      const compTravV = H - 2*espEst;
-      pecas.push({nome:"Travessa vertical",tipo:"estrutura",perfil:descEst,comp:compTravV,qtd:nTravV*(nPostes-1),compTotal:nTravV*(nPostes-1)*compTravV,peso:nTravV*(nPostes-1)*compTravV*pEst,obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compTravV*100).toFixed(1)}cm`});
-    }
+    pecas.push({nome:"Poste vertical",    tipo:"estrutura",    perfil:descEst, comp:compPoste,    qtd:nPostes, compTotal:nPostes*compPoste,  peso:nPostes*compPoste*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compPoste*100).toFixed(1)}cm`});
+    pecas.push({nome:"Travessa superior", tipo:"estrutura",    perfil:descEst, comp:compTravessa, qtd:1,       compTotal:compTravessa,        peso:compTravessa*pEst,       obs:`${(compTravessa*100).toFixed(1)}cm — por fora`});
+    pecas.push({nome:"Travessa inferior", tipo:"estrutura",    perfil:descEst, comp:compTravessa, qtd:1,       compTotal:compTravessa,        peso:compTravessa*pEst,       obs:`${(compTravessa*100).toFixed(1)}cm — por fora`});
     if(nEl>0) {
       if(form.oriPreenchi==="horizontal") {
-        const qtd = nEl*(nPostes-1)*nColVao;
-        pecas.push({nome:"Barra horizontal",tipo:"preenchimento",perfil:descPre,comp:compPreH,qtd,compTotal:qtd*compPreH,peso:qtd*compPreH*pPre,obs:`vão − postes${nTravV>0?` − travessas`:""} = ${(compPreH*100).toFixed(1)}cm`});
+        const qtd = nEl*(nPostes-1);
+        pecas.push({nome:"Barra horizontal",tipo:"preenchimento",perfil:descPre,comp:compPreH,qtd,compTotal:qtd*compPreH,peso:qtd*compPreH*pPre,obs:`vão − postes = ${(compPreH*100).toFixed(1)}cm`});
       } else {
-        const qtd = nEl*(nPostes-1)*nSegH;
-        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`altInt${nTravH>0?` − travessas`:""} = ${(compPreV*100).toFixed(1)}cm`});
+        const qtd = nEl*(nPostes-1);
+        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`altInterna = ${(compPreV*100).toFixed(1)}cm`});
       }
     }
 
     const pesoTotal=pecas.reduce((s,p)=>s+p.peso,0);
     const mTotal=pecas.reduce((s,p)=>s+p.compTotal,0);
-    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nPostes,nEl,nTravH,nTravV,descEst,descPre});
+    setResult({pecas,pesoTotal:pesoTotal.toFixed(1),mTotal:mTotal.toFixed(2),L,H,nPostes,nEl,descEst,descPre});
   }
 
   return (
@@ -1299,8 +1287,6 @@ function ParapeitoCalc() {
             <div className="field"><label>Comprimento <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.comprimento} onChange={e=>set("comprimento",e.target.value)} placeholder="Ex: 10.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.8" step="0.05" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 1.10" /></div>
             <div className="field"><label>Espaçamento entre postes <span className="unit">(cm)</span></label><input type="number" min="50" max="300" step="10" value={form.postesEsp} onChange={e=>set("postesEsp",e.target.value)} /></div>
-            <div className="field"><label>Travessas horizontais internas</label><select value={form.nTravHoriz} onChange={e=>set("nTravHoriz",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
-            <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
           </div>
         </div>
         <div className="card">
