@@ -626,8 +626,8 @@ function ListaCorte({ pecas }) {
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiagonal, perfilEst }) {
   // Proporção real: L metros de largura, H metros de altura
-  const maxW = 660; const maxDrawH = 400;
-  const padL = 14; const padR = 90; const padT = 14; const padB = 52;
+  const maxW = 700; const maxDrawH = 400;
+  const padL = 14; const padR = 110; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
@@ -715,8 +715,73 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                   </g>
                 );
               })}
+              {/* Cotas por subdivisão — apenas na última folha, lado direito */}
+              {fi === folhas-1 && (regioes||[]).map((reg, ri) => {
+                const ratios = [0, ...(travPosRatio||[]), 1];
+                const y1r = oy + ratios[ri] * dh;
+                const y2r = oy + ratios[ri+1] * dh;
+                const altR = y2r - y1r;
+                if (altR < 4) return null;
+                const espMetros = parseFloat(reg.esp) / 100;
+                const espPxV = (espMetros / (L/folhas)) * fw;
+
+                return (
+                  <g key={`cota-${ri}`}>
+                    {/* Cota de altura da subdivisão — à direita do desenho */}
+                    <line x1={fx+fw+4} y1={y1r} x2={fx+fw+10} y2={y1r} stroke="#e07020" strokeWidth="0.8" />
+                    <line x1={fx+fw+4} y1={y2r} x2={fx+fw+10} y2={y2r} stroke="#e07020" strokeWidth="0.8" />
+                    <line x1={fx+fw+8} y1={y1r+2} x2={fx+fw+8} y2={y2r-2} stroke="#e07020" strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
+                    <rect x={fx+fw+12} y={(y1r+y2r)/2-7} width={32} height={13} fill="#f5f5f0" rx="2" opacity="0.9" />
+                    <text x={fx+fw+14} y={(y1r+y2r)/2+4} fill="#e07020" fontSize="8" fontFamily="monospace" fontWeight="bold">
+                      {((ratios[ri+1]-ratios[ri])*H*100).toFixed(0)}cm
+                    </text>
+
+                    {/* Cota de espaçamento entre barras — apenas se vertical e há espaço */}
+                    {reg.ori === "vertical" && espPxV > 12 && altR > 30 && (() => {
+                      const nBars = Math.max(0, Math.ceil((fw-4)/espPxV)-1);
+                      if (nBars < 1) return null;
+                      const bx1 = fx + (1/(nBars+1)) * fw;
+                      const bx2 = fx + (2/(nBars+1)) * fw;
+                      const by  = y1r + altR * 0.5;
+                      return (
+                        <g>
+                          <line x1={bx1} y1={by-4} x2={bx1} y2={by+4} stroke="#6060ff" strokeWidth="0.8" />
+                          <line x1={bx2} y1={by-4} x2={bx2} y2={by+4} stroke="#6060ff" strokeWidth="0.8" />
+                          <line x1={bx1+1} y1={by} x2={bx2-1} y2={by} stroke="#6060ff" strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
+                          <rect x={(bx1+bx2)/2-12} y={by+4} width={24} height={11} fill="#f5f5f0" rx="2" opacity="0.9" />
+                          <text x={(bx1+bx2)/2} y={by+12} textAnchor="middle" fill="#6060ff" fontSize="8" fontFamily="monospace" fontWeight="bold">
+                            {parseFloat(reg.esp).toFixed(0)}cm
+                          </text>
+                        </g>
+                      );
+                    })()}
+
+                    {/* Cota de espaçamento — horizontal */}
+                    {reg.ori === "horizontal" && altR > 30 && (() => {
+                      const espPxH = (espMetros / H) * dh;
+                      if (espPxH < 10) return null;
+                      const nBars = Math.max(0, Math.ceil(altR/espPxH)-1);
+                      if (nBars < 1) return null;
+                      const by1 = y1r + ((1)/(nBars+1)) * altR;
+                      const by2 = y1r + ((2)/(nBars+1)) * altR;
+                      const bx  = fx + fw * 0.5;
+                      return (
+                        <g>
+                          <line x1={bx-4} y1={by1} x2={bx+4} y2={by1} stroke="#6060ff" strokeWidth="0.8" />
+                          <line x1={bx-4} y1={by2} x2={bx+4} y2={by2} stroke="#6060ff" strokeWidth="0.8" />
+                          <line x1={bx} y1={by1+1} x2={bx} y2={by2-1} stroke="#6060ff" strokeWidth="1" markerStart="url(#arr)" markerEnd="url(#arr)" />
+                          <rect x={bx+4} y={(by1+by2)/2-5} width={24} height={11} fill="#f5f5f0" rx="2" opacity="0.9" />
+                          <text x={bx+6} y={(by1+by2)/2+4} fill="#6060ff" fontSize="8" fontFamily="monospace" fontWeight="bold">
+                            {parseFloat(reg.esp).toFixed(0)}cm
+                          </text>
+                        </g>
+                      );
+                    })()}
+                  </g>
+                );
+              })}
               {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
-              <text x={fx+fw/2} y={oy+dh/2} textAnchor="middle" fill="#999" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>
+              {folhas > 1 && <text x={fx+fw/2} y={oy+dh/2} textAnchor="middle" fill="#bbb" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>}
             </g>
           );
         })}
