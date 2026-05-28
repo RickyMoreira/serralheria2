@@ -984,15 +984,44 @@ function PortaoCalc() {
               const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
               const hasTrav = ri < form.travHoriz.length;
               const temSubdivisao = form.travHoriz.length > 0;
+              const travAcima = ri > 0 ? form.travHoriz[ri-1] : null; // travessa que está acima desta subdivisão
               return (
                 <div key={reg.id}>
+                  {/* Travessa NO TOPO desta subdivisão (exceto a primeira) */}
+                  {temSubdivisao && ri > 0 && travAcima && (
+                    <div style={{
+                      display:"flex",alignItems:"center",gap:10,
+                      padding:"7px 14px",
+                      background:"rgba(34,211,238,0.06)",
+                      border:"1px solid rgba(34,211,238,0.2)",
+                      borderRadius:"6px 6px 0 0",
+                      marginBottom:0,
+                    }}>
+                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>
+                        Travessa {ri}
+                      </span>
+                      <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
+                        <TravessaPosInput
+                          value={travAcima.pos || ""}
+                          max={altNum*100-1}
+                          onChange={val => setTravPos(ri-1, val)}
+                        />
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
+                      </div>
+                      <button onClick={()=>removeTravH(ri-1)} className="btn-remove" title="Remover">✕</button>
+                    </div>
+                  )}
+
+                  {/* Bloco da subdivisão */}
                   <div style={{
                     background:"var(--bg3)",
                     border:"1px solid var(--border)",
-                    borderRadius:6,
-                    borderBottomLeftRadius: hasTrav ? 0 : 6,
-                    borderBottomRightRadius: hasTrav ? 0 : 6,
+                    borderTopLeftRadius: (temSubdivisao && ri > 0) ? 0 : 6,
+                    borderTopRightRadius: (temSubdivisao && ri > 0) ? 0 : 6,
+                    borderBottomLeftRadius: 6,
+                    borderBottomRightRadius: 6,
                     overflow:"hidden",
+                    marginBottom: hasTrav ? 8 : 0,
                   }}>
                     {/* Cabeçalho — só mostra quando há subdivisões */}
                     {temSubdivisao && (
@@ -1030,32 +1059,6 @@ function PortaoCalc() {
                       <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil" />
                     </div>
                   </div>
-
-                  {/* Travessa */}
-                  {hasTrav && (
-                    <div style={{
-                      display:"flex",alignItems:"center",gap:10,
-                      padding:"7px 14px",
-                      background:"rgba(34,211,238,0.06)",
-                      border:"1px solid rgba(34,211,238,0.2)",
-                      borderTop:"none",
-                      borderRadius:"0 0 6px 6px",
-                      marginBottom:8,
-                    }}>
-                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>
-                        Travessa {ri+1}
-                      </span>
-                      <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
-                        <TravessaPosInput
-                          value={form.travHoriz[ri]?.pos || ""}
-                          max={altNum*100-1}
-                          onChange={val => setTravPos(ri, val)}
-                        />
-                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
-                      </div>
-                      <button onClick={()=>removeTravH(ri)} className="btn-remove" title="Remover">✕</button>
-                    </div>
-                  )}
                 </div>
               );
             })}
