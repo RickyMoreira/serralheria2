@@ -930,7 +930,6 @@ function PortaoCalc() {
             <div className="field"><label>Largura total <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.largura} onChange={e=>set("largura",e.target.value)} placeholder="Ex: 4.00" /></div>
             <div className="field"><label>Altura <span className="unit">(m)</span></label><input type="number" min="0.5" step="0.1" value={form.altura} onChange={e=>set("altura",e.target.value)} placeholder="Ex: 2.00" /></div>
             <div className="field"><label>Nº de folhas</label><select value={form.folhas} onChange={e=>set("folhas",e.target.value)}><option value="1">1 folha</option><option value="2">2 folhas</option><option value="4">4 folhas</option></select></div>
-            <div className="field"><label>Travessas verticais internas</label><select value={form.nTravVert} onChange={e=>set("nTravVert",e.target.value)}>{[...Array(11)].map((_,i)=><option key={i} value={i}>{i===0?"Nenhuma":`${i} travessa${i>1?"s":""}`}</option>)}</select></div>
             <div className="checkbox-row">
               <input type="checkbox" id="diag" checked={form.incluiDiagonal} onChange={e=>set("incluiDiagonal",e.target.checked)} style={{width:"auto"}} />
               <label htmlFor="diag">Incluir diagonal</label>
@@ -945,68 +944,74 @@ function PortaoCalc() {
         </div>
       </div>
 
-
-      {/* ── PREENCHIMENTO POR REGIÃO ── */}
+      {/* ── PARTE INTERNA ── */}
       <div className="card">
         <div className="card-header">
-          <span>PREENCHIMENTO POR REGIÃO</span>
+          <span>PARTE INTERNA</span>
           <button onClick={addTravH} className="btn-add">+ Travessa horizontal</button>
         </div>
         <div style={{padding:"20px 18px",display:"flex",gap:16}}>
 
-          {/* Coluna esquerda: linha do tempo visual */}
-          <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:20,flexShrink:0,paddingTop:6}}>
-            <div style={{width:10,height:10,borderRadius:"50%",background:"var(--accent)",marginBottom:0}} />
-            {form.regioes.map((_, ri) => {
-              const hasTrav = ri < form.travHoriz.length;
-              return (
-                <div key={ri} style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1,width:"100%"}}>
-                  <div style={{width:2,flex:1,background:"var(--border2)",minHeight:60}} />
-                  {hasTrav && <div style={{width:14,height:14,borderRadius:"50%",background:"var(--cyan)",border:"2px solid var(--bg)",flexShrink:0,marginBlock:2}} />}
-                  {!hasTrav && <div style={{width:10,height:10,borderRadius:"50%",background:"var(--text3)",marginTop:2}} />}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Coluna direita: regiões e travessas */}
-          <div style={{flex:1,display:"flex",flexDirection:"column",gap:0}}>
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--accent)",letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>
-              Topo {altNum > 0 ? `— 0 cm` : ""}
+          {/* Linha do tempo — só mostra quando há travessas */}
+          {form.travHoriz.length > 0 && (
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:20,flexShrink:0,paddingTop:6}}>
+              <div style={{width:10,height:10,borderRadius:"50%",background:"var(--accent)",marginBottom:0}} />
+              {form.regioes.map((_, ri) => {
+                const hasTrav = ri < form.travHoriz.length;
+                return (
+                  <div key={ri} style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1,width:"100%"}}>
+                    <div style={{width:2,flex:1,background:"var(--border2)",minHeight:60}} />
+                    {hasTrav
+                      ? <div style={{width:14,height:14,borderRadius:"50%",background:"var(--cyan)",border:"2px solid var(--bg)",flexShrink:0,marginBlock:2}} />
+                      : <div style={{width:10,height:10,borderRadius:"50%",background:"var(--text3)",marginTop:2}} />
+                    }
+                  </div>
+                );
+              })}
             </div>
+          )}
+
+          {/* Regiões */}
+          <div style={{flex:1,display:"flex",flexDirection:"column",gap:0}}>
+            {form.travHoriz.length > 0 && (
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--accent)",letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>
+                Topo{altNum > 0 ? ` — 0 cm` : ""}
+              </div>
+            )}
 
             {form.regioes.map((reg, ri) => {
               const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
               const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
               const hasTrav = ri < form.travHoriz.length;
+              const temSubdivisao = form.travHoriz.length > 0;
               return (
                 <div key={reg.id}>
-                  {/* Região */}
                   <div style={{
                     background:"var(--bg3)",
                     border:"1px solid var(--border)",
                     borderRadius:6,
-                    marginBottom: hasTrav ? 0 : 0,
                     borderBottomLeftRadius: hasTrav ? 0 : 6,
                     borderBottomRightRadius: hasTrav ? 0 : 6,
                     overflow:"hidden",
                   }}>
-                    {/* Cabeçalho da região */}
-                    <div style={{
-                      display:"flex",alignItems:"center",justifyContent:"space-between",
-                      padding:"8px 14px",
-                      borderBottom:"1px solid var(--border)",
-                      background:"rgba(74,222,128,0.04)",
-                    }}>
-                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"var(--green)",letterSpacing:1.5,textTransform:"uppercase"}}>
-                        Região {ri+1}
-                      </span>
-                      {altRegiao && (
-                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)"}}>
-                          {altRegiao} cm
+                    {/* Cabeçalho — só mostra quando há subdivisões */}
+                    {temSubdivisao && (
+                      <div style={{
+                        display:"flex",alignItems:"center",justifyContent:"space-between",
+                        padding:"7px 14px",
+                        borderBottom:"1px solid var(--border)",
+                        background:"rgba(74,222,128,0.04)",
+                      }}>
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"var(--green)",letterSpacing:1.5,textTransform:"uppercase"}}>
+                          Subdivisão {ri+1}
                         </span>
-                      )}
-                    </div>
+                        {altRegiao && (
+                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)"}}>
+                            {altRegiao} cm
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {/* Campos */}
                     <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       <div className="grid-2" style={{gap:10}}>
@@ -1026,7 +1031,7 @@ function PortaoCalc() {
                     </div>
                   </div>
 
-                  {/* Travessa abaixo desta região */}
+                  {/* Travessa */}
                   {hasTrav && (
                     <div style={{
                       display:"flex",alignItems:"center",gap:10,
@@ -1055,9 +1060,11 @@ function PortaoCalc() {
               );
             })}
 
-            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--text3)",letterSpacing:1,marginTop:4,textTransform:"uppercase"}}>
-              Base {altNum > 0 ? `— ${(altNum*100).toFixed(0)} cm` : ""}
-            </div>
+            {form.travHoriz.length > 0 && (
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--text3)",letterSpacing:1,marginTop:2,textTransform:"uppercase"}}>
+                Base{altNum > 0 ? ` — ${(altNum*100).toFixed(0)} cm` : ""}
+              </div>
+            )}
           </div>
         </div>
       </div>
