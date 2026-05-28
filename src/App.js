@@ -1256,8 +1256,13 @@ function ParapeitoCalc() {
     const compPreV   = altInterna;           // vertical: entre travessas
 
     let nEl=0;
-    if (form.oriPreenchi==="horizontal") nEl=Math.max(0,Math.floor(H/esp)-1);
-    else nEl=Math.max(0,Math.floor(vao/esp)-1);
+    if (form.oriPreenchi==="horizontal") {
+      // Horizontal: distribuído na altura total
+      nEl = Math.max(0, Math.ceil(H/esp) - 1);
+    } else {
+      // Vertical: distribuído dentro de cada vão entre postes
+      nEl = Math.max(0, Math.ceil(largVao/esp) - 1);
+    }
 
     const pecas=[];
     pecas.push({nome:"Poste vertical",    tipo:"estrutura",    perfil:descEst, comp:compPoste,    qtd:nPostes, compTotal:nPostes*compPoste,  peso:nPostes*compPoste*pEst,  obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compPoste*100).toFixed(1)}cm`});
@@ -1269,7 +1274,7 @@ function ParapeitoCalc() {
         pecas.push({nome:"Barra horizontal",tipo:"preenchimento",perfil:descPre,comp:compPreH,qtd,compTotal:qtd*compPreH,peso:qtd*compPreH*pPre,obs:`vão − postes = ${(compPreH*100).toFixed(1)}cm`});
       } else {
         const qtd = nEl*(nPostes-1);
-        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`altInterna = ${(compPreV*100).toFixed(1)}cm`});
+        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`${nEl} barras × vão de ${(largVao*100).toFixed(1)}cm`});
       }
     }
 
