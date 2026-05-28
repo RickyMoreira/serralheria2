@@ -635,8 +635,8 @@ function ListaCorte({ pecas }) {
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiagonal, perfilEst }) {
   // Proporção real: L metros de largura, H metros de altura
-  const maxW = 700; const maxDrawH = 400;
-  const padL = 14; const padR = 110; const padT = 14; const padB = 52;
+  const maxW = 720; const maxDrawH = 400;
+  const padL = 14; const padR = 130; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
@@ -800,7 +800,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
         })}
 
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
-        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
+        <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={55} orient="v" />
         {folhas > 1 && <Cota x1={ox} y1={oy+dh} x2={ox+fw} y2={oy+dh} label={`${(L/folhas).toFixed(2)} m`} offset={38} orient="h" />}
       </svg>
       <div className="legend-box">
