@@ -781,9 +781,10 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                           const tanAng = Math.tan(ang);
                           const extra = altR / tanAng + fw;
                           const nBars = Math.max(0, Math.ceil(extra / espPxDiag) + 2);
-                          // Folha par (0,2...): / esquerda para direita subindo
-                          // Folha ímpar (1,3...): \ esquerda para direita descendo
-                          const invertido = fi % 2 !== 0;
+                          // Folha par (0,2...): / por padrão
+                          // Folha ímpar (1,3...): \ por padrão
+                          // Se inverter: troca a direção
+                          const invertido = (fi % 2 !== 0) !== (reg.inverter || false);
                           return (
                             <g key="diag">
                               <defs>
@@ -1253,9 +1254,15 @@ function PortaoCalc() {
                         )}
                       </div>
                       {reg.ori === "diagonal" && (
-                        <div className="field">
-                          <label>Espaçamento entre barras <span className="unit">(cm)</span></label>
-                          <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
+                        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                          <div className="field">
+                            <label>Espaçamento entre barras <span className="unit">(cm)</span></label>
+                            <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
+                          </div>
+                          <div className="checkbox-row">
+                            <input type="checkbox" id={`inv-${ri}`} checked={reg.inverter||false} onChange={ev=>setRegiao(ri,"inverter",ev.target.checked)} style={{width:"auto"}} />
+                            <label htmlFor={`inv-${ri}`}>Inverter direção das barras</label>
+                          </div>
                         </div>
                       )}
                       <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil" />
