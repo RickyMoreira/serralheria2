@@ -1328,10 +1328,10 @@ function ParapeitoCalc() {
 // GRADE
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
-  const maxW = 500; const maxDrawH = 420;
+  const maxSize = 460;
   const padL = 14; const padR = 90; const padT = 14; const padB = 52;
-  const availW = maxW - padL - padR;
-  const availH = maxDrawH - padT - padB;
+  const availW = maxSize - padL - padR;
+  const availH = maxSize - padT - padB;
   const scale  = Math.min(availW / L, availH / H);
   const dw = L * scale; const dh = H * scale;
   const W  = dw + padL + padR; const SH = dh + padT + padB;
@@ -1348,7 +1348,7 @@ function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
   return (
     <div className="drawing-box">
       <div className="drawing-header">📐 VISTA FRONTAL — GRADE</div>
-      <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
+      <svg viewBox={`0 0 ${W} ${SH}`} style={{display:"block",width:"100%",maxWidth:`${W}px`,height:"auto"}} preserveAspectRatio="xMidYMid meet">
         <Defs />
         <rect width={W} height={SH} fill="#f5f5f0" />
         {barrasV.map((bx,i)=><line key={i} x1={bx} y1={oy+4} x2={bx} y2={oy+dh-4} stroke={corBarraV} strokeWidth="2" />)}
