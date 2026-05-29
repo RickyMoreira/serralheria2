@@ -779,8 +779,8 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
                           const tanAng = Math.tan(ang);
-                          const extra = altR / tanAng + fw;
-                          const nBars = Math.max(0, Math.ceil(extra / espPxDiag) + 2);
+                          // nBars deve cobrir: largura da folha + altura total da folha / tan(ang)
+                          const nBars = Math.max(0, Math.ceil((fw + dh / tanAng) / espPxDiag) + 2);
                           // Folha par (0,2...): / por padrão
                           // Folha ímpar (1,3...): \ por padrão
                           // Se inverter: troca a direção
