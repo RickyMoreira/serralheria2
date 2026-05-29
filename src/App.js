@@ -772,27 +772,31 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                             return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
                           });
                         })()
-                      : reg.ori === "diagonal"
+      : reg.ori === "diagonal"
                       ? (() => {
                           const ang = (parseFloat(reg.angulo)||45) * Math.PI / 180;
                           const espPxDiag = (espMetros / Math.sin(ang) / (L/folhas)) * fw;
-                          const nBars = Math.max(0, Math.ceil((fw) / espPxDiag));
                           const corD = PECA_CORES["Barra diagonal"].cor;
-                          // Desenha linhas diagonais que cobrem a região
-                          return [...Array(Math.min(nBars+4, 60))].map((_,bi) => {
-                            const startX = fx - altR/Math.tan(ang) + bi * espPxDiag;
-                            const endX = startX + altR/Math.tan(ang);
-                            // Clip dentro da região
-                            const x1c = Math.max(fx+2, startX);
-                            const x2c = Math.min(fx+fw-2, endX);
-                            if (x2c <= x1c) return null;
-                            // Calcular Y correspondente ao clipping
-                            const t1 = (x1c - startX) / (endX - startX);
-                            const t2 = (x2c - startX) / (endX - startX);
-                            const y1c = y1r + t1 * altR;
-                            const y2c = y1r + t2 * altR;
-                            return <line key={bi} x1={x1c} y1={y1c} x2={x2c} y2={y2c} stroke={corD} strokeWidth="1.5" />;
-                          });
+                          const clipId = `clip-${fi}-${ri}`;
+                          const tanAng = Math.tan(ang);
+                          const extra = altR / tanAng + fw;
+                          const nBars = Math.max(0, Math.ceil(extra / espPxDiag) + 2);
+                          return (
+                            <g key="diag">
+                              <defs>
+                                <clipPath id={clipId}>
+                                  <rect x={fx+2} y={y1r} width={fw-4} height={altR} />
+                                </clipPath>
+                              </defs>
+                              <g clipPath={`url(#${clipId})`}>
+                                {[...Array(nBars)].map((_,bi) => {
+                                  const startX = fx - altR/tanAng + bi * espPxDiag;
+                                  const endX = startX + altR/tanAng;
+                                  return <line key={bi} x1={startX} y1={y1r} x2={endX} y2={y2r} stroke={corD} strokeWidth="1.5" />;
+                                })}
+                              </g>
+                            </g>
+                          );
                         })()
                       : (() => {
                           const nBars = Math.max(0, Math.ceil((fw-4) / espPxV) - 1);
