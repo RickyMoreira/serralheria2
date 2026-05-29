@@ -623,6 +623,7 @@ const PECA_CORES = {
   "Travessa vertical":  { bg: "#1a0a2e", cor: "#d070ff" },
   "Barra horizontal":   { bg: "#0a160a", cor: "#6fcf6f" },
   "Barra vertical":     { bg: "#0d1a0d", cor: "#a0e0a0" },
+  "Barra diagonal":     { bg: "#1a0a1a", cor: "#e879f9" },
   "Diagonal":           { bg: "#1e1408", cor: "#e0a020" },
   "Poste vertical":     { bg: "#1a0d2e", cor: "#b47aff" },
   "Moldura lateral":    { bg: "#0d1a2e", cor: "#4a9eff" },
@@ -771,6 +772,28 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                             return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
                           });
                         })()
+                      : reg.ori === "diagonal"
+                      ? (() => {
+                          const ang = (parseFloat(reg.angulo)||45) * Math.PI / 180;
+                          const espPxDiag = (espMetros / Math.sin(ang) / (L/folhas)) * fw;
+                          const nBars = Math.max(0, Math.ceil((fw) / espPxDiag));
+                          const corD = PECA_CORES["Barra diagonal"].cor;
+                          // Desenha linhas diagonais que cobrem a região
+                          return [...Array(Math.min(nBars+4, 60))].map((_,bi) => {
+                            const startX = fx - altR/Math.tan(ang) + bi * espPxDiag;
+                            const endX = startX + altR/Math.tan(ang);
+                            // Clip dentro da região
+                            const x1c = Math.max(fx+2, startX);
+                            const x2c = Math.min(fx+fw-2, endX);
+                            if (x2c <= x1c) return null;
+                            // Calcular Y correspondente ao clipping
+                            const t1 = (x1c - startX) / (endX - startX);
+                            const t2 = (x2c - startX) / (endX - startX);
+                            const y1c = y1r + t1 * altR;
+                            const y2c = y1r + t2 * altR;
+                            return <line key={bi} x1={x1c} y1={y1c} x2={x2c} y2={y2c} stroke={corD} strokeWidth="1.5" />;
+                          });
+                        })()
                       : (() => {
                           const nBars = Math.max(0, Math.ceil((fw-4) / espPxV) - 1);
                           return [...Array(Math.min(nBars,60))].map((_,bi) => {
@@ -868,6 +891,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
         {(nTravV||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa vertical"].cor}} />Travessa vertical</div>}
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />Preenchimento vertical</div>
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra horizontal"].cor}} />Preenchimento horizontal</div>
+        <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra diagonal"].cor}} />Preenchimento diagonal</div>
         {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Diagonal"].cor, height:3}} />Diagonal</div>}
       </div>
     </div>
@@ -903,7 +927,7 @@ function TravessaPosInput({ value, max, onChange }) {
   );
 }
 function regiaoDefault(id) {
-  return { id, ori:"vertical", esp:"10", preA:30, preB:30, preE:2 };
+  return { id, ori:"vertical", esp:"10", angulo:"45", preA:30, preB:30, preE:2 };
 }
 
 function PortaoCalc() {
@@ -1032,15 +1056,22 @@ function PortaoCalc() {
       const nColunas = nTravV + 1;
 
       if (reg.ori === "horizontal") {
-        // Número de barras horizontais: quantas cabem dentro da região com o espaçamento dado
         const nBarras = Math.max(0, Math.ceil(altBruta / esp) - 1);
         if (nBarras > 0) {
           const compPre = nTravV > 0 ? (largInterna - nTravV*espEst) / nColunas : largInterna;
           const qtd = nBarras * folhas * nColunas;
           pecas.push({ nome:`Barra horizontal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compPre, qtd, compTotal:qtd*compPre, peso:qtd*compPre*pPre, obs:`R${ri+1}: ${nBarras} barras` });
         }
+      } else if (reg.ori === "diagonal") {
+        const ang = (parseFloat(reg.angulo) || 45) * Math.PI / 180;
+        const compDiag = altRegiao / Math.sin(ang);
+        const espH = esp / Math.sin(ang);
+        const nBarras = Math.max(0, Math.ceil(largInterna / espH));
+        if (nBarras > 0) {
+          const qtd = nBarras * folhas;
+          pecas.push({ nome:`Barra diagonal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compDiag, qtd, compTotal:qtd*compDiag, peso:qtd*compDiag*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(compDiag*100).toFixed(1)}cm (${reg.angulo}°)` });
+        }
       } else {
-        // Número de barras verticais: quantas cabem na LARGURA da folha
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
           const qtd = nBarras * folhas;
@@ -1185,13 +1216,29 @@ function PortaoCalc() {
                           <select value={reg.ori} onChange={ev=>setRegiao(ri,"ori",ev.target.value)}>
                             <option value="vertical">↕ Vertical</option>
                             <option value="horizontal">↔ Horizontal</option>
+                            <option value="diagonal">╱ Diagonal</option>
                           </select>
                         </div>
+                        {reg.ori === "diagonal" ? (
+                          <div className="field">
+                            <label>Ângulo <span className="unit">(graus)</span></label>
+                            <select value={reg.angulo||"45"} onChange={ev=>setRegiao(ri,"angulo",ev.target.value)}>
+                              {[30,35,40,45,50,55,60].map(a=><option key={a} value={a}>{a}°</option>)}
+                            </select>
+                          </div>
+                        ) : (
+                          <div className="field">
+                            <label>Espaçamento <span className="unit">(cm)</span></label>
+                            <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
+                          </div>
+                        )}
+                      </div>
+                      {reg.ori === "diagonal" && (
                         <div className="field">
-                          <label>Espaçamento <span className="unit">(cm)</span></label>
+                          <label>Espaçamento entre barras <span className="unit">(cm)</span></label>
                           <RegiaoEspInput value={reg.esp} onChange={val=>setRegiao(ri,"esp",val)} />
                         </div>
-                      </div>
+                      )}
                       <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil" />
                     </div>
                   </div>
