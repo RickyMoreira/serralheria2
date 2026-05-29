@@ -542,7 +542,6 @@ function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
   return (
     <div className="field">
       <label>{label || "Perfil"}</label>
-      <div className="perfil-dims">
       <div className="perfil-dims" style={{display:"flex",gap:6,flexWrap:"wrap"}}>
         <select value={A} onChange={ev => { ev.stopPropagation(); onChange(parseInt(ev.target.value), B, espessura); }}
           style={{ flex:"1 1 80px", background:"var(--bg)", border:"1px solid var(--border2)", color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13, padding:"8px 28px 8px 10px", borderRadius:5, appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5f6e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center" }}>
@@ -557,14 +556,13 @@ function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
           {DIMS_E.filter(ep => ep < Math.min(A,B)/2).map(ep => <option key={ep} value={ep}>e={ep}mm</option>)}
         </select>
       </div>
-      </div>
       <div className="perfil-info"><span>{maior}×{menor} e={espessura}mm</span> → <strong>{peso.toFixed(3)} kg/m</strong>
       </div>
     </div>
   );
 }
 
-// ─── SVG helpers// ─── SVG helpers ─────────────────────────────────────────────────────────────
+// ─── SVG helpers ─────────────────────────────────────────────────────────────
 function Defs() {
   return (
     <defs>
