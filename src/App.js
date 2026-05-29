@@ -27,9 +27,9 @@ const styles = `
     --shadow:    0 4px 24px rgba(0,0,0,0.4);
   }
 
-  body { background: var(--bg); font-family: 'Barlow', sans-serif; }
-
-  .app { min-height: 100vh; background: var(--bg); color: var(--text); }
+  body { background: var(--bg); font-family: 'Barlow', sans-serif; -webkit-text-size-adjust: 100%; }
+  * { -webkit-tap-highlight-color: transparent; }
+  .app { min-height: 100vh; min-height: 100dvh; background: var(--bg); color: var(--text); }
 
   /* ── HEADER ── */
   .header {
@@ -107,11 +107,69 @@ const styles = `
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
 
+  /* ── MOBILE ── */
   @media (max-width: 768px) {
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .header { padding: 0 16px; flex-wrap: wrap; }
-    .content { padding: 16px; }
-    .tab { padding: 0 14px; font-size: 12px; }
+    .content { padding: 12px; gap: 12px; }
+
+    /* Header compacto */
+    .header { padding: 0 12px; flex-wrap: nowrap; overflow-x: auto; }
+    .header-brand { padding-right: 16px; margin-right: 12px; }
+    .header-title { font-size: 18px; }
+    .header-sub { display: none; }
+    .header-icon { width: 30px; height: 30px; font-size: 16px; }
+
+    /* Tabs menores */
+    .tabs { gap: 0; }
+    .tab { padding: 0 14px; font-size: 13px; }
+    .tab-icon { font-size: 14px; }
+
+    /* Cards */
+    .card-header { padding: 10px 14px; font-size: 11px; }
+    .card-body { padding: 14px; gap: 12px; }
+
+    /* Inputs maiores para toque */
+    input, select {
+      font-size: 16px !important; /* evita zoom no iOS */
+      padding: 12px 14px;
+      min-height: 48px;
+    }
+    select { padding-right: 36px; }
+
+    label { font-size: 10px; }
+
+    /* Botões maiores */
+    .btn-calc { font-size: 16px; padding: 15px; min-height: 52px; }
+    .btn-reset { padding: 15px 16px; font-size: 11px; min-height: 52px; }
+    .btn-add { padding: 8px 14px; font-size: 12px; min-height: 38px; }
+    .btn-remove { min-height: 38px; padding: 8px 12px; }
+
+    /* Perfil selector — empilha os 3 selects */
+    .perfil-dims { flex-direction: column; gap: 8px; }
+    .perfil-dims select { font-size: 16px !important; }
+
+    /* Summary badges menores */
+    .summary-grid { grid-template-columns: 1fr 1fr; }
+    .summary-badge-value { font-size: 22px; }
+
+    /* Tabela de corte scrollável */
+    .corte-table { font-size: 10px; }
+    .corte-table th, .corte-table td { padding: 6px 8px; }
+
+    /* Desenho SVG scrollável horizontalmente */
+    .drawing-box { overflow-x: auto; }
+    .drawing-svg { min-width: 320px; }
+
+    /* Região builder */
+    .region-body { padding: 12px; }
+
+    /* Travessa row */
+    .travessa-row { flex-wrap: wrap; gap: 8px; }
+  }
+
+  @media (max-width: 400px) {
+    .tab span.tab-icon { display: none; }
+    .summary-grid { grid-template-columns: 1fr; }
   }
 
   /* ── CARDS ── */
@@ -485,18 +543,20 @@ function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
     <div className="field">
       <label>{label || "Perfil"}</label>
       <div className="perfil-dims">
+      <div className="perfil-dims" style={{display:"flex",gap:6,flexWrap:"wrap"}}>
         <select value={A} onChange={ev => { ev.stopPropagation(); onChange(parseInt(ev.target.value), B, espessura); }}
-          style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
+          style={{ flex:"1 1 80px", background:"var(--bg)", border:"1px solid var(--border2)", color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13, padding:"8px 28px 8px 10px", borderRadius:5, appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5f6e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center" }}>
           {DIMS_A.map(a => <option key={a} value={a}>{a}mm</option>)}
         </select>
         <select value={B} onChange={ev => { ev.stopPropagation(); onChange(A, parseInt(ev.target.value), espessura); }}
-          style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
+          style={{ flex:"1 1 80px", background:"var(--bg)", border:"1px solid var(--border2)", color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13, padding:"8px 28px 8px 10px", borderRadius:5, appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5f6e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center" }}>
           {DIMS_B.map(b => <option key={b} value={b}>{b}mm</option>)}
         </select>
         <select value={espessura} onChange={ev => { ev.stopPropagation(); onChange(A, B, parseFloat(ev.target.value)); }}
-          style={{ flex:1, background:"#111", border:"1px solid #333", color:"#e8e0d0", fontFamily:"monospace", fontSize:13, padding:"8px 6px", borderRadius:3 }}>
+          style={{ flex:"1 1 80px", background:"var(--bg)", border:"1px solid var(--border2)", color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13, padding:"8px 28px 8px 10px", borderRadius:5, appearance:"none", backgroundImage:"url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a5f6e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E\")", backgroundRepeat:"no-repeat", backgroundPosition:"right 8px center" }}>
           {DIMS_E.filter(ep => ep < Math.min(A,B)/2).map(ep => <option key={ep} value={ep}>e={ep}mm</option>)}
         </select>
+      </div>
       </div>
       <div className="perfil-info"><span>{maior}×{menor} e={espessura}mm</span> → <strong>{peso.toFixed(3)} kg/m</strong>
       </div>
