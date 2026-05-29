@@ -1194,9 +1194,8 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
   const postesX = [];
   for (let i=0;i<nPostes;i++) postesX.push(ox + (i/(nPostes-1||1))*dw);
 
-  const elsY = []; const elsX = [];
+  const elsY = [];
   if (oriPreenchi === "horizontal") { for(let i=1;i<=nElementos;i++) elsY.push(oy+(i/(nElementos+1))*dh); }
-  else { for(let i=1;i<=Math.min(nElementos,40);i++) elsX.push(ox+(i/(nElementos+1))*dw); }
 
   return (
     <div className="drawing-box">
@@ -1204,12 +1203,22 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
         <rect width={W} height={SH} fill="#f5f5f0" />
-        
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke="#4a9eff" strokeWidth="3" />
         <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke="#4a9eff" strokeWidth="3" />
         {postesX.map((px,i)=><rect key={i} x={px-3} y={oy} width={6} height={dh} fill="#4a9eff" opacity="0.9" />)}
-        {elsY.map((ey,i)=><line key={i} x1={ox} y1={ey} x2={ox+dw} y2={ey} stroke="#6fcf6f" strokeWidth="1.5" />)}
-        {elsX.map((ex,i)=><line key={i} x1={ex} y1={oy} x2={ex} y2={oy+dh} stroke="#6fcf6f" strokeWidth="1.5" />)}
+        {/* Preenchimento horizontal: de ponta a ponta */}
+        {oriPreenchi === "horizontal" && elsY.map((ey,i)=>(
+          <line key={i} x1={ox} y1={ey} x2={ox+dw} y2={ey} stroke="#6fcf6f" strokeWidth="1.5" />
+        ))}
+        {/* Preenchimento vertical: dentro de cada vão entre postes */}
+        {oriPreenchi === "vertical" && nPostes > 1 && postesX.slice(0,-1).map((px1, vi) => {
+          const px2 = postesX[vi+1];
+          const vaoW = px2 - px1;
+          return [...Array(nElementos)].map((_,bi) => {
+            const bx = px1 + ((bi+1)/(nElementos+1)) * vaoW;
+            return <line key={`${vi}-${bi}`} x1={bx} y1={oy+3} x2={bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="1.5" />;
+          });
+        })}
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
         <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
         {nPostes>1 && <Cota x1={postesX[0]} y1={oy+dh} x2={postesX[1]} y2={oy+dh} label={`${(L/(nPostes-1)).toFixed(2)} m`} offset={38} orient="h" />}
