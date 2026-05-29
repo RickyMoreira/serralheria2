@@ -781,6 +781,9 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                           const tanAng = Math.tan(ang);
                           const extra = altR / tanAng + fw;
                           const nBars = Math.max(0, Math.ceil(extra / espPxDiag) + 2);
+                          // Folha par (0,2...): / esquerda para direita subindo
+                          // Folha ímpar (1,3...): \ esquerda para direita descendo
+                          const invertido = fi % 2 !== 0;
                           return (
                             <g key="diag">
                               <defs>
@@ -790,9 +793,21 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                               </defs>
                               <g clipPath={`url(#${clipId})`}>
                                 {[...Array(nBars)].map((_,bi) => {
-                                  const startX = fx - altR/tanAng + bi * espPxDiag;
-                                  const endX = startX + altR/tanAng;
-                                  return <line key={bi} x1={startX} y1={y1r} x2={endX} y2={y2r} stroke={corD} strokeWidth="1.5" />;
+                                  let x1, y1, x2, y2;
+                                  if (!invertido) {
+                                    // / : começa em baixo-esquerda, termina em cima-direita
+                                    x1 = fx - altR/tanAng + bi * espPxDiag;
+                                    y1 = y2r;
+                                    x2 = x1 + altR/tanAng;
+                                    y2 = y1r;
+                                  } else {
+                                    // \ : começa em cima-esquerda, termina em baixo-direita
+                                    x1 = fx - altR/tanAng + bi * espPxDiag;
+                                    y1 = y1r;
+                                    x2 = x1 + altR/tanAng;
+                                    y2 = y2r;
+                                  }
+                                  return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
                               </g>
                             </g>
