@@ -796,17 +796,19 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 {[...Array(nBars)].map((_,bi) => {
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    // / : começa em baixo-esquerda, termina em cima-direita
-                                    x1 = fx - altR/tanAng + bi * espPxDiag;
-                                    y1 = y2r;
-                                    x2 = x1 + altR/tanAng;
-                                    y2 = y1r;
+                                    // / : ancora no canto inferior-esquerdo da FOLHA inteira
+                                    const baseX = fx - (oy + dh - y2r) / tanAng;
+                                    x1 = baseX + bi * espPxDiag;
+                                    y1 = oy + dh;
+                                    x2 = x1 + dh / tanAng;
+                                    y2 = oy;
                                   } else {
-                                    // \ : começa em cima-esquerda, termina em baixo-direita
-                                    x1 = fx - altR/tanAng + bi * espPxDiag;
-                                    y1 = y1r;
-                                    x2 = x1 + altR/tanAng;
-                                    y2 = y2r;
+                                    // \ : ancora no canto superior-esquerdo da FOLHA inteira
+                                    const baseX = fx + (y1r - oy) / tanAng;
+                                    x1 = baseX + bi * espPxDiag - dh / tanAng;
+                                    y1 = oy;
+                                    x2 = x1 + dh / tanAng;
+                                    y2 = oy + dh;
                                   }
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
