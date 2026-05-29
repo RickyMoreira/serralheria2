@@ -1084,9 +1084,16 @@ function PortaoCalc() {
         }
       } else if (reg.ori === "diagonal") {
         const ang = (parseFloat(reg.angulo) || 45) * Math.PI / 180;
-        const compDiag = altRegiao / Math.sin(ang);
+        const tanAng = Math.tan(ang);
+        // Largura que a barra percorre ao cruzar a região de altRegiao
+        const largDiag = altRegiao / tanAng;
+        // Comprimento real da barra
+        const compDiag = largDiag <= largInterna
+          ? altRegiao / Math.sin(ang)           // barra completa (região alta)
+          : largInterna / Math.cos(ang);         // barra cortada lateralmente (região larga)
+        // Quantidade: barras distribuídas pela largura + altura projetada
         const espH = esp / Math.sin(ang);
-        const nBarras = Math.max(0, Math.ceil(largInterna / espH));
+        const nBarras = Math.max(0, Math.ceil((largInterna + largDiag) / espH));
         if (nBarras > 0) {
           const qtd = nBarras * folhas;
           pecas.push({ nome:`Barra diagonal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compDiag, qtd, compTotal:qtd*compDiag, peso:qtd*compDiag*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(compDiag*100).toFixed(1)}cm (${reg.angulo}°)` });
