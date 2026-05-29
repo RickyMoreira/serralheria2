@@ -1228,6 +1228,7 @@ function ParapeitoCalc() {
     estA:50, estB:50, estE:3,
     preA:30, preB:30, preE:2,
     oriPreenchi:"horizontal", espacamento:"12",
+    qtdVertical:"3",
     postesEsp:"200",
   });
   const [result, setResult] = useState(null);
@@ -1248,20 +1249,19 @@ function ParapeitoCalc() {
     const descPre  = `Tubo ${Math.max(form.preA,form.preB)}×${Math.min(form.preA,form.preB)} e=${form.preE}mm`;
 
     const vao        = L/(nPostes-1||1);
-    const compPoste  = H - 2*espEst;        // postes por dentro das travessas sup/inf
-    const compTravessa = L;                  // travessas por fora (comprimento total)
-    const largVao    = vao - 2*espEst;       // largura interna entre postes
-    const compPreH   = largVao;              // horizontal: entre postes
-    const altInterna = H - 2*espEst;        // altura interna entre travessas
-    const compPreV   = altInterna;           // vertical: entre travessas
+    const compPoste  = H - 2*espEst;
+    const compTravessa = L;
+    const largVao    = vao - 2*espEst;
+    const compPreH   = largVao;
+    const altInterna = H - 2*espEst;
+    const compPreV   = altInterna;
 
     let nEl=0;
     if (form.oriPreenchi==="horizontal") {
-      // Horizontal: distribuído na altura total
       nEl = Math.max(0, Math.ceil(H/esp) - 1);
     } else {
-      // Vertical: distribuído dentro de cada vão entre postes
-      nEl = Math.max(0, Math.ceil(largVao/esp) - 1);
+      // Vertical: quantidade fixa por vão definida pelo usuário
+      nEl = parseInt(form.qtdVertical) || 0;
     }
 
     const pecas=[];
@@ -1274,7 +1274,8 @@ function ParapeitoCalc() {
         pecas.push({nome:"Barra horizontal",tipo:"preenchimento",perfil:descPre,comp:compPreH,qtd,compTotal:qtd*compPreH,peso:qtd*compPreH*pPre,obs:`vão − postes = ${(compPreH*100).toFixed(1)}cm`});
       } else {
         const qtd = nEl*(nPostes-1);
-        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`${nEl} barras × vão de ${(largVao*100).toFixed(1)}cm`});
+        const espReal = largVao / (nEl+1);
+        pecas.push({nome:"Barra vertical",tipo:"preenchimento",perfil:descPre,comp:compPreV,qtd,compTotal:qtd*compPreV,peso:qtd*compPreV*pPre,obs:`${nEl}/vão, espaç. ${(espReal*100).toFixed(1)}cm`});
       }
     }
 
@@ -1300,7 +1301,10 @@ function ParapeitoCalc() {
             <PerfilEstSelector A={form.estA} B={form.estB} e={form.estE} onChange={setEst} label="Perfil estrutural (postes/travessas)" />
             <PerfilEstSelector A={form.preA} B={form.preB} e={form.preE} onChange={setPre} label="Perfil de preenchimento" />
             <div className="field"><label>Orientação do preenchimento</label><select value={form.oriPreenchi} onChange={e=>{set("oriPreenchi",e.target.value);setResult(null);}}><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></div>
-            <div className="field"><label>Espaçamento preenchimento <span className="unit">(cm)</span></label><input type="number" min="3" max="50" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
+            {form.oriPreenchi === "horizontal"
+              ? <div className="field"><label>Espaçamento <span className="unit">(cm)</span></label><input type="number" min="3" max="50" step="1" value={form.espacamento} onChange={e=>set("espacamento",e.target.value)} /></div>
+              : <div className="field"><label>Barras verticais por vão</label><select value={form.qtdVertical} onChange={e=>set("qtdVertical",e.target.value)}>{[...Array(20)].map((_,i)=><option key={i+1} value={i+1}>{i+1} barra{i>0?"s":""} por vão</option>)}</select></div>
+            }
           </div>
         </div>
       </div>
