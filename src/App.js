@@ -726,7 +726,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
           const corMontante = PECA_CORES["Montante vertical"].cor;
           const corTravH    = PECA_CORES["Travessa horizontal"].cor;
           const corTravV    = PECA_CORES["Travessa vertical"].cor;
-          const corDiag     = PECA_CORES["Diagonal"].cor;
           const travRatios  = travPosRatio || [];
           return (
             <g key={fi}>
