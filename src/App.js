@@ -1085,24 +1085,25 @@ function PortaoCalc() {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const sinAng = Math.sin(ang);
         const tanAng = Math.tan(ang);
-        const largDiag = altRegiao / tanAng; // projeção horizontal da barra que cruza altura inteira
+        const largDiag = altRegiao / tanAng; // projeção horizontal da barra completa
         const espH = esp / sinAng;
         const nBarras = Math.max(1, Math.ceil((largInterna + largDiag) / espH));
 
         const baseX = -largDiag;
         const barras = [];
         for (let i = 0; i < nBarras; i++) {
-          const xBottom = baseX + i * espH;
+          const xIni = baseX + i * espH; // x da barra no fundo (y=0)
+          const xFim = xIni + largDiag;  // x da barra no topo (y=altRegiao)
 
-          // Clip horizontal: [0, largInterna]
-          const t0 = Math.max(0, Math.min(1, (0 - xBottom) / largDiag));
-          const t1 = Math.max(0, Math.min(1, (largInterna - xBottom) / largDiag));
-          if (t1 <= t0) continue;
+          // Clip horizontal em [0, largInterna]
+          const xClipIni = Math.max(xIni, 0);
+          const xClipFim = Math.min(xFim, largInterna);
+          if (xClipFim <= xClipIni) continue;
 
-          // Comprimento real: percorre dt em x e dt em y proporcionalmente
-          const dtX = (t1 - t0) * largDiag;   // deslocamento horizontal real
-          const dtY = (t1 - t0) * altRegiao;   // deslocamento vertical real
-          const comp = Math.sqrt(dtX*dtX + dtY*dtY);
+          // Comprimento real da barra clippada
+          const dx = xClipFim - xClipIni;
+          const dy = dx / tanAng; // proporção mantida pelo ângulo
+          const comp = Math.sqrt(dx*dx + dy*dy);
           if (comp < 0.02) continue;
           barras.push(comp);
         }
