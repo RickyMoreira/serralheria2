@@ -1083,7 +1083,6 @@ function PortaoCalc() {
         }
       } else if (reg.ori === "diagonal") {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
-        const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const sinAng = Math.sin(ang);
         const tanAng = Math.tan(ang);
         const largDiag = altRegiao / tanAng;
