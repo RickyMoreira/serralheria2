@@ -796,19 +796,17 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 {[...Array(nBars)].map((_,bi) => {
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    // / : de baixo-esquerda para cima-direita
-                                    // ancora no canto inferior-esquerdo do portão inteiro
+                                    // / : ancora canto inferior-esquerdo do portão
                                     x1 = ox - dh/tanAng + bi * espPxDiag;
                                     y1 = oy + dh;
                                     x2 = x1 + dh/tanAng;
                                     y2 = oy;
                                   } else {
-                                    // \ : de cima-esquerda para baixo-direita
-                                    // ancora no canto superior-esquerdo do portão inteiro
-                                    x1 = ox + bi * espPxDiag - dh/tanAng;
-                                    y1 = oy;
-                                    x2 = x1 + dh/tanAng;
-                                    y2 = oy + dh;
+                                    // \ : ancora canto inferior-direito do portão (espelhado)
+                                    x1 = (ox + dw) + dh/tanAng - bi * espPxDiag;
+                                    y1 = oy + dh;
+                                    x2 = x1 - dh/tanAng;
+                                    y2 = oy;
                                   }
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
@@ -896,7 +894,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                   </g>
                 );
               })}
-              {incluiDiagonal && <line x1={fx+6} y1={oy+4} x2={fx+fw-6} y2={oy+dh-4} stroke={corDiag} strokeWidth="1.5" strokeDasharray="4,3" />}
               {folhas > 1 && <text x={fx+fw/2} y={oy+dh/2} textAnchor="middle" fill="#bbb" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>}
             </g>
           );
