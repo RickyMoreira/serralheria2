@@ -1092,17 +1092,19 @@ function PortaoCalc() {
         const baseX = -largDiag;
         const barras = [];
         for (let i = 0; i < nBarras; i++) {
-          const xIni = baseX + i * espH; // x da barra no fundo (y=0)
-          const xFim = xIni + largDiag;  // x da barra no topo (y=altRegiao)
+          const xIni = baseX + i * espH;
+          const xFim = xIni + largDiag;
 
           // Clip horizontal em [0, largInterna]
           const xClipIni = Math.max(xIni, 0);
           const xClipFim = Math.min(xFim, largInterna);
           if (xClipFim <= xClipIni) continue;
 
-          // Comprimento real da barra clippada
+          // dx e dy reais: a barra percorre largDiag horizontalmente e altRegiao verticalmente
+          // então a proporção é: dx/largDiag = dy/altRegiao
+          const frac = (xClipFim - xClipIni) / largDiag;
           const dx = xClipFim - xClipIni;
-          const dy = dx / tanAng; // proporção mantida pelo ângulo
+          const dy = frac * altRegiao;
           const comp = Math.sqrt(dx*dx + dy*dy);
           if (comp < 0.02) continue;
           barras.push(comp);
