@@ -780,7 +780,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                           const clipId = `clip-${fi}-${ri}`;
                           const tanAng = Math.tan(ang);
                           // nBars deve cobrir: largura da folha + altura total da folha / tan(ang)
-                          const nBars = Math.max(0, Math.ceil((fw + dh / tanAng) / espPxDiag) + 2);
+                          const nBars = Math.max(0, Math.ceil((dw + dh / tanAng) / espPxDiag) + 2);
                           // Folha par (0,2...): / por padrão
                           // Folha ímpar (1,3...): \ por padrão
                           // Se inverter: troca a direção
@@ -796,18 +796,18 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 {[...Array(nBars)].map((_,bi) => {
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    // / : ancora no canto inferior-esquerdo do portão inteiro
-                                    const baseX = ox - dh/tanAng;
-                                    x1 = baseX + bi * espPxDiag;
+                                    // / : de baixo-esquerda para cima-direita
+                                    // ancora no canto inferior-esquerdo do portão inteiro
+                                    x1 = ox - dh/tanAng + bi * espPxDiag;
                                     y1 = oy + dh;
                                     x2 = x1 + dh/tanAng;
                                     y2 = oy;
                                   } else {
-                                    // \ : ancora no canto superior-direito do portão inteiro
-                                    const baseX = ox + dw;
-                                    x1 = baseX - bi * espPxDiag;
+                                    // \ : de cima-esquerda para baixo-direita
+                                    // ancora no canto superior-esquerdo do portão inteiro
+                                    x1 = ox + bi * espPxDiag - dh/tanAng;
                                     y1 = oy;
-                                    x2 = x1 - dh/tanAng;
+                                    x2 = x1 + dh/tanAng;
                                     y2 = oy + dh;
                                   }
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
