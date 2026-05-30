@@ -1085,25 +1085,16 @@ function PortaoCalc() {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const sinAng = Math.sin(ang);
-        const cosAng = Math.cos(ang);
         const tanAng = Math.tan(ang);
-        const largDiag = altRegiao / tanAng; // projeção horizontal da barra completa
-        const espH = esp / sinAng;           // espaçamento horizontal entre barras
+        const largDiag = altRegiao / tanAng;
+        const espH = esp / sinAng;
         const nBarras = Math.max(1, Math.ceil((largInterna + largDiag) / espH));
 
-        // Para cada barra, calcular comprimento real dentro da região
-        // Âncora: canto inferior-esquerdo da região
-        // Barra i: linha de (baseX + i*espH, altRegiao) até (baseX + i*espH + largDiag, 0)
-        const baseX = -largDiag; // primeira barra começa fora à esquerda
+        const baseX = -largDiag;
         const barras = [];
         for (let i = 0; i < nBarras; i++) {
-          const xBottom = baseX + i * espH; // x no fundo
-          const xTop    = xBottom + largDiag; // x no topo
+          const xBottom = baseX + i * espH;
 
-          // Clipar na região [0, largInterna] horizontalmente e [0, altRegiao] verticalmente
-          // Linha paramétrica: x(t) = xBottom + t*(xTop-xBottom), y(t) = altRegiao - t*altRegiao, t∈[0,1]
-          // Clip por x: t_xMin = (0 - xBottom)/largDiag, t_xMax = (largInterna - xBottom)/largDiag
-          // Clip por y: t=0 (fundo) a t=1 (topo) — já está no range
           const t0 = Math.max(0, Math.min(1, (0 - xBottom) / largDiag));
           const t1 = Math.max(0, Math.min(1, (largInterna - xBottom) / largDiag));
           if (t1 <= t0) continue; // barra fora da região
