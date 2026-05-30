@@ -1106,21 +1106,23 @@ function PortaoCalc() {
           barras.push(comp);
         }
 
-        // Agrupa barras por comprimento (arredondado a 0.5cm) para simplificar lista
+        // Agrupa barras por comprimento (arredondado a 0.5cm)
         const grupos = {};
         barras.forEach(c => {
-          const key = (Math.ceil(c * 200) / 2).toFixed(1); // arredonda para cima ao 0.5cm
+          const key = (Math.ceil(c * 200) / 2).toFixed(1);
           grupos[key] = (grupos[key] || 0) + 1;
         });
 
         // Ordena do maior para o menor
         const gruposOrdenados = Object.entries(grupos).sort((a,b) => parseFloat(b[0]) - parseFloat(a[0]));
 
-        // Lista cada grupo de barras por folha (apenas 1 lado — multiplica por folhas no total)
+        // Lista apenas metade (distribuição simétrica: borda→meio→borda)
+        // Cada grupo tem qtd total; metade é qtd/2 arredondado para cima
         let barNum = 1;
-        gruposOrdenados.forEach(([compStr, qtdPorFolha]) => {
+        gruposOrdenados.forEach(([compStr, qtdTotal]) => {
           const comp = parseFloat(compStr) / 100;
-          const qtd = qtdPorFolha * folhas;
+          const qtdMeioPorFolha = Math.ceil(qtdTotal / 2); // metade do grupo por folha
+          const qtd = qtdMeioPorFolha * folhas;
           pecas.push({
             nome: `Diag R${ri+1} #${barNum}`,
             tipo: "preenchimento",
@@ -1129,7 +1131,7 @@ function PortaoCalc() {
             qtd,
             compTotal: qtd * comp,
             peso: qtd * comp * pPre,
-            obs: `${qtdPorFolha}×/folha — ${angGraus}°`
+            obs: `${qtdMeioPorFolha}×/folha (simétrica)`
           });
           barNum++;
         });
