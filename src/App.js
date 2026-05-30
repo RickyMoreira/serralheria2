@@ -796,16 +796,18 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 {[...Array(nBars)].map((_,bi) => {
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    // / : ancora no canto inferior-esquerdo da folha
-                                    x1 = fx - dh/tanAng + bi * espPxDiag;
+                                    // / : ancora no canto inferior-esquerdo do portão inteiro
+                                    const baseX = ox - dh/tanAng;
+                                    x1 = baseX + bi * espPxDiag;
                                     y1 = oy + dh;
                                     x2 = x1 + dh/tanAng;
                                     y2 = oy;
                                   } else {
-                                    // \ : ancora no canto superior-esquerdo da folha
-                                    x1 = fx + bi * espPxDiag - dh/tanAng;
+                                    // \ : ancora no canto superior-direito do portão inteiro
+                                    const baseX = ox + dw;
+                                    x1 = baseX - bi * espPxDiag;
                                     y1 = oy;
-                                    x2 = x1 + dh/tanAng;
+                                    x2 = x1 - dh/tanAng;
                                     y2 = oy + dh;
                                   }
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
