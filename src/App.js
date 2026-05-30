@@ -1082,15 +1082,17 @@ function PortaoCalc() {
         }
       } else if (reg.ori === "diagonal") {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
+        const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const tanAng = Math.tan(ang);
         const largDiag = altRegiao / tanAng;
-        const compDiag = largDiag <= largInterna
+        const compMax = largDiag <= largInterna
           ? altRegiao / Math.sin(ang)
           : largInterna / Math.cos(ang);
         const espH = esp / Math.sin(ang);
         const nBarras = Math.max(1, Math.ceil((largInterna + largDiag) / espH));
         const qtd = nBarras * folhas;
-        pecas.push({ nome:`Barra diagonal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compDiag, qtd, compTotal:qtd*compDiag, peso:qtd*compDiag*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(compDiag*100).toFixed(1)}cm (${Math.round((parseFloat(reg.angulo)||45))}°)` });
+        // Todas as barras são cortadas do comprimento máximo (barras das bordas são menores)
+        pecas.push({ nome:`Barra diagonal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compMax, qtd, compTotal:qtd*compMax, peso:qtd*compMax*pPre, obs:`R${ri+1}: ${nBarras}× ${(compMax*100).toFixed(1)}cm (${angGraus}°) — bordas menores` });
       } else {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
