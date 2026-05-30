@@ -1085,18 +1085,14 @@ function PortaoCalc() {
       } else if (reg.ori === "diagonal") {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const tanAng = Math.tan(ang);
-        console.log("DIAGONAL ri=",ri,"esp=",esp,"ang=",ang,"altRegiao=",altRegiao,"largInterna=",largInterna);
-        if (esp <= 0) { console.log("esp<=0 skip"); return; }
         const largDiag = altRegiao / tanAng;
         const compDiag = largDiag <= largInterna
           ? altRegiao / Math.sin(ang)
           : largInterna / Math.cos(ang);
         const espH = esp / Math.sin(ang);
         const nBarras = Math.max(1, Math.ceil((largInterna + largDiag) / espH));
-        console.log("DIAGONAL nBarras=",nBarras,"compDiag=",compDiag);
         const qtd = nBarras * folhas;
         pecas.push({ nome:`Barra diagonal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compDiag, qtd, compTotal:qtd*compDiag, peso:qtd*compDiag*pPre, obs:`R${ri+1}: ${nBarras} barras × ${(compDiag*100).toFixed(1)}cm (${Math.round((parseFloat(reg.angulo)||45))}°)` });
-        console.log("DIAGONAL PUSHED pecas.length=", pecas.length, "ultima peca:", pecas[pecas.length-1].nome);
       } else {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
@@ -1109,7 +1105,6 @@ function PortaoCalc() {
     const pesoTotal = pecas.reduce((s,p) => s+p.peso, 0);
     const mTotal = pecas.reduce((s,p) => s+p.compTotal, 0);
 
-    console.log("ANTES SETRESULT pecas=", pecas.map(p=>p.nome));
     setResult({ pecas, pesoTotal:pesoTotal.toFixed(1), mTotal:mTotal.toFixed(2), L, H, folhas, nMeio:nTravH, nTravV, travOrdenadas, regioes:form.regioes, descEst });
   }
 
