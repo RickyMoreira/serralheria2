@@ -632,6 +632,7 @@ const PECA_CORES = {
 };
 
 function getPecaCor(nome) {
+  if (nome.startsWith("Diag ")) return PECA_CORES["Barra diagonal"];
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
 function ListaCorte({ pecas }) {
@@ -1083,16 +1084,64 @@ function PortaoCalc() {
       } else if (reg.ori === "diagonal") {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const angGraus = Math.round(parseFloat(reg.angulo) || 45);
+        const sinAng = Math.sin(ang);
+        const cosAng = Math.cos(ang);
         const tanAng = Math.tan(ang);
-        const largDiag = altRegiao / tanAng;
-        const compMax = largDiag <= largInterna
-          ? altRegiao / Math.sin(ang)
-          : largInterna / Math.cos(ang);
-        const espH = esp / Math.sin(ang);
+        const largDiag = altRegiao / tanAng; // projeção horizontal da barra completa
+        const espH = esp / sinAng;           // espaçamento horizontal entre barras
         const nBarras = Math.max(1, Math.ceil((largInterna + largDiag) / espH));
-        const qtd = nBarras * folhas;
-        // Todas as barras são cortadas do comprimento máximo (barras das bordas são menores)
-        pecas.push({ nome:`Barra diagonal R${ri+1}`, tipo:"preenchimento", perfil:descPre, comp:compMax, qtd, compTotal:qtd*compMax, peso:qtd*compMax*pPre, obs:`R${ri+1}: ${nBarras}× ${(compMax*100).toFixed(1)}cm (${angGraus}°) — bordas menores` });
+
+        // Para cada barra, calcular comprimento real dentro da região
+        // Âncora: canto inferior-esquerdo da região
+        // Barra i: linha de (baseX + i*espH, altRegiao) até (baseX + i*espH + largDiag, 0)
+        const baseX = -largDiag; // primeira barra começa fora à esquerda
+        const barras = [];
+        for (let i = 0; i < nBarras; i++) {
+          const xBottom = baseX + i * espH; // x no fundo
+          const xTop    = xBottom + largDiag; // x no topo
+
+          // Clipar na região [0, largInterna] horizontalmente e [0, altRegiao] verticalmente
+          // Linha paramétrica: x(t) = xBottom + t*(xTop-xBottom), y(t) = altRegiao - t*altRegiao, t∈[0,1]
+          // Clip por x: t_xMin = (0 - xBottom)/largDiag, t_xMax = (largInterna - xBottom)/largDiag
+          // Clip por y: t=0 (fundo) a t=1 (topo) — já está no range
+          const t0 = Math.max(0, Math.min(1, (0 - xBottom) / largDiag));
+          const t1 = Math.max(0, Math.min(1, (largInterna - xBottom) / largDiag));
+          if (t1 <= t0) continue; // barra fora da região
+
+          const dx = (t1 - t0) * largDiag;
+          const dy = (t1 - t0) * altRegiao;
+          const comp = Math.sqrt(dx*dx + dy*dy);
+          if (comp < 0.02) continue; // barra muito pequena, ignorar
+          barras.push(comp);
+        }
+
+        // Agrupa barras por comprimento (arredondado a 0.5cm) para simplificar lista
+        const grupos = {};
+        barras.forEach(c => {
+          const key = (Math.ceil(c * 200) / 2).toFixed(1); // arredonda para cima ao 0.5cm
+          grupos[key] = (grupos[key] || 0) + 1;
+        });
+
+        // Ordena do maior para o menor
+        const gruposOrdenados = Object.entries(grupos).sort((a,b) => parseFloat(b[0]) - parseFloat(a[0]));
+
+        // Lista cada grupo de barras por folha (apenas 1 lado — multiplica por folhas no total)
+        let barNum = 1;
+        gruposOrdenados.forEach(([compStr, qtdPorFolha]) => {
+          const comp = parseFloat(compStr) / 100;
+          const qtd = qtdPorFolha * folhas;
+          pecas.push({
+            nome: `Diag R${ri+1} #${barNum}`,
+            tipo: "preenchimento",
+            perfil: descPre,
+            comp,
+            qtd,
+            compTotal: qtd * comp,
+            peso: qtd * comp * pPre,
+            obs: `${qtdPorFolha}×/folha — ${angGraus}°`
+          });
+          barNum++;
+        });
       } else {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
