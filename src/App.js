@@ -1085,7 +1085,6 @@ function PortaoCalc() {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const tanAng = Math.tan(ang);
-        const cosAng = Math.cos(ang);
         const sinAng = Math.sin(ang);
 
         // Dimensões internas da região (em metros)
