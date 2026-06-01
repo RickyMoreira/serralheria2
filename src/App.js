@@ -678,7 +678,7 @@ function ListaCorte({ pecas }) {
                   <td style={{ color: "#fff" }}>{i + 1}</td>
                   <td><span style={{ background: isBlack ? "#1a1a1a" : bg, border: `1px solid ${isBlack ? "#aaa" : cor}`, color: isBlack ? "#fff" : cor, padding: "2px 8px", borderRadius: 2, fontSize: 11, fontWeight: 700, fontFamily: "monospace" }}>{p.nome}</span></td>
                   <td style={{ color: "#ddd" }}>{p.perfil}</td>
-                  <td style={{ color: isBlack ? "#fff" : cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(1)} cm</td>
+                  <td style={{ color: isBlack ? "#fff" : cor, fontWeight: 700, fontSize: 15 }}>{(p.comp * 100).toFixed(2)} cm</td>
                   <td style={{ color: "#e8e0d0" }}>{p.qtd}</td>
                   <td style={{ color: "#ccc" }}>{p.compTotal.toFixed(2)}</td>
                   <td style={{ color: "#ccc" }}>{p.peso.toFixed(2)}</td>
@@ -1123,7 +1123,7 @@ function PortaoCalc() {
         const isCentral = (i) => i === barras.length - 1 && nTotal % 2 !== 0;
 
         barras.forEach((comp, i) => {
-          const compCm = Math.ceil(comp * 100);
+          const compCm = Math.round(comp * 10000) / 100; // 2 casas decimais em cm
           const compM = compCm / 100;
           const qtdPorFolha = isCentral(i) ? 1 : 2;
           const qtd = qtdPorFolha * folhas;
