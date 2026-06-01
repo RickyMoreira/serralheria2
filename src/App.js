@@ -1086,28 +1086,14 @@ function PortaoCalc() {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const tanAng = Math.tan(ang);
-        const sinAng = Math.sin(ang);
 
-        // Dimensões internas da região (em metros)
-        const W = largInterna;   // largura interna da folha
-        const H = altRegiao;     // altura interna da região
+        const W = largInterna;
+        const H = altRegiao;
 
-        // Espaçamento horizontal entre barras (projeção horizontal do espaçamento perpendicular)
-        const espH = esp / sinAng;
+        // esp é o espaçamento horizontal entre barras
+        const espH = esp;
 
-        // Número de barras que cabem: da borda esquerda até a borda direita
-        // A barra i tem sua base em xBase = i * espH (do canto esquerdo)
-        // Ela sobe com ângulo ang, então percorre dx horizontalmente e dy = dx/tanAng verticalmente
-        // Mas dy máximo é H, então dx máximo = H * tanAng
-        // Se dx > W: barra é cortada pela direita → dx_real = W
-        // Se dx < W: barra é cortada pelo topo → dx_real = H * tanAng (mas cortada pelo topo)
-
-        // Barras da borda esquerda até o meio:
-        // base em x=0, vai crescendo até x = W (barra máxima = diagonal da folha)
-        // depois espelha de volta
-
-        // Conta quantas barras cabem da borda ao centro
-        const nMeio = Math.ceil(W / espH); // barras do lado esquerdo até o centro
+        const nMeio = Math.ceil(W / espH);
         const barras = []; // comprimentos da menor à maior (borda → meio)
 
         for (let i = 1; i <= nMeio; i++) {
