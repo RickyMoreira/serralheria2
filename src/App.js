@@ -1083,58 +1083,63 @@ function PortaoCalc() {
         }
       } else if (reg.ori === "diagonal") {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
-        const sinAng = Math.sin(ang);
+        const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const tanAng = Math.tan(ang);
-        const largDiag = altRegiao / tanAng; // projeção horizontal da barra completa
+        const cosAng = Math.cos(ang);
+        const sinAng = Math.sin(ang);
+
+        // Dimensões internas da região (em metros)
+        const W = largInterna;   // largura interna da folha
+        const H = altRegiao;     // altura interna da região
+
+        // Espaçamento horizontal entre barras (projeção horizontal do espaçamento perpendicular)
         const espH = esp / sinAng;
-        const nBarras = Math.max(1, Math.ceil((largInterna + largDiag) / espH));
 
-        const baseX = -largDiag;
-        const barras = [];
-        for (let i = 0; i < nBarras; i++) {
-          const xIni = baseX + i * espH;
-          const xFim = xIni + largDiag;
+        // Número de barras que cabem: da borda esquerda até a borda direita
+        // A barra i tem sua base em xBase = i * espH (do canto esquerdo)
+        // Ela sobe com ângulo ang, então percorre dx horizontalmente e dy = dx/tanAng verticalmente
+        // Mas dy máximo é H, então dx máximo = H * tanAng
+        // Se dx > W: barra é cortada pela direita → dx_real = W
+        // Se dx < W: barra é cortada pelo topo → dx_real = H * tanAng (mas cortada pelo topo)
 
-          // Clip horizontal em [0, largInterna]
-          const xClipIni = Math.max(xIni, 0);
-          const xClipFim = Math.min(xFim, largInterna);
-          if (xClipFim <= xClipIni) continue;
+        // Barras da borda esquerda até o meio:
+        // base em x=0, vai crescendo até x = W (barra máxima = diagonal da folha)
+        // depois espelha de volta
 
-          // dx e dy reais: a barra percorre largDiag horizontalmente e altRegiao verticalmente
-          // então a proporção é: dx/largDiag = dy/altRegiao
-          const frac = (xClipFim - xClipIni) / largDiag;
-          const dx = xClipFim - xClipIni;
-          const dy = frac * altRegiao;
-          const comp = Math.sqrt(dx*dx + dy*dy);
-          if (comp < 0.02) continue;
+        // Conta quantas barras cabem da borda ao centro
+        const nMeio = Math.ceil(W / espH); // barras do lado esquerdo até o centro
+        const barras = []; // comprimentos da menor à maior (borda → meio)
+
+        for (let i = 1; i <= nMeio; i++) {
+          const dx = Math.min(i * espH, W); // projeção horizontal desta barra
+          const dy = dx / tanAng;           // projeção vertical correspondente
+          const dyReal = Math.min(dy, H);   // limitada pela altura
+          const dxReal = dyReal * tanAng;   // ajusta dx se limitado pela altura
+          const comp = Math.sqrt(dxReal*dxReal + dyReal*dyReal);
           barras.push(comp);
         }
 
-        // Ordena barras do menor para o maior
-        barras.sort((a,b) => a - b);
+        // Lista da menor para a maior, apenas a metade (+ central se ímpar)
+        // Cada barra ocorre 2× por folha (simétrica) × folhas
+        // A central (última) ocorre apenas 1× por folha se nTotal é ímpar
+        const nTotal = 2 * nMeio - 1; // total de barras por folha
+        const isCentral = (i) => i === barras.length - 1 && nTotal % 2 !== 0;
 
-        // Pega apenas a metade (da borda até o meio) — a outra metade é simétrica
-        const metade = barras.slice(0, Math.ceil(barras.length / 2));
-
-        // Lista cada barra com comprimento exato (arredondado para cima ao cm)
-        let barNum = 1;
-        metade.forEach(comp => {
-          const compCm = Math.ceil(comp * 100); // arredonda para cima ao cm inteiro
+        barras.forEach((comp, i) => {
+          const compCm = Math.ceil(comp * 100); // arredonda para cima ao cm
           const compM = compCm / 100;
-          const qtd = folhas; // 1 barra deste tamanho por folha (+ 1 simétrica no outro lado)
+          const qtdPorFolha = isCentral(i) ? 1 : 2; // central única, demais simétricas
+          const qtd = qtdPorFolha * folhas;
           pecas.push({
-            nome: `Diag R${ri+1} #${barNum}`,
+            nome: `Diag R${ri+1} #${i+1}`,
             tipo: "preenchimento",
             perfil: descPre,
             comp: compM,
             qtd,
             compTotal: qtd * compM,
             peso: qtd * compM * pPre,
-            obs: barNum === metade.length && barras.length % 2 !== 0
-              ? `central (única)`
-              : `+ 1 simétrica`
+            obs: isCentral(i) ? `central (${angGraus}°)` : `+ 1 simétrica (${angGraus}°)`
           });
-          barNum++;
         });
       } else {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
