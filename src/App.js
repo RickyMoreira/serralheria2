@@ -1097,22 +1097,22 @@ function PortaoCalc() {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const tanAng = Math.tan(ang);
+        const sinAng = Math.sin(ang);
 
         const W = largInterna;
         const H = altRegiao;
 
-        // esp é o espaçamento horizontal entre barras
-        const espH = esp;
+        // Espaçamento perpendicular entre barras (igual ao desenho)
+        const espH = esp / sinAng; // projeção horizontal do espaçamento perpendicular
 
         const nMeio = Math.ceil(W / espH);
         const barras = []; // comprimentos da menor à maior (borda → meio)
 
         for (let i = 1; i <= nMeio; i++) {
-          const dx = Math.min(i * espH, W); // projeção horizontal desta barra
-          const dy = dx / tanAng;           // projeção vertical correspondente
-          const dyReal = Math.min(dy, H);   // limitada pela altura
-          const dxReal = dyReal * tanAng;   // ajusta dx se limitado pela altura
-          const comp = Math.sqrt(dxReal*dxReal + dyReal*dyReal);
+          const dx = Math.min(i * espH, W);
+          const dy = Math.min(dx / tanAng, H);
+          const dxReal = dy * tanAng;
+          const comp = Math.sqrt(dxReal*dxReal + dy*dy);
           barras.push(comp);
         }
 
