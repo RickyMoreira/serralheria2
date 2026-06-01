@@ -636,7 +636,18 @@ function getPecaCor(nome) {
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
 function ListaCorte({ pecas }) {
-  const sorted = [...pecas].sort((a, b) => b.comp - a.comp);
+  const sorted = [...pecas].sort((a, b) => {
+    const aIsDiag = a.nome.startsWith("Diag ");
+    const bIsDiag = b.nome.startsWith("Diag ");
+    // Diagonais: ordenar por número crescente (#1 primeiro)
+    if (aIsDiag && bIsDiag) {
+      const aNum = parseInt(a.nome.match(/#(\d+)/)?.[1] || 0);
+      const bNum = parseInt(b.nome.match(/#(\d+)/)?.[1] || 0);
+      return aNum - bNum;
+    }
+    // Resto: ordenar por comprimento decrescente
+    return b.comp - a.comp;
+  });
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
 
