@@ -1133,16 +1133,21 @@ function PortaoCalc() {
         const W = largInterna;
         const Hreg = altRegiao;
 
-        const espH = esp / sinAng;
+        // Passo horizontal entre barras: esp/tan(ang) é o cateto horizontal
+        // quando o espaçamento perpendicular entre barras é esp.
+        // A barra #i tem seu pé a i*espPasso do canto inferior-esquerdo.
+        const espPasso = esp / tanAng; // passo horizontal (= esp para 45°)
 
-        const nMeio = Math.ceil(W / espH);
+        const nMeio = Math.ceil(largInterna / espPasso);
         const barras = [];
 
         for (let i = 1; i <= nMeio; i++) {
-          const dx = Math.min(i * espH, W);
-          const dy = Math.min(dx / tanAng, Hreg);
-          const dxReal = dy * tanAng;
-          const comp = Math.sqrt(dxReal*dxReal + dy*dy);
+          const dx = Math.min(i * espPasso, largInterna);
+          const dy = Math.min(dx / tanAng * tanAng, Hreg); // dy = min(dx, Hreg) quando ang=45°
+          // recalcula dx real considerando clip na altura
+          const dyReal = Math.min(dx / tanAng, Hreg);
+          const dxReal = Math.min(dyReal * tanAng, largInterna);
+          const comp = Math.sqrt(dxReal*dxReal + dyReal*dyReal);
           barras.push(comp);
         }
 
