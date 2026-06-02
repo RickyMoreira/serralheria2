@@ -112,25 +112,21 @@ const styles = `
     .grid-2, .grid-3 { grid-template-columns: 1fr; }
     .content { padding: 12px; gap: 12px; }
 
-    /* Header compacto */
     .header { padding: 0 12px; flex-wrap: nowrap; overflow-x: auto; }
     .header-brand { padding-right: 16px; margin-right: 12px; }
     .header-title { font-size: 18px; }
     .header-sub { display: none; }
     .header-icon { width: 30px; height: 30px; font-size: 16px; }
 
-    /* Tabs menores */
     .tabs { gap: 0; }
     .tab { padding: 0 14px; font-size: 13px; }
     .tab-icon { font-size: 14px; }
 
-    /* Cards */
     .card-header { padding: 10px 14px; font-size: 11px; }
     .card-body { padding: 14px; gap: 12px; }
 
-    /* Inputs maiores para toque */
     input, select {
-      font-size: 16px !important; /* evita zoom no iOS */
+      font-size: 16px !important;
       padding: 12px 14px;
       min-height: 48px;
     }
@@ -138,32 +134,25 @@ const styles = `
 
     label { font-size: 10px; }
 
-    /* Botões maiores */
     .btn-calc { font-size: 16px; padding: 15px; min-height: 52px; }
     .btn-reset { padding: 15px 16px; font-size: 11px; min-height: 52px; }
     .btn-add { padding: 8px 14px; font-size: 12px; min-height: 38px; }
     .btn-remove { min-height: 38px; padding: 8px 12px; }
 
-    /* Perfil selector — empilha os 3 selects */
     .perfil-dims { flex-direction: column; gap: 8px; }
     .perfil-dims select { font-size: 16px !important; }
 
-    /* Summary badges menores */
     .summary-grid { grid-template-columns: 1fr 1fr; }
     .summary-badge-value { font-size: 22px; }
 
-    /* Tabela de corte scrollável */
     .corte-table { font-size: 10px; }
     .corte-table th, .corte-table td { padding: 6px 8px; }
 
-    /* Desenho SVG scrollável horizontalmente */
     .drawing-box { overflow-x: auto; }
     .drawing-svg { min-width: 320px; }
 
-    /* Região builder */
     .region-body { padding: 12px; }
 
-    /* Travessa row */
     .travessa-row { flex-wrap: wrap; gap: 8px; }
   }
 
@@ -455,33 +444,25 @@ const DIMS_B  = [10,12,15,20,25,30,38,40,50,60,70,76,80,90,100,120,150,200];
 const DIMS_E  = [1,1.5,2,2.5,3,3.5,4,5,6];
 
 // Dimensões para barras maciças
-const DIMS_CHATA_L = [12,19,25,30,32,38,40,50,60,75,100]; // largura mm
-const DIMS_CHATA_E = [2,3,4,5,6,8,10,12];                 // espessura mm
-const DIMS_QUAD    = [5,6,8,10,12,16,20,25,32,40,50];     // lado mm
-const DIMS_RED     = [5,6,8,10,12,16,20,25,32,38,50];     // diâmetro mm
+const DIMS_CHATA_L = [12,19,25,30,32,38,40,50,60,75,100];
+const DIMS_CHATA_E = [2,3,4,5,6,8,10,12];
+const DIMS_QUAD    = [5,6,8,10,12,16,20,25,32,40,50];
+const DIMS_RED     = [5,6,8,10,12,16,20,25,32,38,50];
 
-// Peso kg/m para tubo: 7,85 × 2 × (A+B-2e) × e × 0,001
 function calcPesoM(A, B, e) {
   return 7.85 * 2 * (A + B - 2 * e) * e * 0.001;
 }
-// Peso kg/m para barra chata: 7,85 × L × e × 0,001
 function calcPesoChata(L, e) {
   return 7.85 * L * e * 0.001;
 }
-// Peso kg/m para barra quadrada maciça: 7,85 × L² × 0,001
 function calcPesoQuad(L) {
   return 7.85 * L * L * 0.001;
 }
-// Peso kg/m para barra redonda maciça: 7,85 × π/4 × D² × 0,001
 function calcPesoRed(D) {
   return 7.85 * Math.PI / 4 * D * D * 0.001;
 }
 
-// Constrói chave do perfil
-
-// Seletor para BARRAS MACIÇAS (chata, quadrada, redonda)
 function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
-  // tipo: "chata" | "quadrada" | "redonda"
   let peso = 0; let desc = "";
   if (tipo === "chata")    { peso = calcPesoChata(L, e); desc = `Chata ${L}×${e}mm`; }
   if (tipo === "quadrada") { peso = calcPesoQuad(L);     desc = `Quadrada ${L}×${L}mm`; }
@@ -526,7 +507,6 @@ function BarraMacicoSelector({ tipo, L, e, D, onChange, label }) {
   );
 }
 
-// Retorna peso e desc de uma barra maciça
 function barraInfo(tipo, L, e, D) {
   if (tipo === "chata")    return { peso: calcPesoChata(L, e), desc: `Barra chata ${L}×${e}mm`, espMm: e };
   if (tipo === "quadrada") return { peso: calcPesoQuad(L),     desc: `Quadrada ${L}×${L}mm`,    espMm: L };
@@ -534,7 +514,6 @@ function barraInfo(tipo, L, e, D) {
   return { peso: 0, desc: "", espMm: 0 };
 }
 
-// Componente seletor de perfil tubular (3 dropdowns)
 function PerfilEstSelector({ A, B, e: espessura, onChange, label }) {
   const maior = Math.max(A, B);
   const menor = Math.min(A, B);
@@ -589,7 +568,6 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
     const mx = (x1+x2)/2;
     return (
       <g>
-        {/* Short tick marks instead of long dashes */}
         <line x1={x1} y1={y1} x2={x1} y2={y1+8} stroke={co} strokeWidth="1" />
         <line x1={x2} y1={y1} x2={x2} y2={y1+8} stroke={co} strokeWidth="1" />
         <line x1={x1} y1={y} x2={x2} y2={y} stroke={co} strokeWidth="1" markerStart="url(#arrRev)" markerEnd="url(#arr)" />
@@ -603,7 +581,6 @@ function Cota({ x1, y1, x2, y2, label, offset = 18, orient = "h" }) {
     const lw = label.length * 5.5 + 8;
     return (
       <g>
-        {/* Short tick marks */}
         <line x1={x2} y1={y1} x2={x2+8} y2={y1} stroke={co} strokeWidth="1" />
         <line x1={x2} y1={y2} x2={x2+8} y2={y2} stroke={co} strokeWidth="1" />
         <line x1={rx} y1={y1} x2={rx} y2={y2} stroke={co} strokeWidth="1" markerStart="url(#arrRev)" markerEnd="url(#arr)" />
@@ -639,13 +616,11 @@ function ListaCorte({ pecas }) {
   const sorted = [...pecas].sort((a, b) => {
     const aIsDiag = a.nome.startsWith("Diag ");
     const bIsDiag = b.nome.startsWith("Diag ");
-    // Diagonais: ordenar por número crescente (#1 primeiro)
     if (aIsDiag && bIsDiag) {
       const aNum = parseInt(a.nome.match(/#(\d+)/)?.[1] || 0);
       const bNum = parseInt(b.nome.match(/#(\d+)/)?.[1] || 0);
       return aNum - bNum;
     }
-    // Resto: ordenar por comprimento decrescente
     return b.comp - a.comp;
   });
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
@@ -705,13 +680,11 @@ function ListaCorte({ pecas }) {
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
 function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiagonal, perfilEst }) {
-  // Proporção real: L metros de largura, H metros de altura
   const maxW = 720; const maxDrawH = 400;
   const padL = 14; const padR = 130; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
   const availH = maxDrawH - padT - padB;
 
-  // Escala mantendo proporção
   const scaleX = availW / L;
   const scaleY = availH / H;
   const scale  = Math.min(scaleX, scaleY);
@@ -729,7 +702,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
       <svg viewBox={`0 0 ${W} ${SH}`} className="drawing-svg">
         <Defs />
         <rect width={W} height={SH} fill="#f5f5f0" />
-        
 
         {[...Array(folhas)].map((_,fi) => {
           const fx = ox + fi * fw;
@@ -768,10 +740,9 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                   ? PECA_CORES["Barra horizontal"].cor
                   : PECA_CORES["Barra vertical"].cor;
 
-                // Espaçamento em pixels proporcional ao desenho
                 const espMetros = parseFloat(reg.esp) / 100;
-                const espPxH = (espMetros / H) * dh; // px por espaço horizontal (altura)
-                const espPxV = (espMetros / (L/folhas)) * fw; // px por espaço vertical (largura)
+                const espPxH = (espMetros / H) * dh;
+                const espPxV = (espMetros / (L/folhas)) * fw;
 
                 return (
                   <g key={ri}>
@@ -783,18 +754,14 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                             return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
                           });
                         })()
-      : reg.ori === "diagonal"
+                      : reg.ori === "diagonal"
                       ? (() => {
                           const ang = (parseFloat(reg.angulo)||45) * Math.PI / 180;
                           const espPxDiag = (espMetros / Math.sin(ang) / (L/folhas)) * fw;
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
                           const tanAng = Math.tan(ang);
-                          // nBars deve cobrir: largura da folha + altura total da folha / tan(ang)
                           const nBars = Math.max(0, Math.ceil((dw + dh / tanAng) / espPxDiag) + 2);
-                          // Folha par (0,2...): / por padrão
-                          // Folha ímpar (1,3...): \ por padrão
-                          // Se inverter: troca a direção
                           const invertido = (fi % 2 !== 0) !== (reg.inverter || false);
                           return (
                             <g key="diag">
@@ -820,9 +787,10 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
                               </g>
-                              {/* Cota na primeira barra diagonal visível desta folha */}
+                              {/* Cota de espaçamento perpendicular — barra central da região */}
                               {(() => {
-                                // Encontra a primeira barra que aparece dentro da folha
+                                // Coleta barras visíveis dentro da folha
+                                const visiveis = [];
                                 for (let bi = 0; bi < nBars; bi++) {
                                   let lx1, ly1, lx2, ly2;
                                   if (!invertido) {
@@ -836,34 +804,59 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                     lx2 = lx1 - dh/tanAng;
                                     ly2 = oy;
                                   }
-                                  // Clip da barra na folha
                                   const cx1 = Math.max(fx+2, Math.min(fx+fw-2, lx1));
                                   const cx2 = Math.max(fx+2, Math.min(fx+fw-2, lx2));
                                   const cy1 = ly1 + (cx1-lx1)/(lx2-lx1||1) * (ly2-ly1);
                                   const cy2 = ly1 + (cx2-lx1)/(lx2-lx1||1) * (ly2-ly1);
                                   const barLen = Math.sqrt((cx2-cx1)**2 + (cy2-cy1)**2);
-                                  if (barLen < 8) continue; // barra muito pequena, pula
-                                  // Ponto médio da barra para label
-                                  const mx = (cx1+cx2)/2;
-                                  const my = (cy1+cy2)/2;
-                                  
-                                  // Comprimento real em cm
-                                  const realCm = (barLen / (dh / (H||1)) * 100).toFixed(2);
-                                  // Ângulo do texto
-                                  const angText = Math.atan2(cy2-cy1, cx2-cx1) * 180/Math.PI;
-                                  return (
-                                    <g key="cota-diag">
-                                      <rect x={mx-18} y={my-8} width={36} height={12} fill="rgba(245,245,240,0.88)" rx="2"
-                                        transform={`rotate(${angText},${mx},${my})`} />
-                                      <text x={mx} y={my+3} textAnchor="middle" fill={corD}
-                                        fontSize="8" fontFamily="monospace" fontWeight="bold"
-                                        transform={`rotate(${angText},${mx},${my})`}>
-                                        {realCm}cm
-                                      </text>
-                                    </g>
-                                  );
+                                  if (barLen < 8) continue;
+                                  visiveis.push({ cx1, cy1, cx2, cy2 });
                                 }
-                                return null;
+                                if (visiveis.length < 2) return null;
+
+                                // Barra central
+                                const ci = Math.floor(visiveis.length / 2);
+                                const { cx1, cy1, cx2, cy2 } = visiveis[ci];
+
+                                // Ponto médio da barra central
+                                const mx = (cx1 + cx2) / 2;
+                                const my = (cy1 + cy2) / 2;
+
+                                // Direção perpendicular (normal à barra)
+                                const ddx = cx2 - cx1; const ddy = cy2 - cy1;
+                                const blen = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
+                                // Normal unitária
+                                const nx = -ddy / blen; const ny = ddx / blen;
+
+                                // Distância perpendicular entre barras em px
+                                const espPxPerp = espPxDiag;
+
+                                // Dois pontos da cota: centro da barra ± metade do espaçamento na direção normal
+                                const p1x = mx - nx * espPxPerp / 2;
+                                const p1y = my - ny * espPxPerp / 2;
+                                const p2x = mx + nx * espPxPerp / 2;
+                                const p2y = my + ny * espPxPerp / 2;
+
+                                // Ângulo do texto (paralelo à seta)
+                                const angText = Math.atan2(p2y - p1y, p2x - p1x) * 180 / Math.PI;
+                                const lmx = (p1x + p2x) / 2;
+                                const lmy = (p1y + p2y) / 2;
+
+                                return (
+                                  <g key="cota-esp-diag">
+                                    <line x1={p1x} y1={p1y} x2={p2x} y2={p2y}
+                                      stroke="#6060ff" strokeWidth="1"
+                                      markerStart="url(#arrSpRev)" markerEnd="url(#arrSp)" />
+                                    <rect x={lmx - 14} y={lmy - 6} width={28} height={11}
+                                      fill="rgba(245,245,240,0.9)" rx="2"
+                                      transform={`rotate(${angText},${lmx},${lmy})`} />
+                                    <text x={lmx} y={lmy + 3} textAnchor="middle" fill="#6060ff"
+                                      fontSize="7" fontFamily="monospace" fontWeight="bold"
+                                      transform={`rotate(${angText},${lmx},${lmy})`}>
+                                      {parseFloat(reg.esp).toFixed(0)}cm
+                                    </text>
+                                  </g>
+                                );
                               })()}
                             </g>
                           );
@@ -891,7 +884,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
 
                 return (
                   <g key={`cota-${ri}`}>
-                    {/* Cota de altura da subdivisão — à direita, skip primeira subdivisão */}
                     {ri > 0 && (
                       <>
                         <line x1={fx+fw+4} y1={y1r} x2={fx+fw+10} y2={y1r} stroke="#e07020" strokeWidth="0.8" />
@@ -904,7 +896,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                       </>
                     )}
 
-                    {/* Cota de espaçamento entre barras — apenas se vertical e há espaço */}
                     {reg.ori === "vertical" && espPxV > 12 && altR > 30 && (() => {
                       const nBars = Math.max(0, Math.ceil((fw-4)/espPxV)-1);
                       if (nBars < 1) return null;
@@ -924,7 +915,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                       );
                     })()}
 
-                    {/* Cota de espaçamento — horizontal */}
                     {reg.ori === "horizontal" && altR > 30 && (() => {
                       const espPxH = (espMetros / H) * dh;
                       if (espPxH < 10) return null;
@@ -971,7 +961,6 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
   );
 }
 
-// Componente isolado para o input de espaçamento da região - usa uncontrolled input
 function RegiaoEspInput({ value, onChange }) {
   return (
     <input type="number" min="3" max="100" step="1"
@@ -983,7 +972,6 @@ function RegiaoEspInput({ value, onChange }) {
   );
 }
 
-// Componente isolado para o input de posição da travessa - usa uncontrolled input
 function TravessaPosInput({ value, max, onChange }) {
   return (
     <input
@@ -1009,21 +997,17 @@ function PortaoCalc() {
     estA:50, estB:50, estE:3,
     incluiDiagonal:true,
     nTravVert:"0",
-    // Travessas horizontais: array de posições em cm
-    travHoriz:[],   // ex: [{id:0, pos:"80"}]
-    // Regiões: uma por espaço entre travessas (nTravH+1)
-    regioes:[regiaoDefault(0)], // começa com 1 região (sem travessas)
+    travHoriz:[],
+    regioes:[regiaoDefault(0)],
   });
   const [result, setResult] = useState(null);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
   const setEst = (A,B,e) => setForm(f => ({...f, estA:A, estB:B, estE:e}));
 
-  // Adicionar travessa horizontal
   function addTravH() {
     setForm(f => {
       const newId = Date.now();
       const nTrav = f.travHoriz.length;
-      // Posição padrão: divide igualmente
       const altAtual = parseFloat(f.altura) || 200;
       const pos = Math.round(altAtual / (nTrav + 2) * (nTrav + 1));
       return {
@@ -1039,7 +1023,7 @@ function PortaoCalc() {
     setForm(f => ({
       ...f,
       travHoriz: f.travHoriz.filter((_,i) => i !== idx),
-      regioes: f.regioes.filter((_,i) => i !== idx + 1), // remove a região acima da travessa removida
+      regioes: f.regioes.filter((_,i) => i !== idx + 1),
     }));
     setResult(null);
   }
@@ -1078,7 +1062,6 @@ function PortaoCalc() {
     const descEst = `Tubo ${Math.max(form.estA,form.estB)}×${Math.min(form.estA,form.estB)} e=${form.estE}mm`;
     const nTravV = parseInt(form.nTravVert) || 0;
 
-    // Ordenar travessas por posição
     const travOrdenadas = [...form.travHoriz]
       .map(t => ({ ...t, posCm: parseFloat(t.pos) || 0 }))
       .filter(t => t.posCm > 0 && t.posCm < H * 100)
@@ -1086,7 +1069,6 @@ function PortaoCalc() {
 
     const nTravH = travOrdenadas.length;
 
-    // Comprimentos estruturais
     const compTravSupInf = Lf;
     const compMontante   = H - 2 * espEst;
     const compTravHoriz  = Lf - 2 * espEst;
@@ -1095,7 +1077,6 @@ function PortaoCalc() {
 
     const pecas = [];
 
-    // Estrutura
     pecas.push({ nome:"Travessa superior",  tipo:"estrutura", perfil:descEst, comp:compTravSupInf, qtd:folhas,      compTotal:folhas*compTravSupInf,       peso:folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Travessa inferior",  tipo:"estrutura", perfil:descEst, comp:compTravSupInf, qtd:folhas,      compTotal:folhas*compTravSupInf,       peso:folhas*compTravSupInf*pEst,       obs:`${(compTravSupInf*100).toFixed(1)}cm — por fora` });
     pecas.push({ nome:"Montante vertical",  tipo:"estrutura", perfil:descEst, comp:compMontante,   qtd:2*folhas,    compTotal:2*folhas*compMontante,       peso:2*folhas*compMontante*pEst,       obs:`H − 2×${(espEst*100).toFixed(1)}cm = ${(compMontante*100).toFixed(1)}cm` });
@@ -1104,20 +1085,14 @@ function PortaoCalc() {
     const temDiagFill = form.regioes.some(r => r.ori === "diagonal");
     if (form.incluiDiagonal && diagComp > 0 && !temDiagFill) pecas.push({ nome:"Diagonal", tipo:"diagonal", perfil:descEst, comp:diagComp, qtd:folhas, compTotal:folhas*diagComp, peso:folhas*diagComp*pEst });
 
-    // Preenchimento por região
-    const limites = [0, ...travOrdenadas.map(t => t.posCm / 100), H]; // em metros
+    const limites = [0, ...travOrdenadas.map(t => t.posCm / 100), H];
 
     form.regioes.forEach((reg, ri) => {
       if (ri >= limites.length - 1) return;
       const yTop = limites[ri];
       const yBot = limites[ri + 1];
-      const altBruta = yBot - yTop; // altura bruta da região em metros
+      const altBruta = yBot - yTop;
 
-      // Descontos:
-      // topo da região 1: espessura da travessa superior (por fora, mas montante interno começa depois)
-      // topo das outras regiões: metade da travessa horizontal (ela está centrada na posição)
-      // base da última região: 0 (travessa inferior é por fora, barras vão até o montante)
-      // base das outras regiões: metade da travessa horizontal
       const descontoTop = ri === 0 ? espEst : espEst / 2;
       const descontoBot = ri === limites.length - 2 ? 0 : espEst / 2;
       const altRegiao = altBruta - descontoTop - descontoBot;
@@ -1143,34 +1118,30 @@ function PortaoCalc() {
         const sinAng = Math.sin(ang);
 
         const W = largInterna;
-        const H = altRegiao;
+        const Hreg = altRegiao;
 
-        // Espaçamento perpendicular entre barras (igual ao desenho)
-        const espH = esp / sinAng; // projeção horizontal do espaçamento perpendicular
+        const espH = esp / sinAng;
 
         const nMeio = Math.ceil(W / espH);
-        const barras = []; // comprimentos da menor à maior (borda → meio)
+        const barras = [];
 
         for (let i = 1; i <= nMeio; i++) {
           const dx = Math.min(i * espH, W);
-          const dy = Math.min(dx / tanAng, H);
+          const dy = Math.min(dx / tanAng, Hreg);
           const dxReal = dy * tanAng;
           const comp = Math.sqrt(dxReal*dxReal + dy*dy);
           barras.push(comp);
         }
 
-        // Lista da menor para a maior, apenas a metade (+ central se ímpar)
-        // Cada barra ocorre 2× por folha (simétrica) × folhas
-        // A central (última) ocorre apenas 1× por folha se nTotal é ímpar
-        const nTotal = 2 * nMeio - 1; // total de barras por folha
+        const nTotal = 2 * nMeio - 1;
         const isCentral = (i) => i === barras.length - 1 && nTotal % 2 !== 0;
 
         barras.forEach((comp, i) => {
-          const compCm = Math.round(comp * 10000) / 100; // 2 casas decimais em cm
+          const compCm = Math.round(comp * 10000) / 100;
           const compM = compCm / 100;
           const qtdPorFolha = isCentral(i) ? 1 : 2;
           const qtd = qtdPorFolha * folhas;
-          const num = i + 1; // #1 = menor (borda), #N = maior (central)
+          const num = i + 1;
           pecas.push({
             nome: `Diag R${ri+1} #${num}`,
             tipo: "preenchimento",
@@ -1226,7 +1197,6 @@ function PortaoCalc() {
         </div>
         <div style={{padding:"20px 18px",display:"flex",gap:16}}>
 
-          {/* Linha do tempo — só mostra quando há travessas */}
           {form.travHoriz.length > 0 && (
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:20,flexShrink:0,paddingTop:6}}>
               <div style={{width:10,height:10,borderRadius:"50%",background:"var(--accent)",marginBottom:0}} />
@@ -1245,7 +1215,6 @@ function PortaoCalc() {
             </div>
           )}
 
-          {/* Regiões */}
           <div style={{flex:1,display:"flex",flexDirection:"column",gap:0}}>
             {form.travHoriz.length > 0 && (
               <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--accent)",letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>
@@ -1258,10 +1227,9 @@ function PortaoCalc() {
               const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
               const hasTrav = ri < form.travHoriz.length;
               const temSubdivisao = form.travHoriz.length > 0;
-              const travAcima = ri > 0 ? form.travHoriz[ri-1] : null; // travessa que está acima desta subdivisão
+              const travAcima = ri > 0 ? form.travHoriz[ri-1] : null;
               return (
                 <div key={reg.id}>
-                  {/* Travessa NO TOPO desta subdivisão (exceto a primeira) */}
                   {temSubdivisao && ri > 0 && travAcima && (
                     <div style={{
                       display:"flex",alignItems:"center",gap:10,
@@ -1286,7 +1254,6 @@ function PortaoCalc() {
                     </div>
                   )}
 
-                  {/* Bloco da subdivisão */}
                   <div style={{
                     background:"var(--bg3)",
                     border:"1px solid var(--border)",
@@ -1297,7 +1264,6 @@ function PortaoCalc() {
                     overflow:"hidden",
                     marginBottom: hasTrav ? 8 : 0,
                   }}>
-                    {/* Cabeçalho — só mostra quando há subdivisões */}
                     {temSubdivisao && (
                       <div style={{
                         display:"flex",alignItems:"center",justifyContent:"space-between",
@@ -1315,7 +1281,6 @@ function PortaoCalc() {
                         )}
                       </div>
                     )}
-                    {/* Campos */}
                     <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
                       <div className="grid-2" style={{gap:10}}>
                         <div className="field">
@@ -1424,11 +1389,9 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke="#4a9eff" strokeWidth="3" />
         <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke="#4a9eff" strokeWidth="3" />
         {postesX.map((px,i)=><rect key={i} x={px-3} y={oy} width={6} height={dh} fill="#4a9eff" opacity="0.9" />)}
-        {/* Preenchimento horizontal: de ponta a ponta */}
         {oriPreenchi === "horizontal" && elsY.map((ey,i)=>(
           <line key={i} x1={ox} y1={ey} x2={ox+dw} y2={ey} stroke="#6fcf6f" strokeWidth="1.5" />
         ))}
-        {/* Preenchimento vertical: dentro de cada vão entre postes */}
         {oriPreenchi === "vertical" && nPostes > 1 && postesX.slice(0,-1).map((px1, vi) => {
           const px2 = postesX[vi+1];
           const vaoW = px2 - px1;
@@ -1487,7 +1450,6 @@ function ParapeitoCalc() {
     if (form.oriPreenchi==="horizontal") {
       nEl = Math.max(0, Math.ceil(H/esp) - 1);
     } else {
-      // Vertical: quantidade fixa por vão definida pelo usuário
       nEl = parseInt(form.qtdVertical) || 0;
     }
 
@@ -1676,7 +1638,6 @@ function GradeCalc() {
         <div className="card">
           <div className="card-header">🔩 Perfis</div>
           <div className="card-body">
-            {/* Moldura — tubo ou maciça */}
             <div className="field">
               <label>Tipo da moldura</label>
               <select value={form.molTipo} onChange={e=>set("molTipo",e.target.value)}
