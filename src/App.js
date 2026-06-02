@@ -757,7 +757,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                       : reg.ori === "diagonal"
                       ? (() => {
                           const ang = (parseFloat(reg.angulo)||45) * Math.PI / 180;
-                          const espPxDiag = (espMetros / Math.sin(ang) / (L/folhas)) * fw;
+                          const espPxDiag = (espMetros / tanAng / (L/folhas)) * fw;
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
                           const tanAng = Math.tan(ang);
