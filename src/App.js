@@ -1107,7 +1107,7 @@ function PortaoCalc() {
 
       const esp = parseFloat(reg.esp) / 100;
       const pPre = calcPesoM(reg.preA, reg.preB, reg.preE);
-      const descPre = `Tubo ${Math.max(reg.preA,reg.preB)}×${Math.min(reg.preA,reg.preB)} e=${reg.preE}mm`;
+      const descPre = `Tubo ${reg.preA}×${reg.preB} e=${reg.preE}mm`;
       const largInterna = Lf - 2 * espEst;
       const nColunas = nTravV + 1;
 
