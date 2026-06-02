@@ -761,28 +761,34 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
                           const tanAng = Math.tan(ang);
-                          const nBars = Math.max(0, Math.ceil((dw + dh / tanAng) / espPxDiag) + 2);
+                          // Âncora no canto interno da folha (fx+2 = borda esquerda interna)
+                          const fxInt = fx + 2; // x esquerdo interno da folha
+                          const fxEnd = fx + fw - 2; // x direito interno
+                          // nBars: suficiente para cobrir largura interna + altura/tan
+                          const nBars = Math.max(0, Math.ceil((fw + altR / tanAng) / espPxDiag) + 4);
                           const invertido = (fi % 2 !== 0) !== (reg.inverter || false);
                           return (
                             <g key="diag">
                               <defs>
                                 <clipPath id={clipId}>
-                                  <rect x={fx+2} y={y1r} width={fw-4} height={altR} />
+                                  <rect x={fxInt} y={y1r} width={fw-4} height={altR} />
                                 </clipPath>
                               </defs>
                               <g clipPath={`url(#${clipId})`}>
                                 {[...Array(nBars)].map((_,bi) => {
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    x1 = ox - dh/tanAng + bi * espPxDiag;
-                                    y1 = oy + dh;
-                                    x2 = x1 + dh/tanAng;
-                                    y2 = oy;
+                                    // âncora: canto inferior-esquerdo interno da folha
+                                    x1 = fxInt - altR/tanAng + bi * espPxDiag;
+                                    y1 = y1r + altR;
+                                    x2 = x1 + altR/tanAng;
+                                    y2 = y1r;
                                   } else {
-                                    x1 = (fx + fw) + dh/tanAng - bi * espPxDiag;
-                                    y1 = oy + dh;
-                                    x2 = x1 - dh/tanAng;
-                                    y2 = oy;
+                                    // âncora: canto inferior-direito interno da folha
+                                    x1 = fxEnd + altR/tanAng - bi * espPxDiag;
+                                    y1 = y1r + altR;
+                                    x2 = x1 - altR/tanAng;
+                                    y2 = y1r;
                                   }
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
@@ -794,15 +800,15 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 for (let bi = 0; bi < nBars; bi++) {
                                   let lx1, ly1, lx2, ly2;
                                   if (!invertido) {
-                                    lx1 = ox - dh/tanAng + bi * espPxDiag;
-                                    ly1 = oy + dh;
-                                    lx2 = lx1 + dh/tanAng;
-                                    ly2 = oy;
+                                    lx1 = fxInt - altR/tanAng + bi * espPxDiag;
+                                    ly1 = y1r + altR;
+                                    lx2 = lx1 + altR/tanAng;
+                                    ly2 = y1r;
                                   } else {
-                                    lx1 = (fx + fw) + dh/tanAng - bi * espPxDiag;
-                                    ly1 = oy + dh;
-                                    lx2 = lx1 - dh/tanAng;
-                                    ly2 = oy;
+                                    lx1 = fxEnd + altR/tanAng - bi * espPxDiag;
+                                    ly1 = y1r + altR;
+                                    lx2 = lx1 - altR/tanAng;
+                                    ly2 = y1r;
                                   }
                                   const cx1 = Math.max(fx+2, Math.min(fx+fw-2, lx1));
                                   const cx2 = Math.max(fx+2, Math.min(fx+fw-2, lx2));
