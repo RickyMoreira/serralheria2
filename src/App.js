@@ -617,13 +617,9 @@ function ListaCorte({ pecas }) {
     const aIsDiag = a.nome.startsWith("Diag ");
     const bIsDiag = b.nome.startsWith("Diag ");
     if (aIsDiag && bIsDiag) {
-      const aNum = parseFloat(a.nome.match(/#(\d+)/)?.[1] || 0);
-      const bNum = parseFloat(b.nome.match(/#(\d+)/)?.[1] || 0);
-      if (aNum !== bNum) return aNum - bNum;
-      // mesmo número: a antes de b
-      const aSuf = a.nome.slice(-1);
-      const bSuf = b.nome.slice(-1);
-      return aSuf < bSuf ? -1 : aSuf > bSuf ? 1 : 0;
+      const aNum = parseInt(a.nome.match(/#(\d+)/)?.[1] || 0);
+      const bNum = parseInt(b.nome.match(/#(\d+)/)?.[1] || 0);
+      return aNum - bNum;
     }
     return b.comp - a.comp;
   });
@@ -1149,47 +1145,46 @@ function PortaoCalc() {
 
         const nTotal = 2 * nMeio - 1;
         const isCentral = (i) => i === barras.length - 1 && nTotal % 2 !== 0;
-        const obsRepete = folhas > 1 ? ` — repete em ${folhas} folhas` : "";
 
+        // Agrupa barras por comprimento
+        const grupos = new Map(); // chave: compM string → {compM, qtd, peso}
         barras.forEach((comp, i) => {
           const compM = parseFloat((comp).toFixed(4));
-          const num = i + 1;
-          if (isCentral(i)) {
-            // Barra central: 1 por folha
-            pecas.push({
-              nome: `Diag R${ri+1} #${num}`,
-              tipo: "preenchimento",
-              perfil: descPre,
-              comp: compM,
-              qtd: folhas,
-              compTotal: folhas * compM,
-              peso: folhas * compM * pPre,
-              obs: `central (${angGraus}°)${obsRepete}`
-            });
+          const qtdPorFolha = isCentral(i) ? 1 : 2;
+          const qtdTotal = qtdPorFolha * folhas;
+          const key = compM.toFixed(4);
+          if (grupos.has(key)) {
+            const g = grupos.get(key);
+            g.qtd += qtdTotal;
+            g.compTotal += qtdTotal * compM;
+            g.peso += qtdTotal * compM * pPre;
           } else {
-            // Barra simétrica: lista as 2 da folha esquerda separadamente
-            pecas.push({
-              nome: `Diag R${ri+1} #${num}a`,
-              tipo: "preenchimento",
-              perfil: descPre,
-              comp: compM,
-              qtd: folhas,
-              compTotal: folhas * compM,
-              peso: folhas * compM * pPre,
-              obs: `esq (${angGraus}°)${obsRepete}`
-            });
-            pecas.push({
-              nome: `Diag R${ri+1} #${num}b`,
-              tipo: "preenchimento",
-              perfil: descPre,
-              comp: compM,
-              qtd: folhas,
-              compTotal: folhas * compM,
-              peso: folhas * compM * pPre,
-              obs: `dir (${angGraus}°)${obsRepete}`
+            grupos.set(key, {
+              compM,
+              qtd: qtdTotal,
+              compTotal: qtdTotal * compM,
+              peso: qtdTotal * compM * pPre,
+              obs: isCentral(i) ? `central (${angGraus}°)` : `${angGraus}°`
             });
           }
         });
+
+        // Ordena por comprimento crescente e insere na lista
+        let diagIdx = 1;
+        [...grupos.values()]
+          .sort((a, b) => a.compM - b.compM)
+          .forEach(g => {
+            pecas.push({
+              nome: `Diag R${ri+1} #${diagIdx++}`,
+              tipo: "preenchimento",
+              perfil: descPre,
+              comp: g.compM,
+              qtd: g.qtd,
+              compTotal: g.compTotal,
+              peso: g.peso,
+              obs: g.obs
+            });
+          });
       } else {
         const nBarras = Math.max(0, Math.ceil(largInterna / esp) - 1);
         if (nBarras > 0) {
