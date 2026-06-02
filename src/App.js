@@ -1232,19 +1232,17 @@ function PortaoCalc() {
           {form.regioes.map((reg, ri) => {
               const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
               const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
-              const hasTrav = ri < form.travHoriz.length; // há travessa ABAIXO desta subdivisão
+              const hasTrav = ri < form.travHoriz.length;
               const temSubdivisao = form.travHoriz.length > 0;
-              const travAbaixo = hasTrav ? form.travHoriz[ri] : null;
+              const travAcima = ri > 0 ? form.travHoriz[ri-1] : null;
               return (
-                <div key={reg.id} style={{marginBottom: hasTrav ? 0 : 0}}>
-                  {/* ── BLOCO DA SUBDIVISÃO ── */}
+                <div key={reg.id} style={{marginBottom: temSubdivisao ? 16 : 0}}>
                   <div style={{
                     background:"var(--bg3)",
                     border:"1px solid var(--border)",
                     borderRadius: 8,
                     overflow:"hidden",
                     boxShadow: temSubdivisao ? "0 2px 8px rgba(0,0,0,0.18)" : "none",
-                    marginBottom: hasTrav ? 0 : temSubdivisao ? 16 : 0,
                   }}>
                     {/* Cabeçalho da subdivisão */}
                     {temSubdivisao && (
@@ -1262,8 +1260,7 @@ function PortaoCalc() {
                             background: ri % 2 === 0 ? "var(--green)" : "var(--blue)",
                             display:"flex", alignItems:"center", justifyContent:"center",
                             fontFamily:"'Barlow Condensed',sans-serif",
-                            fontSize:12, fontWeight:700, color:"#111",
-                            flexShrink:0,
+                            fontSize:12, fontWeight:700, color:"#111", flexShrink:0,
                           }}>{ri+1}</div>
                           <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:700,
                             color: ri % 2 === 0 ? "var(--green)" : "var(--blue)",
@@ -1279,6 +1276,33 @@ function PortaoCalc() {
                         )}
                       </div>
                     )}
+
+                    {/* Travessa que separa esta subdivisão da anterior — fica aqui dentro */}
+                    {temSubdivisao && ri > 0 && travAcima && (
+                      <div style={{
+                        display:"flex", alignItems:"center", gap:10,
+                        padding:"8px 16px",
+                        background:"rgba(34,211,238,0.06)",
+                        borderBottom:"1px solid rgba(34,211,238,0.2)",
+                      }}>
+                        <div style={{width:8,height:8,borderRadius:"50%",background:"var(--cyan)",flexShrink:0}} />
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",
+                          fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap"}}>
+                          Travessa {ri}
+                        </span>
+                        <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
+                          <TravessaPosInput
+                            value={travAcima.pos || ""}
+                            max={altNum*100-1}
+                            onChange={val => setTravPos(ri-1, val)}
+                          />
+                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,
+                            color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
+                        </div>
+                        <button onClick={()=>removeTravH(ri-1)} className="btn-remove" title="Remover">✕</button>
+                      </div>
+                    )}
+
                     {/* Campos da subdivisão */}
                     <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
                       <div className="grid-2" style={{gap:10}}>
@@ -1319,42 +1343,6 @@ function PortaoCalc() {
                       <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil" />
                     </div>
                   </div>
-
-                  {/* ── TRAVESSA ABAIXO DESTA SUBDIVISÃO ── */}
-                  {hasTrav && travAbaixo && (
-                    <div style={{
-                      display:"flex", alignItems:"center", gap:10,
-                      padding:"8px 16px",
-                      margin:"0 8px",
-                      background:"rgba(34,211,238,0.08)",
-                      border:"1px solid rgba(34,211,238,0.3)",
-                      borderTop:"none", borderBottom:"none",
-                    }}>
-                      <div style={{
-                        width:8, height:8, borderRadius:"50%",
-                        background:"var(--cyan)", flexShrink:0,
-                      }} />
-                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",
-                        fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap"}}>
-                        Travessa {ri+1}
-                      </span>
-                      <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
-                        <TravessaPosInput
-                          value={travAbaixo.pos || ""}
-                          max={altNum*100-1}
-                          onChange={val => setTravPos(ri, val)}
-                        />
-                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,
-                          color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
-                      </div>
-                      <button onClick={()=>removeTravH(ri)} className="btn-remove" title="Remover">✕</button>
-                    </div>
-                  )}
-                  {hasTrav && (
-                    <div style={{margin:"0 8px 16px 8px", height:4,
-                      background:"linear-gradient(90deg,transparent,rgba(34,211,238,0.2),transparent)",
-                      borderRadius:"0 0 4px 4px"}} />
-                  )}
                 </div>
               );
             })}
