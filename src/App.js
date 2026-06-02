@@ -1144,8 +1144,8 @@ function PortaoCalc() {
         const isCentral = (i) => i === barras.length - 1 && nTotal % 2 !== 0;
 
         barras.forEach((comp, i) => {
-          const compCm = Math.round(comp * 10000) / 100;
-          const compM = compCm / 100;
+          const compCm = parseFloat((comp * 100).toFixed(2));
+          const compM = parseFloat((comp).toFixed(4));
           const qtdPorFolha = isCentral(i) ? 1 : 2;
           const qtd = qtdPorFolha * folhas;
           const num = i + 1;
