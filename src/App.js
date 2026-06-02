@@ -757,10 +757,10 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                       : reg.ori === "diagonal"
                       ? (() => {
                           const ang = (parseFloat(reg.angulo)||45) * Math.PI / 180;
+                          const tanAng = Math.tan(ang);
                           const espPxDiag = (espMetros / tanAng / (L/folhas)) * fw;
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
-                          const tanAng = Math.tan(ang);
                           // Âncora no canto interno da folha (fx+2 = borda esquerda interna)
                           const fxInt = fx + 2; // x esquerdo interno da folha
                           const fxEnd = fx + fw - 2; // x direito interno
@@ -1128,23 +1128,15 @@ function PortaoCalc() {
         const ang = Math.max(10, Math.min(80, parseFloat(reg.angulo) || 45)) * Math.PI / 180;
         const angGraus = Math.round(parseFloat(reg.angulo) || 45);
         const tanAng = Math.tan(ang);
-        const sinAng = Math.sin(ang);
-
-        const W = largInterna;
         const Hreg = altRegiao;
 
-        // Passo horizontal entre barras: esp/tan(ang) é o cateto horizontal
-        // quando o espaçamento perpendicular entre barras é esp.
-        // A barra #i tem seu pé a i*espPasso do canto inferior-esquerdo.
-        const espPasso = esp / tanAng; // passo horizontal (= esp para 45°)
+        const espPasso = esp / tanAng;
 
         const nMeio = Math.ceil(largInterna / espPasso);
         const barras = [];
 
         for (let i = 1; i <= nMeio; i++) {
           const dx = Math.min(i * espPasso, largInterna);
-          const dy = Math.min(dx / tanAng * tanAng, Hreg); // dy = min(dx, Hreg) quando ang=45°
-          // recalcula dx real considerando clip na altura
           const dyReal = Math.min(dx / tanAng, Hreg);
           const dxReal = Math.min(dyReal * tanAng, largInterna);
           const comp = Math.sqrt(dxReal*dxReal + dyReal*dyReal);
