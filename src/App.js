@@ -13,8 +13,8 @@ const styles = `
     --border:    #2a2d35;
     --border2:   #353942;
     --text:      #e2e4ea;
-    --text2:     #9ea3b0;
-    --text3:     #5a5f6e;
+    --text2:     #b8bdc9;
+    --text3:     #7a8090;
     --accent:    #f0a500;
     --accent2:   #ffbe3d;
     --green:     #4ade80;
