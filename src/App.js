@@ -1232,7 +1232,6 @@ function PortaoCalc() {
           {form.regioes.map((reg, ri) => {
               const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
               const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
-              const hasTrav = ri < form.travHoriz.length;
               const temSubdivisao = form.travHoriz.length > 0;
               const travAcima = ri > 0 ? form.travHoriz[ri-1] : null;
               return (
