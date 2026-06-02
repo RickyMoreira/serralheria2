@@ -1364,7 +1364,6 @@ function PortaoCalc() {
                 Base{altNum > 0 ? ` — ${(altNum*100).toFixed(0)} cm` : ""}
               </div>
             )}
-          </div>
         </div>
       </div>
 
