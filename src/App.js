@@ -1227,93 +1227,60 @@ function PortaoCalc() {
           <span>PARTE INTERNA</span>
           <button onClick={addTravH} className="btn-add">+ Travessa horizontal</button>
         </div>
-        <div style={{padding:"20px 18px",display:"flex",gap:16}}>
+        <div style={{padding:"16px 18px",display:"flex",flexDirection:"column",gap:0}}>
 
-          {form.travHoriz.length > 0 && (
-            <div style={{display:"flex",flexDirection:"column",alignItems:"center",width:20,flexShrink:0,paddingTop:6}}>
-              <div style={{width:10,height:10,borderRadius:"50%",background:"var(--accent)",marginBottom:0}} />
-              {form.regioes.map((_, ri) => {
-                const hasTrav = ri < form.travHoriz.length;
-                return (
-                  <div key={ri} style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1,width:"100%"}}>
-                    <div style={{width:2,flex:1,background:"var(--border2)",minHeight:60}} />
-                    {hasTrav
-                      ? <div style={{width:14,height:14,borderRadius:"50%",background:"var(--cyan)",border:"2px solid var(--bg)",flexShrink:0,marginBlock:2}} />
-                      : <div style={{width:10,height:10,borderRadius:"50%",background:"var(--text3)",marginTop:2}} />
-                    }
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <div style={{flex:1,display:"flex",flexDirection:"column",gap:0}}>
-            {form.travHoriz.length > 0 && (
-              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--accent)",letterSpacing:1,marginBottom:8,textTransform:"uppercase"}}>
-                Topo{altNum > 0 ? ` — 0 cm` : ""}
-              </div>
-            )}
-
-            {form.regioes.map((reg, ri) => {
+          {form.regioes.map((reg, ri) => {
               const limites = [0, ...form.travHoriz.map(t=>parseFloat(t.pos)||0).sort((a,b)=>a-b), altNum*100];
               const altRegiao = altNum > 0 ? (limites[ri+1] - limites[ri]).toFixed(0) : null;
-              const hasTrav = ri < form.travHoriz.length;
+              const hasTrav = ri < form.travHoriz.length; // há travessa ABAIXO desta subdivisão
               const temSubdivisao = form.travHoriz.length > 0;
-              const travAcima = ri > 0 ? form.travHoriz[ri-1] : null;
+              const travAbaixo = hasTrav ? form.travHoriz[ri] : null;
               return (
-                <div key={reg.id}>
-                  {temSubdivisao && ri > 0 && travAcima && (
-                    <div style={{
-                      display:"flex",alignItems:"center",gap:10,
-                      padding:"7px 14px",
-                      background:"rgba(34,211,238,0.06)",
-                      border:"1px solid rgba(34,211,238,0.2)",
-                      borderRadius:"6px 6px 0 0",
-                      marginBottom:0,
-                    }}>
-                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap",minWidth:80}}>
-                        Travessa {ri}
-                      </span>
-                      <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
-                        <TravessaPosInput
-                          value={travAcima.pos || ""}
-                          max={altNum*100-1}
-                          onChange={val => setTravPos(ri-1, val)}
-                        />
-                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
-                      </div>
-                      <button onClick={()=>removeTravH(ri-1)} className="btn-remove" title="Remover">✕</button>
-                    </div>
-                  )}
-
+                <div key={reg.id} style={{marginBottom: hasTrav ? 0 : 0}}>
+                  {/* ── BLOCO DA SUBDIVISÃO ── */}
                   <div style={{
                     background:"var(--bg3)",
                     border:"1px solid var(--border)",
-                    borderTopLeftRadius: (temSubdivisao && ri > 0) ? 0 : 6,
-                    borderTopRightRadius: (temSubdivisao && ri > 0) ? 0 : 6,
-                    borderBottomLeftRadius: 6,
-                    borderBottomRightRadius: 6,
+                    borderRadius: 8,
                     overflow:"hidden",
-                    marginBottom: hasTrav ? 8 : 0,
+                    boxShadow: temSubdivisao ? "0 2px 8px rgba(0,0,0,0.18)" : "none",
+                    marginBottom: hasTrav ? 0 : temSubdivisao ? 16 : 0,
                   }}>
+                    {/* Cabeçalho da subdivisão */}
                     {temSubdivisao && (
                       <div style={{
-                        display:"flex",alignItems:"center",justifyContent:"space-between",
-                        padding:"7px 14px",
+                        display:"flex", alignItems:"center", justifyContent:"space-between",
+                        padding:"9px 16px",
                         borderBottom:"1px solid var(--border)",
-                        background:"rgba(74,222,128,0.04)",
+                        background: ri % 2 === 0
+                          ? "linear-gradient(90deg,rgba(74,222,128,0.10),rgba(74,222,128,0.04))"
+                          : "linear-gradient(90deg,rgba(96,165,250,0.10),rgba(96,165,250,0.04))",
                       }}>
-                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,fontWeight:700,color:"var(--green)",letterSpacing:1.5,textTransform:"uppercase"}}>
-                          Subdivisão {ri+1}
-                        </span>
+                        <div style={{display:"flex",alignItems:"center",gap:10}}>
+                          <div style={{
+                            width:22, height:22, borderRadius:"50%",
+                            background: ri % 2 === 0 ? "var(--green)" : "var(--blue)",
+                            display:"flex", alignItems:"center", justifyContent:"center",
+                            fontFamily:"'Barlow Condensed',sans-serif",
+                            fontSize:12, fontWeight:700, color:"#111",
+                            flexShrink:0,
+                          }}>{ri+1}</div>
+                          <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:700,
+                            color: ri % 2 === 0 ? "var(--green)" : "var(--blue)",
+                            letterSpacing:1.5, textTransform:"uppercase"}}>
+                            Subdivisão {ri+1}
+                          </span>
+                        </div>
                         {altRegiao && (
-                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)"}}>
+                          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,
+                            color:"var(--accent)",fontWeight:700}}>
                             {altRegiao} cm
                           </span>
                         )}
                       </div>
                     )}
-                    <div style={{padding:"12px 14px",display:"flex",flexDirection:"column",gap:10}}>
+                    {/* Campos da subdivisão */}
+                    <div style={{padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
                       <div className="grid-2" style={{gap:10}}>
                         <div className="field">
                           <label>Orientação</label>
@@ -1352,6 +1319,42 @@ function PortaoCalc() {
                       <PerfilEstSelector A={reg.preA} B={reg.preB} e={reg.preE} onChange={(A,B,esp)=>setRegiaoPre(ri,A,B,esp)} label="Perfil" />
                     </div>
                   </div>
+
+                  {/* ── TRAVESSA ABAIXO DESTA SUBDIVISÃO ── */}
+                  {hasTrav && travAbaixo && (
+                    <div style={{
+                      display:"flex", alignItems:"center", gap:10,
+                      padding:"8px 16px",
+                      margin:"0 8px",
+                      background:"rgba(34,211,238,0.08)",
+                      border:"1px solid rgba(34,211,238,0.3)",
+                      borderTop:"none", borderBottom:"none",
+                    }}>
+                      <div style={{
+                        width:8, height:8, borderRadius:"50%",
+                        background:"var(--cyan)", flexShrink:0,
+                      }} />
+                      <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:9,color:"var(--cyan)",
+                        fontWeight:700,letterSpacing:1.5,textTransform:"uppercase",whiteSpace:"nowrap"}}>
+                        Travessa {ri+1}
+                      </span>
+                      <div style={{display:"flex",alignItems:"center",gap:6,flex:1}}>
+                        <TravessaPosInput
+                          value={travAbaixo.pos || ""}
+                          max={altNum*100-1}
+                          onChange={val => setTravPos(ri, val)}
+                        />
+                        <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,
+                          color:"var(--text3)",whiteSpace:"nowrap"}}>cm do topo</span>
+                      </div>
+                      <button onClick={()=>removeTravH(ri)} className="btn-remove" title="Remover">✕</button>
+                    </div>
+                  )}
+                  {hasTrav && (
+                    <div style={{margin:"0 8px 16px 8px", height:4,
+                      background:"linear-gradient(90deg,transparent,rgba(34,211,238,0.2),transparent)",
+                      borderRadius:"0 0 4px 4px"}} />
+                  )}
                 </div>
               );
             })}
