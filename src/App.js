@@ -814,24 +814,31 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 }
                                 if (visiveis.length < 2) return null;
 
-                                // Barra central
-                                const ci = Math.floor(visiveis.length / 2);
-                                const { cx1, cy1, cx2, cy2 } = visiveis[ci];
+                                // 4ª barra visível (índice 3), ou a penúltima se houver menos de 5
+                                const i4 = Math.min(3, visiveis.length - 2);
+                                const i5 = i4 + 1;
+                                const b4 = visiveis[i4];
+                                const b5 = visiveis[i5];
 
-                                // Ponto médio da barra central
-                                const mx = (cx1 + cx2) / 2;
-                                const my = (cy1 + cy2) / 2;
+                                // Ponto médio de cada barra
+                                const m4x = (b4.cx1 + b4.cx2) / 2;
+                                const m4y = (b4.cy1 + b4.cy2) / 2;
+                                const m5x = (b5.cx1 + b5.cx2) / 2;
+                                const m5y = (b5.cy1 + b5.cy2) / 2;
 
-                                // Direção perpendicular (normal à barra)
-                                const ddx = cx2 - cx1; const ddy = cy2 - cy1;
+                                // Centro do vazio entre as duas barras
+                                const mx = (m4x + m5x) / 2;
+                                const my = (m4y + m5y) / 2;
+
+                                // Direção perpendicular baseada na 4ª barra
+                                const ddx = b4.cx2 - b4.cx1; const ddy = b4.cy2 - b4.cy1;
                                 const blen = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
-                                // Normal unitária
                                 const nx = -ddy / blen; const ny = ddx / blen;
 
                                 // Distância perpendicular entre barras em px
                                 const espPxPerp = espPxDiag;
 
-                                // Dois pontos da cota: centro da barra ± metade do espaçamento na direção normal
+                                // Seta vai do meio da 4ª até o meio da 5ª barra (ao longo da normal)
                                 const p1x = mx - nx * espPxPerp / 2;
                                 const p1y = my - ny * espPxPerp / 2;
                                 const p2x = mx + nx * espPxPerp / 2;
