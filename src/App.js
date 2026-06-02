@@ -807,13 +807,11 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 {[...Array(nBars)].map((_,bi) => {
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    // / : ancora canto inferior-esquerdo do portão inteiro
                                     x1 = ox - dh/tanAng + bi * espPxDiag;
                                     y1 = oy + dh;
                                     x2 = x1 + dh/tanAng;
                                     y2 = oy;
                                   } else {
-                                    // \ : ancora canto inferior-direito da folha atual (espelhado por folha)
                                     x1 = (fx + fw) + dh/tanAng - bi * espPxDiag;
                                     y1 = oy + dh;
                                     x2 = x1 - dh/tanAng;
@@ -822,6 +820,51 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
                               </g>
+                              {/* Cota na primeira barra diagonal visível desta folha */}
+                              {(() => {
+                                // Encontra a primeira barra que aparece dentro da folha
+                                for (let bi = 0; bi < nBars; bi++) {
+                                  let lx1, ly1, lx2, ly2;
+                                  if (!invertido) {
+                                    lx1 = ox - dh/tanAng + bi * espPxDiag;
+                                    ly1 = oy + dh;
+                                    lx2 = lx1 + dh/tanAng;
+                                    ly2 = oy;
+                                  } else {
+                                    lx1 = (fx + fw) + dh/tanAng - bi * espPxDiag;
+                                    ly1 = oy + dh;
+                                    lx2 = lx1 - dh/tanAng;
+                                    ly2 = oy;
+                                  }
+                                  // Clip da barra na folha
+                                  const cx1 = Math.max(fx+2, Math.min(fx+fw-2, lx1));
+                                  const cx2 = Math.max(fx+2, Math.min(fx+fw-2, lx2));
+                                  const cy1 = ly1 + (cx1-lx1)/(lx2-lx1||1) * (ly2-ly1);
+                                  const cy2 = ly1 + (cx2-lx1)/(lx2-lx1||1) * (ly2-ly1);
+                                  const barLen = Math.sqrt((cx2-cx1)**2 + (cy2-cy1)**2);
+                                  if (barLen < 8) continue; // barra muito pequena, pula
+                                  // Ponto médio da barra para label
+                                  const mx = (cx1+cx2)/2;
+                                  const my = (cy1+cy2)/2;
+                                  const barLenM = (barLen / Math.min(dw/L*folhas, dh/H));
+                                  // Comprimento real em cm
+                                  const realCm = (barLen / (dh / (H||1)) * 100).toFixed(2);
+                                  // Ângulo do texto
+                                  const angText = Math.atan2(cy2-cy1, cx2-cx1) * 180/Math.PI;
+                                  return (
+                                    <g key="cota-diag">
+                                      <rect x={mx-18} y={my-8} width={36} height={12} fill="rgba(245,245,240,0.88)" rx="2"
+                                        transform={`rotate(${angText},${mx},${my})`} />
+                                      <text x={mx} y={my+3} textAnchor="middle" fill={corD}
+                                        fontSize="8" fontFamily="monospace" fontWeight="bold"
+                                        transform={`rotate(${angText},${mx},${my})`}>
+                                        {realCm}cm
+                                      </text>
+                                    </g>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </g>
                           );
                         })()
