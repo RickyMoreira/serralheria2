@@ -846,7 +846,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                   // Ponto médio da barra para label
                                   const mx = (cx1+cx2)/2;
                                   const my = (cy1+cy2)/2;
-                                  const barLenM = (barLen / Math.min(dw/L*folhas, dh/H));
+                                  
                                   // Comprimento real em cm
                                   const realCm = (barLen / (dh / (H||1)) * 100).toFixed(2);
                                   // Ângulo do texto
