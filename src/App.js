@@ -1131,26 +1131,27 @@ function PortaoCalc() {
         const Hreg = altRegiao;
 
         const espPasso = esp / tanAng;
+        const centro = largInterna / 2;
+        const EPS = 1e-6;
 
-        const nMeio = Math.ceil(largInterna / espPasso);
-        const barras = [];
+        // Gera barras do canto (dx=espPasso) até o centro (dx=centro), inclusive
+        const nMeio = Math.max(1, Math.ceil((centro - EPS) / espPasso));
+        const barras = []; // {comp, dx, isCentral}
 
         for (let i = 1; i <= nMeio; i++) {
-          const dx = Math.min(i * espPasso, largInterna);
+          const dx = Math.min(i * espPasso, centro);
           const dyReal = Math.min(dx / tanAng, Hreg);
-          const dxReal = Math.min(dyReal * tanAng, largInterna);
+          const dxReal = Math.min(dyReal * tanAng, dx);
           const comp = Math.sqrt(dxReal*dxReal + dyReal*dyReal);
-          barras.push(comp);
+          const ehCentral = Math.abs(dx - centro) < EPS;
+          barras.push({ comp, ehCentral });
         }
 
-        const nTotal = 2 * nMeio - 1;
-        const isCentral = (i) => i === barras.length - 1 && nTotal % 2 !== 0;
-
         // Agrupa barras por comprimento
-        const grupos = new Map(); // chave: compM string → {compM, qtd, peso}
-        barras.forEach((comp, i) => {
-          const compM = parseFloat((comp).toFixed(4));
-          const qtdPorFolha = isCentral(i) ? 1 : 2;
+        const grupos = new Map();
+        barras.forEach(({ comp, ehCentral }) => {
+          const compM = parseFloat(comp.toFixed(4));
+          const qtdPorFolha = ehCentral ? 1 : 2;
           const qtdTotal = qtdPorFolha * folhas;
           const key = compM.toFixed(4);
           if (grupos.has(key)) {
@@ -1158,13 +1159,14 @@ function PortaoCalc() {
             g.qtd += qtdTotal;
             g.compTotal += qtdTotal * compM;
             g.peso += qtdTotal * compM * pPre;
+            if (ehCentral) g.ehCentral = true;
           } else {
             grupos.set(key, {
               compM,
               qtd: qtdTotal,
               compTotal: qtdTotal * compM,
               peso: qtdTotal * compM * pPre,
-              obs: isCentral(i) ? `central (${angGraus}°)` : `${angGraus}°`
+              ehCentral
             });
           }
         });
@@ -1182,7 +1184,7 @@ function PortaoCalc() {
               qtd: g.qtd,
               compTotal: g.compTotal,
               peso: g.peso,
-              obs: g.obs
+              obs: g.ehCentral ? `central (${angGraus}°)` : `${angGraus}°`
             });
           });
       } else {
