@@ -760,104 +760,83 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                           const tanAng = Math.tan(ang);
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
-                          // Âncora no canto interno da folha
                           const fxInt = fx + 2;
-                          const fxEnd = fx + fw - 2;
                           const invertido = (fi % 2 !== 0) !== (reg.inverter || false);
 
-                          // largura interna da folha em px (mesma usada no cálculo)
                           const largInternaPx = fw - 4;
-                          const espPasso = (espMetros / tanAng / (L/folhas)) * fw; // px
-                          const centroPx = largInternaPx / 2;
-                          const EPS_PX = 0.01;
-                          const nMeio = Math.max(1, Math.ceil((centroPx - EPS_PX) / espPasso));
+                          const espPasso = (espMetros / tanAng / (L/folhas)) * fw; // px, passo entre bases
+                          const subidaMax = altR / tanAng; // px, quanto a barra avança em x ao subir altR
 
-                          // Gera as posições dx (em px, a partir do canto) até o centro
-                          const dxList = [];
-                          for (let i = 1; i <= nMeio; i++) {
-                            dxList.push(Math.min(i * espPasso, centroPx));
+                          // Interseção da reta (que sobe da base) com o retângulo [0,largInternaPx]x[0,altR]
+                          // Parametrização a partir da base (t=0 na base, t=1 no topo ideal):
+                          //   x(t) = dxBase ∓ t*subidaMax   (− se sobe p/ esquerda, + se sobe p/ direita)
+                          //   y(t) = altR*(1-t)
+                          function clipLine(dxBase) {
+                            let tMin = 0, tMax = 1;
+                            if (!invertido) {
+                              // x(t) = dxBase - t*subidaMax
+                              const tForX0 = dxBase / subidaMax;        // x=0
+                              const tForXL = (dxBase - largInternaPx) / subidaMax; // x=largInternaPx
+                              tMax = Math.min(tMax, tForX0);
+                              tMin = Math.max(tMin, tForXL);
+                            } else {
+                              // x(t) = dxBase + t*subidaMax
+                              const tForXL = (largInternaPx - dxBase) / subidaMax; // x=largInternaPx
+                              const tForX0 = -dxBase / subidaMax;        // x=0
+                              tMax = Math.min(tMax, tForXL);
+                              tMin = Math.max(tMin, tForX0);
+                            }
+                            if (tMin >= tMax || tMax < 0 || tMin > 1) return null;
+                            const sign = invertido ? 1 : -1;
+                            const x1 = dxBase + sign*tMin*subidaMax, y1 = altR*(1-tMin);
+                            const x2 = dxBase + sign*tMax*subidaMax, y2 = altR*(1-tMax);
+                            return { x1, y1, x2, y2 };
                           }
 
-                          // Para cada dx do lado "menor", gera a barra correspondente e sua espelhada
-                          // (exceto se dx === centroPx, que é a única central, sem espelho)
-                          const barrasDesenho = []; // {dx} a partir do canto esquerdo interno (0..largInternaPx)
-                          dxList.forEach(dx => {
-                            const ehCentral = Math.abs(dx - centroPx) < EPS_PX;
-                            barrasDesenho.push(dx); // lado esquerdo
-                            if (!ehCentral) barrasDesenho.push(largInternaPx - dx); // espelho
-                          });
-                          barrasDesenho.sort((a,b) => a-b);
+                          // Gera bases cobrindo todo o intervalo necessário (de 0 até largInternaPx+subidaMax,
+                          // ou no caso invertido, espelhado)
+                          const dxBaseMax = largInternaPx + subidaMax;
+                          const n = Math.ceil(dxBaseMax / espPasso) + 2;
+                          const linhas = [];
+                          for (let i = 0; i < n; i++) {
+                            const dxBase = i * espPasso;
+                            const line = clipLine(dxBase);
+                            if (line) linhas.push(line);
+                          }
 
                           return (
-                            <g key="diag">
+                            <g key={`diag-${fi}-${ri}`}>
                               <defs>
                                 <clipPath id={clipId}>
                                   <rect x={fxInt} y={y1r} width={fw-4} height={altR} />
                                 </clipPath>
                               </defs>
                               <g clipPath={`url(#${clipId})`}>
-                                {barrasDesenho.map((dx, bi) => {
-                                  // dx é a distância do canto esquerdo interno até o pé da barra na base
-                                  const subidaX = altR / tanAng;
-                                  let x1, y1, x2, y2;
-                                  if (!invertido) {
-                                    x1 = fxInt + dx;
-                                    y1 = y1r + altR;
-                                    x2 = x1 - subidaX;
-                                    y2 = y1r;
-                                  } else {
-                                    x1 = fxEnd - dx;
-                                    y1 = y1r + altR;
-                                    x2 = x1 + subidaX;
-                                    y2 = y1r;
-                                  }
+                                {linhas.map((ln, bi) => {
+                                  const x1 = fxInt + ln.x1, y1 = y1r + ln.y1;
+                                  const x2 = fxInt + ln.x2, y2 = y1r + ln.y2;
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
                               </g>
                               {/* Cota de espaçamento perpendicular — entre 2 barras próximas ao centro */}
                               {(() => {
-                                if (barrasDesenho.length < 2) return null;
-                                const subidaX = altR / tanAng;
-
-                                function pontaBarra(dx) {
-                                  let x1, y1, x2, y2;
-                                  if (!invertido) {
-                                    x1 = fxInt + dx; y1 = y1r + altR;
-                                    x2 = x1 - subidaX; y2 = y1r;
-                                  } else {
-                                    x1 = fxEnd - dx; y1 = y1r + altR;
-                                    x2 = x1 + subidaX; y2 = y1r;
-                                  }
-                                  // Clipa nos limites da folha (x entre fxInt e fxEnd)
-                                  const cx1 = Math.max(fxInt, Math.min(fxEnd, x1));
-                                  const cx2 = Math.max(fxInt, Math.min(fxEnd, x2));
-                                  const t1 = (cx1 - x1) / ((x2-x1) || 1);
-                                  const t2 = (cx2 - x1) / ((x2-x1) || 1);
-                                  const cy1 = y1 + t1*(y2-y1);
-                                  const cy2 = y1 + t2*(y2-y1);
-                                  return { cx1, cy1, cx2, cy2 };
-                                }
-
-                                // Escolhe um par próximo ao meio do array para a cota
-                                const mid = Math.floor(barrasDesenho.length / 2);
-                                const i4 = Math.max(0, Math.min(mid, barrasDesenho.length - 2));
+                                if (linhas.length < 2) return null;
+                                const mid = Math.floor(linhas.length / 2);
+                                const i4 = Math.max(0, Math.min(mid, linhas.length - 2));
                                 const i5 = i4 + 1;
-                                const b4 = pontaBarra(barrasDesenho[i4]);
-                                const b5 = pontaBarra(barrasDesenho[i5]);
+                                const b4 = linhas[i4], b5 = linhas[i5];
 
-                                const m4x = (b4.cx1 + b4.cx2) / 2;
-                                const m4y = (b4.cy1 + b4.cy2) / 2;
-                                const m5x = (b5.cx1 + b5.cx2) / 2;
-                                const m5y = (b5.cy1 + b5.cy2) / 2;
+                                const m4x = fxInt + (b4.x1 + b4.x2)/2, m4y = y1r + (b4.y1+b4.y2)/2;
+                                const m5x = fxInt + (b5.x1 + b5.x2)/2, m5y = y1r + (b5.y1+b5.y2)/2;
 
                                 const mx = (m4x + m5x) / 2;
                                 const my = (m4y + m5y) / 2;
 
-                                const ddx = b4.cx2 - b4.cx1; const ddy = b4.cy2 - b4.cy1;
+                                const ddx = (fxInt+b4.x2) - (fxInt+b4.x1); const ddy = (y1r+b4.y2) - (y1r+b4.y1);
                                 const blen = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
                                 const nx = -ddy / blen; const ny = ddx / blen;
 
-                                const espPxPerp = espPasso * Math.sin(ang) ; // distância perpendicular real em px
+                                const espPxPerp = espPasso * Math.sin(ang);
 
                                 const p1x = mx - nx * espPxPerp / 2;
                                 const p1y = my - ny * espPxPerp / 2;
@@ -1144,42 +1123,53 @@ function PortaoCalc() {
         const Hreg = altRegiao;
 
         const espPasso = esp / tanAng;
-        const centro = largInterna / 2;
+        const subidaMax = Hreg / tanAng;
         const EPS = 1e-6;
 
-        // Gera barras do canto (dx=espPasso) até o centro (dx=centro), inclusive
-        const nMeio = Math.max(1, Math.ceil((centro - EPS) / espPasso));
-        const barras = []; // {comp, dx, isCentral}
+        // Mesma função de clip do desenho: intersecção da reta que sobe da base
+        // (x=dxBase, y=0) até o topo ideal (x=dxBase-subidaMax, y=Hreg), com o
+        // retângulo [0,largInterna] x [0,Hreg]. Direção sempre a mesma (entra à
+        // esquerda, decresce à direita) — sem conceito de espelho.
+        function clipLine(dxBase) {
+          let tMin = 0, tMax = 1;
+          const tForX0 = dxBase / subidaMax;
+          const tForXL = (dxBase - largInterna) / subidaMax;
+          tMax = Math.min(tMax, tForX0);
+          tMin = Math.max(tMin, tForXL);
+          if (tMin >= tMax || tMax < 0 || tMin > 1) return null;
+          const x1 = dxBase - tMin*subidaMax, y1 = Hreg*(1-tMin);
+          const x2 = dxBase - tMax*subidaMax, y2 = Hreg*(1-tMax);
+          const comp = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+          return { comp };
+        }
 
-        for (let i = 1; i <= nMeio; i++) {
-          const dx = Math.min(i * espPasso, centro);
-          const dyReal = Math.min(dx / tanAng, Hreg);
-          const dxReal = Math.min(dyReal * tanAng, dx);
-          const comp = Math.sqrt(dxReal*dxReal + dyReal*dyReal);
-          const ehCentral = Math.abs(dx - centro) < EPS;
-          barras.push({ comp, ehCentral });
+        const dxBaseMax = largInterna + subidaMax;
+        const nBarrasGeradas = Math.ceil((dxBaseMax - EPS) / espPasso) + 2;
+        const barras = []; // { comp }
+
+        for (let i = 0; i < nBarrasGeradas; i++) {
+          const dxBase = i * espPasso;
+          const line = clipLine(dxBase);
+          if (line && line.comp > EPS) barras.push(line.comp);
         }
 
         // Agrupa barras por comprimento
         const grupos = new Map();
-        barras.forEach(({ comp, ehCentral }) => {
+        barras.forEach((comp) => {
           const compM = parseFloat(comp.toFixed(4));
-          const qtdPorFolha = ehCentral ? 1 : 2;
-          const qtdTotal = qtdPorFolha * folhas;
+          const qtdTotal = folhas; // 1 barra por folha (sem duplicação de espelho)
           const key = compM.toFixed(4);
           if (grupos.has(key)) {
             const g = grupos.get(key);
             g.qtd += qtdTotal;
             g.compTotal += qtdTotal * compM;
             g.peso += qtdTotal * compM * pPre;
-            if (ehCentral) g.ehCentral = true;
           } else {
             grupos.set(key, {
               compM,
               qtd: qtdTotal,
               compTotal: qtdTotal * compM,
               peso: qtdTotal * compM * pPre,
-              ehCentral
             });
           }
         });
@@ -1197,7 +1187,7 @@ function PortaoCalc() {
               qtd: g.qtd,
               compTotal: g.compTotal,
               peso: g.peso,
-              obs: g.ehCentral ? `central (${angGraus}°)` : `${angGraus}°`
+              obs: `${angGraus}°`
             });
           });
       } else {
