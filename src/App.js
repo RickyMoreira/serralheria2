@@ -1713,13 +1713,154 @@ function GradeCalc() {
 // ROOT
 // ══════════════════════════════════════════════════════════════════════════════
 
+// ══════════════════════════════════════════════════════════════════════════════
+// FEEDBACK
+// ══════════════════════════════════════════════════════════════════════════════
+const FEEDBACK_KEY = "sercalc_feedbacks_v1";
+
+function carregarFeedbacks() {
+  try {
+    const raw = localStorage.getItem(FEEDBACK_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function salvarFeedbacks(lista) {
+  try {
+    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(lista));
+  } catch {
+    // ignora erro de storage indisponível
+  }
+}
+
+function FeedbackTab() {
+  const [lista, setLista] = useState(() => carregarFeedbacks());
+  const [form, setForm] = useState({ tipo:"sugestao", nome:"", texto:"" });
+  const [enviado, setEnviado] = useState(false);
+
+  function enviar() {
+    if (!form.texto.trim()) return;
+    const novo = {
+      id: Date.now(),
+      tipo: form.tipo,
+      nome: form.nome.trim() || "Anônimo",
+      texto: form.texto.trim(),
+      data: new Date().toLocaleString("pt-BR"),
+    };
+    const novaLista = [novo, ...lista];
+    setLista(novaLista);
+    salvarFeedbacks(novaLista);
+    setForm({ tipo:"sugestao", nome:"", texto:"" });
+    setEnviado(true);
+    setTimeout(() => setEnviado(false), 3000);
+  }
+
+  function remover(id) {
+    const novaLista = lista.filter(f => f.id !== id);
+    setLista(novaLista);
+    salvarFeedbacks(novaLista);
+  }
+
+  const TIPO_INFO = {
+    bug:       { label:"🐞 Erro / Bug",      cor:"var(--red)" },
+    sugestao:  { label:"💡 Sugestão",        cor:"var(--accent)" },
+    melhoria:  { label:"⚙ Melhoria",         cor:"var(--blue)" },
+  };
+
+  return (
+    <div className="content" style={{padding:0}}>
+      <div className="card">
+        <div className="card-header">💬 Enviar Feedback</div>
+        <div className="card-body">
+          <div className="grid-2">
+            <div className="field">
+              <label>Tipo</label>
+              <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))}>
+                <option value="bug">🐞 Erro / Bug</option>
+                <option value="sugestao">💡 Sugestão</option>
+                <option value="melhoria">⚙ Melhoria</option>
+              </select>
+            </div>
+            <div className="field">
+              <label>Seu nome <span className="unit">(opcional)</span></label>
+              <input type="text" value={form.nome} onChange={e=>setForm(f=>({...f,nome:e.target.value}))} placeholder="Ex: Ricky" />
+            </div>
+          </div>
+          <div className="field">
+            <label>Mensagem</label>
+            <textarea
+              value={form.texto}
+              onChange={e=>setForm(f=>({...f,texto:e.target.value}))}
+              placeholder="Descreva o erro encontrado ou sua sugestão de melhoria..."
+              rows={4}
+              style={{
+                background:"var(--bg)", border:"1px solid var(--border2)", borderRadius:5,
+                color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13,
+                padding:"10px 12px", outline:"none", resize:"vertical", width:"100%",
+              }}
+            />
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <button className="btn-calc" style={{flex:"none",padding:"12px 28px"}} onClick={enviar}>ENVIAR FEEDBACK</button>
+            {enviado && <span style={{color:"var(--green)",fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>✔ Enviado, obrigado!</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">
+          <span>📋 Feedbacks Recebidos</span>
+          <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"var(--text3)"}}>{lista.length} total</span>
+        </div>
+        <div className="card-body" style={{gap:10}}>
+          {lista.length === 0 && (
+            <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:12,color:"var(--text3)",textAlign:"center",padding:"20px 0"}}>
+              Nenhum feedback enviado ainda.
+            </div>
+          )}
+          {lista.map(f => {
+            const info = TIPO_INFO[f.tipo] || TIPO_INFO.sugestao;
+            return (
+              <div key={f.id} style={{
+                background:"var(--bg3)", border:"1px solid var(--border)", borderRadius:6,
+                padding:"12px 14px", display:"flex", flexDirection:"column", gap:6,
+              }}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                  <span style={{
+                    fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700,
+                    color: info.cor, letterSpacing:1,
+                  }}>{info.label}</span>
+                  <button onClick={()=>remover(f.id)} className="btn-remove" title="Remover" style={{padding:"3px 8px",fontSize:11}}>✕</button>
+                </div>
+                <div style={{fontFamily:"'Barlow',sans-serif",fontSize:13,color:"var(--text)",lineHeight:1.5}}>
+                  {f.texto}
+                </div>
+                <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)"}}>
+                  {f.nome} · {f.data}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="alert">
+        ℹ Os feedbacks são salvos localmente no seu navegador. Para reportar a outra pessoa, copie o texto manualmente.
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { id:"portao",   label:"Portão",   icon:"🚪" },
   { id:"parapeito",label:"Parapeito",icon:"🏗" },
   { id:"grade",    label:"Grade",    icon:"⊞"  },
+  { id:"feedback", label:"Feedback", icon:"💬" },
 ];
 
-const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc };
+const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc, feedback: FeedbackTab };
 
 export default function App() {
   const [tab, setTab] = useState("portao");
