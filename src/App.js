@@ -793,13 +793,16 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                             return { x1, y1, x2, y2 };
                           }
 
-                          // Gera bases cobrindo todo o intervalo necessário (de 0 até largInternaPx+subidaMax,
-                          // ou no caso invertido, espelhado)
+                          // Gera bases cobrindo todo o intervalo necessário.
+                          // Não-invertido: entrada pela esquerda (dxBase de -subidaMax até largInternaPx).
+                          // Invertido: entrada pela direita (dxBase de largInternaPx+subidaMax até 0, decrescendo).
                           const dxBaseMax = largInternaPx + subidaMax;
                           const n = Math.ceil(dxBaseMax / espPasso) + 2;
                           const linhas = [];
                           for (let i = 0; i < n; i++) {
-                            const dxBase = i * espPasso;
+                            const dxBase = invertido
+                              ? largInternaPx - i * espPasso
+                              : i * espPasso;
                             const line = clipLine(dxBase);
                             if (line) linhas.push(line);
                           }
