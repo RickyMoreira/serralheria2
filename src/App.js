@@ -1857,7 +1857,7 @@ const TABS = [
   { id:"portao",   label:"Portão",   icon:"🚪" },
   { id:"parapeito",label:"Parapeito",icon:"🏗" },
   { id:"grade",    label:"Grade",    icon:"⊞"  },
-  { id:"feedback", label:"Feedback", icon:"💬" },
+  { id:"feedback", label:"Sugestões/Erros", icon:"💬" },
 ];
 
 const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc, feedback: FeedbackTab };
