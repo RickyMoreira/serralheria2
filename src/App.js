@@ -1107,7 +1107,7 @@ function PortaoCalc() {
       const altBruta = yBot - yTop;
 
       const descontoTop = ri === 0 ? espEst : espEst / 2;
-      const descontoBot = ri === limites.length - 2 ? 0 : espEst / 2;
+      const descontoBot = ri === limites.length - 2 ? espEst : espEst / 2;
       const altRegiao = altBruta - descontoTop - descontoBot;
       if (altRegiao <= 0) return;
 
