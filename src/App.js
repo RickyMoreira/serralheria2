@@ -1008,7 +1008,7 @@ function PortaoCalc() {
   const [form, setForm] = useState({
     largura:"", altura:"", folhas:"2",
     estA:50, estB:50, estE:3,
-    incluiDiagonal:true,
+    incluiDiagonal:false,
     nTravVert:"0",
     travHoriz:[],
     regioes:[regiaoDefault(0)],
