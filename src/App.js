@@ -758,15 +758,36 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                       ? (() => {
                           const ang = (parseFloat(reg.angulo)||45) * Math.PI / 180;
                           const tanAng = Math.tan(ang);
-                          const espPxDiag = (espMetros / tanAng / (L/folhas)) * fw;
                           const corD = PECA_CORES["Barra diagonal"].cor;
                           const clipId = `clip-${fi}-${ri}`;
-                          // Âncora no canto interno da folha (fx+2 = borda esquerda interna)
-                          const fxInt = fx + 2; // x esquerdo interno da folha
-                          const fxEnd = fx + fw - 2; // x direito interno
-                          // nBars: suficiente para cobrir largura interna + altura/tan
-                          const nBars = Math.max(0, Math.ceil((fw + altR / tanAng) / espPxDiag) + 4);
+                          // Âncora no canto interno da folha
+                          const fxInt = fx + 2;
+                          const fxEnd = fx + fw - 2;
                           const invertido = (fi % 2 !== 0) !== (reg.inverter || false);
+
+                          // largura interna da folha em px (mesma usada no cálculo)
+                          const largInternaPx = fw - 4;
+                          const espPasso = (espMetros / tanAng / (L/folhas)) * fw; // px
+                          const centroPx = largInternaPx / 2;
+                          const EPS_PX = 0.01;
+                          const nMeio = Math.max(1, Math.ceil((centroPx - EPS_PX) / espPasso));
+
+                          // Gera as posições dx (em px, a partir do canto) até o centro
+                          const dxList = [];
+                          for (let i = 1; i <= nMeio; i++) {
+                            dxList.push(Math.min(i * espPasso, centroPx));
+                          }
+
+                          // Para cada dx do lado "menor", gera a barra correspondente e sua espelhada
+                          // (exceto se dx === centroPx, que é a única central, sem espelho)
+                          const barrasDesenho = []; // {dx} a partir do canto esquerdo interno (0..largInternaPx)
+                          dxList.forEach(dx => {
+                            const ehCentral = Math.abs(dx - centroPx) < EPS_PX;
+                            barrasDesenho.push(dx); // lado esquerdo
+                            if (!ehCentral) barrasDesenho.push(largInternaPx - dx); // espelho
+                          });
+                          barrasDesenho.sort((a,b) => a-b);
+
                           return (
                             <g key="diag">
                               <defs>
@@ -775,82 +796,74 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                 </clipPath>
                               </defs>
                               <g clipPath={`url(#${clipId})`}>
-                                {[...Array(nBars)].map((_,bi) => {
+                                {barrasDesenho.map((dx, bi) => {
+                                  // dx é a distância do canto esquerdo interno até o pé da barra na base
+                                  const subidaX = altR / tanAng;
                                   let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    // âncora: canto inferior-esquerdo interno da folha
-                                    x1 = fxInt - altR/tanAng + bi * espPxDiag;
+                                    x1 = fxInt + dx;
                                     y1 = y1r + altR;
-                                    x2 = x1 + altR/tanAng;
+                                    x2 = x1 - subidaX;
                                     y2 = y1r;
                                   } else {
-                                    // âncora: canto inferior-direito interno da folha
-                                    x1 = fxEnd + altR/tanAng - bi * espPxDiag;
+                                    x1 = fxEnd - dx;
                                     y1 = y1r + altR;
-                                    x2 = x1 - altR/tanAng;
+                                    x2 = x1 + subidaX;
                                     y2 = y1r;
                                   }
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
                               </g>
-                              {/* Cota de espaçamento perpendicular — barra central da região */}
+                              {/* Cota de espaçamento perpendicular — entre 2 barras próximas ao centro */}
                               {(() => {
-                                // Coleta barras visíveis dentro da folha
-                                const visiveis = [];
-                                for (let bi = 0; bi < nBars; bi++) {
-                                  let lx1, ly1, lx2, ly2;
+                                if (barrasDesenho.length < 2) return null;
+                                const subidaX = altR / tanAng;
+
+                                function pontaBarra(dx) {
+                                  let x1, y1, x2, y2;
                                   if (!invertido) {
-                                    lx1 = fxInt - altR/tanAng + bi * espPxDiag;
-                                    ly1 = y1r + altR;
-                                    lx2 = lx1 + altR/tanAng;
-                                    ly2 = y1r;
+                                    x1 = fxInt + dx; y1 = y1r + altR;
+                                    x2 = x1 - subidaX; y2 = y1r;
                                   } else {
-                                    lx1 = fxEnd + altR/tanAng - bi * espPxDiag;
-                                    ly1 = y1r + altR;
-                                    lx2 = lx1 - altR/tanAng;
-                                    ly2 = y1r;
+                                    x1 = fxEnd - dx; y1 = y1r + altR;
+                                    x2 = x1 + subidaX; y2 = y1r;
                                   }
-                                  const cx1 = Math.max(fx+2, Math.min(fx+fw-2, lx1));
-                                  const cx2 = Math.max(fx+2, Math.min(fx+fw-2, lx2));
-                                  const cy1 = ly1 + (cx1-lx1)/(lx2-lx1||1) * (ly2-ly1);
-                                  const cy2 = ly1 + (cx2-lx1)/(lx2-lx1||1) * (ly2-ly1);
-                                  const barLen = Math.sqrt((cx2-cx1)**2 + (cy2-cy1)**2);
-                                  if (barLen < 8) continue;
-                                  visiveis.push({ cx1, cy1, cx2, cy2 });
+                                  // Clipa nos limites da folha (x entre fxInt e fxEnd)
+                                  const cx1 = Math.max(fxInt, Math.min(fxEnd, x1));
+                                  const cx2 = Math.max(fxInt, Math.min(fxEnd, x2));
+                                  const t1 = (cx1 - x1) / ((x2-x1) || 1);
+                                  const t2 = (cx2 - x1) / ((x2-x1) || 1);
+                                  const cy1 = y1 + t1*(y2-y1);
+                                  const cy2 = y1 + t2*(y2-y1);
+                                  return { cx1, cy1, cx2, cy2 };
                                 }
-                                if (visiveis.length < 2) return null;
 
-                                // 4ª barra visível (índice 3), ou a penúltima se houver menos de 5
-                                const i4 = Math.min(3, visiveis.length - 2);
+                                // Escolhe um par próximo ao meio do array para a cota
+                                const mid = Math.floor(barrasDesenho.length / 2);
+                                const i4 = Math.max(0, Math.min(mid, barrasDesenho.length - 2));
                                 const i5 = i4 + 1;
-                                const b4 = visiveis[i4];
-                                const b5 = visiveis[i5];
+                                const b4 = pontaBarra(barrasDesenho[i4]);
+                                const b5 = pontaBarra(barrasDesenho[i5]);
 
-                                // Ponto médio de cada barra
                                 const m4x = (b4.cx1 + b4.cx2) / 2;
                                 const m4y = (b4.cy1 + b4.cy2) / 2;
                                 const m5x = (b5.cx1 + b5.cx2) / 2;
                                 const m5y = (b5.cy1 + b5.cy2) / 2;
 
-                                // Centro do vazio entre as duas barras
                                 const mx = (m4x + m5x) / 2;
                                 const my = (m4y + m5y) / 2;
 
-                                // Direção perpendicular baseada na 4ª barra
                                 const ddx = b4.cx2 - b4.cx1; const ddy = b4.cy2 - b4.cy1;
                                 const blen = Math.sqrt(ddx*ddx + ddy*ddy) || 1;
                                 const nx = -ddy / blen; const ny = ddx / blen;
 
-                                // Distância perpendicular entre barras em px
-                                const espPxPerp = espPxDiag;
+                                const espPxPerp = espPasso * Math.sin(ang) ; // distância perpendicular real em px
 
-                                // Seta vai do meio da 4ª até o meio da 5ª barra (ao longo da normal)
                                 const p1x = mx - nx * espPxPerp / 2;
                                 const p1y = my - ny * espPxPerp / 2;
                                 const p2x = mx + nx * espPxPerp / 2;
                                 const p2y = my + ny * espPxPerp / 2;
 
-                                // Ângulo do texto (paralelo à seta)
                                 const angText = Math.atan2(p2y - p1y, p2x - p1x) * 180 / Math.PI;
                                 const lmx = (p1x + p2x) / 2;
                                 const lmy = (p1y + p2y) / 2;
