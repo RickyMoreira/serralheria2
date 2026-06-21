@@ -1744,6 +1744,22 @@ export default function App() {
             ))}
           </nav>
         </header>
+        <div style={{
+          background:"rgba(240,165,0,0.08)",
+          borderBottom:"1px solid rgba(240,165,0,0.25)",
+          padding:"8px 32px",
+          display:"flex",
+          alignItems:"center",
+          gap:8,
+          fontFamily:"'JetBrains Mono',monospace",
+          fontSize:11,
+          color:"var(--accent)",
+          textAlign:"center",
+          justifyContent:"center",
+          flexWrap:"wrap",
+        }}>
+          <span>⚠ Ferramenta em fase de testes. Confira sempre as medidas antes de cortar — não nos responsabilizamos por erros de cálculo.</span>
+        </div>
         <main className="content">
           <Active />
         </main>
