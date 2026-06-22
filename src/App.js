@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useForm, ValidationError } from "@formspree/react";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Barlow:wght@300;400;500;600&display=swap');
@@ -1716,7 +1717,7 @@ function GradeCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 // FEEDBACK
 // ══════════════════════════════════════════════════════════════════════════════
-const FEEDBACK_KEY = "sercalc_feedbacks_v1";
+const FEEDBACK_KEY = "sercalc_feedbacks_v1"; // histórico local, apenas para o próprio usuário ver o que já enviou
 
 function carregarFeedbacks() {
   try {
@@ -1735,27 +1736,44 @@ function salvarFeedbacks(lista) {
   }
 }
 
-function FeedbackTab() {
-  const [lista, setLista] = useState(() => carregarFeedbacks());
-  const [form, setForm] = useState({ tipo:"sugestao", nome:"", texto:"" });
-  const [enviado, setEnviado] = useState(false);
+const TIPO_INFO = {
+  bug:       { label:"🐞 Erro / Bug",      cor:"var(--red)" },
+  sugestao:  { label:"💡 Sugestão",        cor:"var(--accent)" },
+  melhoria:  { label:"⚙ Melhoria",         cor:"var(--blue)" },
+};
 
-  function enviar() {
-    if (!form.texto.trim()) return;
-    const novo = {
-      id: Date.now(),
-      tipo: form.tipo,
-      nome: form.nome.trim() || "Anônimo",
-      texto: form.texto.trim(),
-      data: new Date().toLocaleString("pt-BR"),
-    };
-    const novaLista = [novo, ...lista];
-    setLista(novaLista);
-    salvarFeedbacks(novaLista);
-    setForm({ tipo:"sugestao", nome:"", texto:"" });
-    setEnviado(true);
-    setTimeout(() => setEnviado(false), 3000);
+function FeedbackTab() {
+  const [state, handleSubmit] = useForm("mojoqlye");
+  const [lista, setLista] = useState(() => carregarFeedbacks());
+  const [tipo, setTipo] = useState("sugestao");
+  const [nome, setNome] = useState("");
+  const [texto, setTexto] = useState("");
+  const ultimoEnvio = useRef(null);
+
+  function onSubmit(ev) {
+    ultimoEnvio.current = { tipo, nome: nome.trim() || "Anônimo", texto: texto.trim() };
+    handleSubmit(ev);
   }
+
+  // Quando o Formspree confirma o envio, salva no histórico local e limpa o form
+  useEffect(() => {
+    if (state.succeeded && ultimoEnvio.current) {
+      const novo = {
+        id: Date.now(),
+        ...ultimoEnvio.current,
+        data: new Date().toLocaleString("pt-BR"),
+      };
+      setLista(prev => {
+        const novaLista = [novo, ...prev];
+        salvarFeedbacks(novaLista);
+        return novaLista;
+      });
+      ultimoEnvio.current = null;
+      setTexto("");
+      setNome("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.succeeded]);
 
   function remover(id) {
     const novaLista = lista.filter(f => f.id !== id);
@@ -1763,55 +1781,62 @@ function FeedbackTab() {
     salvarFeedbacks(novaLista);
   }
 
-  const TIPO_INFO = {
-    bug:       { label:"🐞 Erro / Bug",      cor:"var(--red)" },
-    sugestao:  { label:"💡 Sugestão",        cor:"var(--accent)" },
-    melhoria:  { label:"⚙ Melhoria",         cor:"var(--blue)" },
-  };
-
   return (
     <div className="content" style={{padding:0}}>
       <div className="card">
         <div className="card-header">💬 Enviar Feedback</div>
         <div className="card-body">
-          <div className="grid-2">
-            <div className="field">
-              <label>Tipo</label>
-              <select value={form.tipo} onChange={e=>setForm(f=>({...f,tipo:e.target.value}))}>
-                <option value="bug">🐞 Erro / Bug</option>
-                <option value="sugestao">💡 Sugestão</option>
-                <option value="melhoria">⚙ Melhoria</option>
-              </select>
+          {state.succeeded ? (
+            <div className="alert" style={{borderColor:"rgba(74,222,128,0.3)",background:"rgba(74,222,128,0.08)",color:"var(--green)"}}>
+              ✔ Feedback enviado, obrigado pela contribuição!
             </div>
-            <div className="field">
-              <label>Seu nome <span className="unit">(opcional)</span></label>
-              <input type="text" value={form.nome} onChange={e=>setForm(f=>({...f,nome:e.target.value}))} placeholder="Ex: Ricky" />
-            </div>
-          </div>
-          <div className="field">
-            <label>Mensagem</label>
-            <textarea
-              value={form.texto}
-              onChange={e=>setForm(f=>({...f,texto:e.target.value}))}
-              placeholder="Descreva o erro encontrado ou sua sugestão de melhoria..."
-              rows={4}
-              style={{
-                background:"var(--bg)", border:"1px solid var(--border2)", borderRadius:5,
-                color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13,
-                padding:"10px 12px", outline:"none", resize:"vertical", width:"100%",
-              }}
-            />
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:12}}>
-            <button className="btn-calc" style={{flex:"none",padding:"12px 28px"}} onClick={enviar}>ENVIAR FEEDBACK</button>
-            {enviado && <span style={{color:"var(--green)",fontFamily:"'JetBrains Mono',monospace",fontSize:12}}>✔ Enviado, obrigado!</span>}
-          </div>
+          ) : (
+            <form onSubmit={onSubmit} style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div className="grid-2">
+                <div className="field">
+                  <label>Tipo</label>
+                  <select name="tipo" value={tipo} onChange={e=>setTipo(e.target.value)}>
+                    <option value="bug">🐞 Erro / Bug</option>
+                    <option value="sugestao">💡 Sugestão</option>
+                    <option value="melhoria">⚙ Melhoria</option>
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Seu nome <span className="unit">(opcional)</span></label>
+                  <input type="text" name="nome" value={nome} onChange={e=>setNome(e.target.value)} placeholder="Ex: Ricky" />
+                </div>
+              </div>
+              <div className="field">
+                <label>Mensagem</label>
+                <textarea
+                  name="message"
+                  value={texto}
+                  onChange={e=>setTexto(e.target.value)}
+                  placeholder="Descreva o erro encontrado ou sua sugestão de melhoria..."
+                  rows={4}
+                  required
+                  style={{
+                    background:"var(--bg)", border:"1px solid var(--border2)", borderRadius:5,
+                    color:"var(--text)", fontFamily:"'JetBrains Mono',monospace", fontSize:13,
+                    padding:"10px 12px", outline:"none", resize:"vertical", width:"100%",
+                  }}
+                />
+                <ValidationError prefix="Mensagem" field="message" errors={state.errors} />
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <button type="submit" className="btn-calc" style={{flex:"none",padding:"12px 28px"}} disabled={state.submitting}>
+                  {state.submitting ? "ENVIANDO..." : "ENVIAR FEEDBACK"}
+                </button>
+              </div>
+              <ValidationError errors={state.errors} />
+            </form>
+          )}
         </div>
       </div>
 
       <div className="card">
         <div className="card-header">
-          <span>📋 Feedbacks Recebidos</span>
+          <span>📋 Seus Feedbacks Enviados</span>
           <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"var(--text3)"}}>{lista.length} total</span>
         </div>
         <div className="card-body" style={{gap:10}}>
@@ -1832,7 +1857,7 @@ function FeedbackTab() {
                     fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700,
                     color: info.cor, letterSpacing:1,
                   }}>{info.label}</span>
-                  <button onClick={()=>remover(f.id)} className="btn-remove" title="Remover" style={{padding:"3px 8px",fontSize:11}}>✕</button>
+                  <button onClick={()=>remover(f.id)} className="btn-remove" title="Remover do histórico" style={{padding:"3px 8px",fontSize:11}}>✕</button>
                 </div>
                 <div style={{fontFamily:"'Barlow',sans-serif",fontSize:13,color:"var(--text)",lineHeight:1.5}}>
                   {f.texto}
@@ -1847,7 +1872,7 @@ function FeedbackTab() {
       </div>
 
       <div className="alert">
-        ℹ Os feedbacks são salvos localmente no seu navegador. Para reportar a outra pessoa, copie o texto manualmente.
+        ℹ Os feedbacks são enviados diretamente para a equipe responsável. Este histórico abaixo é só uma cópia local para você acompanhar o que já enviou neste navegador.
       </div>
     </div>
   );
