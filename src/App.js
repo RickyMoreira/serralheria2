@@ -1888,13 +1888,131 @@ const TABS = [
 
 const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc, feedback: FeedbackTab };
 
+const EMAIL_KEY = "sercalc_user_email_v1";
+
+function ModalEmail({ onConfirm }) {
+  const [email, setEmail] = useState("");
+  const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  async function handleSubmit() {
+    if (!email.trim() || !email.includes("@")) {
+      setErro("Por favor, insira um email válido.");
+      return;
+    }
+    setEnviando(true);
+
+    // Busca IP do visitante
+    let ip = "desconhecido";
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const data = await res.json();
+      ip = data.ip || "desconhecido";
+    } catch {
+      // ignora erro, continua sem IP
+    }
+
+    try {
+      await fetch("https://formspree.io/f/mojoqlye", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          ip,
+          message: `Novo usuário cadastrado\nIP: ${ip}`,
+          _subject: `SerCalc Pro — Novo usuário: ${email.trim()}`,
+        }),
+      });
+    } catch {
+      // ignora erro de rede, libera mesmo assim
+    }
+    localStorage.setItem(EMAIL_KEY, email.trim());
+    setEnviando(false);
+    onConfirm(email.trim());
+  }
+
+  return (
+    <div style={{
+      position:"fixed", inset:0, zIndex:9999,
+      background:"rgba(0,0,0,0.75)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      padding:16,
+      backdropFilter:"blur(4px)",
+    }}>
+      <div style={{
+        background:"var(--bg2)", border:"1px solid var(--border)",
+        borderRadius:12, padding:"36px 32px", maxWidth:420, width:"100%",
+        boxShadow:"0 20px 60px rgba(0,0,0,0.5)",
+        display:"flex", flexDirection:"column", gap:20,
+      }}>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <div style={{
+              width:40, height:40, background:"var(--accent)", borderRadius:8,
+              display:"flex", alignItems:"center", justifyContent:"center", fontSize:22, flexShrink:0,
+            }}>⚙</div>
+            <div>
+              <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:20,fontWeight:700,color:"var(--text)",letterSpacing:1}}>SerCalc Pro</div>
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",letterSpacing:1,textTransform:"uppercase"}}>Serralheria · Cálculo Estrutural</div>
+            </div>
+          </div>
+          <p style={{fontFamily:"'Barlow',sans-serif",fontSize:14,color:"var(--text2)",lineHeight:1.6,marginTop:8}}>
+            Ferramenta gratuita para calcular corte de portões, parapeitos e grades.<br/>
+            Insira seu email para acessar — usamos apenas para contato sobre atualizações.
+          </p>
+        </div>
+
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <label style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",letterSpacing:1.2,textTransform:"uppercase"}}>Seu email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={e => { setEmail(e.target.value); setErro(""); }}
+            onKeyDown={e => e.key === "Enter" && handleSubmit()}
+            placeholder="serralheiro@email.com"
+            autoFocus
+            style={{
+              background:"var(--bg)", border:`1px solid ${erro ? "var(--red)" : "var(--border2)"}`,
+              borderRadius:5, color:"var(--text)", fontFamily:"'JetBrains Mono',monospace",
+              fontSize:14, padding:"12px 14px", outline:"none", width:"100%",
+            }}
+          />
+          {erro && <span style={{fontFamily:"'JetBrains Mono',monospace",fontSize:11,color:"var(--red)"}}>{erro}</span>}
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={enviando}
+          style={{
+            background:"var(--accent)", color:"#111", border:"none", borderRadius:6,
+            fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700,
+            letterSpacing:2, textTransform:"uppercase", padding:"13px 28px",
+            cursor: enviando ? "wait" : "pointer",
+            boxShadow:"0 2px 12px rgba(240,165,0,0.25)",
+            opacity: enviando ? 0.7 : 1,
+          }}
+        >
+          {enviando ? "AGUARDE..." : "ACESSAR FERRAMENTA →"}
+        </button>
+
+        <p style={{fontFamily:"'JetBrains Mono',monospace",fontSize:10,color:"var(--text3)",textAlign:"center",lineHeight:1.5}}>
+          Ferramenta 100% gratuita · Sem spam · Sem senha necessária
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [tab, setTab] = useState("portao");
+  const [emailConfirmado, setEmailConfirmado] = useState(() => !!localStorage.getItem(EMAIL_KEY));
   const Active = COMPS[tab];
+
   return (
     <>
       <style>{styles}</style>
       <div className="app">
+        {!emailConfirmado && <ModalEmail onConfirm={() => setEmailConfirmado(true)} />}
         <header className="header">
           <div className="header-brand">
             <div className="header-icon">⚙</div>
