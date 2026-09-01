@@ -1879,14 +1879,69 @@ function FeedbackTab() {
   );
 }
 
+// ══════════════════════════════════════════════════════════════════════════════
+// TUTORIAL
+// ══════════════════════════════════════════════════════════════════════════════
+function TutorialTab() {
+  return (
+    <div className="content" style={{padding:0}}>
+      <div className="card">
+        <div className="card-header">🎬 Como usar o SerCalc Pro</div>
+        <div className="card-body" style={{gap:0,padding:0}}>
+          <div style={{position:"relative",paddingBottom:"56.25%",height:0,overflow:"hidden"}}>
+            <iframe
+              src="https://www.youtube.com/embed/E9LBrCeFTW0"
+              title="SerCalc Pro — Como usar"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",border:"none"}}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-header">📋 Resumo rápido</div>
+        <div className="card-body">
+          {[
+            { icon:"🚪", titulo:"Portão", desc:"Informe largura, altura e número de folhas. Escolha o perfil estrutural e configure o preenchimento interno (vertical, horizontal ou diagonal). Clique em Calcular para gerar a lista de corte." },
+            { icon:"🏗", titulo:"Parapeito", desc:"Informe comprimento, altura e espaçamento entre postes. Escolha o perfil e a orientação do preenchimento. O cálculo gera automaticamente postes, travessas e barras." },
+            { icon:"⊞", titulo:"Grade", desc:"Informe largura e altura. Escolha o perfil da moldura e das barras internas. O cálculo verifica a abertura mínima recomendada pela NBR 9050." },
+          ].map((item, i) => (
+            <div key={i} style={{
+              display:"flex", gap:14, padding:"12px 0",
+              borderBottom: i < 2 ? "1px solid var(--border)" : "none",
+            }}>
+              <div style={{
+                fontSize:24, flexShrink:0, width:40, height:40,
+                display:"flex", alignItems:"center", justifyContent:"center",
+                background:"var(--bg)", borderRadius:8, border:"1px solid var(--border)",
+              }}>{item.icon}</div>
+              <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:15,fontWeight:700,color:"var(--text)",letterSpacing:1}}>{item.titulo}</span>
+                <span style={{fontFamily:"'Barlow',sans-serif",fontSize:13,color:"var(--text2)",lineHeight:1.5}}>{item.desc}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="alert">
+        ℹ Ferramenta em fase de testes — confira sempre as medidas antes de cortar. Dúvidas ou sugestões? Use a aba Sugestões/Erros.
+      </div>
+    </div>
+  );
+}
+
 const TABS = [
   { id:"portao",   label:"Portão",   icon:"🚪" },
   { id:"parapeito",label:"Parapeito",icon:"🏗" },
   { id:"grade",    label:"Grade",    icon:"⊞"  },
+  { id:"tutorial", label:"Como Usar", icon:"🎬" },
   { id:"feedback", label:"Sugestões/Erros", icon:"💬" },
 ];
 
-const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc, feedback: FeedbackTab };
+const COMPS = { portao: PortaoCalc, parapeito: ParapeitoCalc, grade: GradeCalc, tutorial: TutorialTab, feedback: FeedbackTab };
 
 const EMAIL_KEY = "sercalc_user_email_v1";
 
