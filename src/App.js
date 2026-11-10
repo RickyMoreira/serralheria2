@@ -1530,6 +1530,32 @@ function PortaoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 // PARAPEITO
 // ══════════════════════════════════════════════════════════════════════════════
+/* Cotas de espaçamento entre barras (azul), mesmo estilo do portão */
+function CotaEspV({ x, y1, y2, label }) {
+  const my = (y1+y2)/2;
+  return (
+    <g>
+      <line x1={x-4} y1={y1} x2={x+4} y2={y1} stroke="#6060ff" strokeWidth="0.8" />
+      <line x1={x-4} y1={y2} x2={x+4} y2={y2} stroke="#6060ff" strokeWidth="0.8" />
+      <line x1={x} y1={y1} x2={x} y2={y2} stroke="#6060ff" strokeWidth="1" markerStart="url(#arrSpTRev)" markerEnd="url(#arrSpT)" />
+      <rect x={x+5} y={my-6} width={34} height={12} fill="#f5f5f0" rx="2" />
+      <text x={x+22} y={my} textAnchor="middle" dominantBaseline="central" fill="#6060ff" fontSize="8" fontFamily="monospace" fontWeight="bold">{label}</text>
+    </g>
+  );
+}
+function CotaEspH({ y, x1, x2, label }) {
+  const mx = (x1+x2)/2;
+  return (
+    <g>
+      <line x1={x1} y1={y-4} x2={x1} y2={y+4} stroke="#6060ff" strokeWidth="0.8" />
+      <line x1={x2} y1={y-4} x2={x2} y2={y+4} stroke="#6060ff" strokeWidth="0.8" />
+      <line x1={x1} y1={y} x2={x2} y2={y} stroke="#6060ff" strokeWidth="1" markerStart="url(#arrSpTRev)" markerEnd="url(#arrSpT)" />
+      <rect x={mx-17} y={y+5} width={34} height={12} fill="#f5f5f0" rx="2" />
+      <text x={mx} y={y+11} textAnchor="middle" dominantBaseline="central" fill="#6060ff" fontSize="8" fontFamily="monospace" fontWeight="bold">{label}</text>
+    </g>
+  );
+}
+
 function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre }) {
   const maxW = 660; const maxDrawH = 340;
   const padL = 14; const padR = 90; const padT = 14; const padB = 52;
@@ -1566,6 +1592,16 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
             return <line key={`${vi}-${bi}`} x1={bx} y1={oy+3} x2={bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="1.5" />;
           });
         })}
+        {oriPreenchi === "horizontal" && elsY.length > 0 && (() => {
+          const ya = elsY.length > 1 ? elsY[0] : oy, yb = elsY.length > 1 ? elsY[1] : elsY[0];
+          return <CotaEspV x={ox+dw*0.5} y1={ya} y2={yb} label={`${((yb-ya)/scale*100).toFixed(1)}cm`} />;
+        })()}
+        {oriPreenchi === "vertical" && nPostes > 1 && nElementos > 0 && (() => {
+          const vaoW = postesX[1] - postesX[0];
+          const xa = nElementos > 1 ? postesX[0] + vaoW/(nElementos+1) : postesX[0];
+          const xb = nElementos > 1 ? postesX[0] + 2*vaoW/(nElementos+1) : postesX[0] + vaoW/2;
+          return <CotaEspH y={oy+dh*0.5} x1={xa} x2={xb} label={`${((xb-xa)/scale*100).toFixed(1)}cm`} />;
+        })()}
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
         <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
         {nPostes>1 && <Cota x1={postesX[0]} y1={oy+dh} x2={postesX[1]} y2={oy+dh} label={`${(L/(nPostes-1)).toFixed(2)} m`} offset={38} orient="h" />}
@@ -1731,6 +1767,14 @@ function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
         <line x1={ox+dw} y1={oy} x2={ox+dw} y2={oy+dh} stroke={corLateral} strokeWidth="5" />
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke={corTopBot} strokeWidth="5" />
         <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke={corTopBot} strokeWidth="5" />
+        {barrasV.length > 0 && (() => {
+          const xa = barrasV.length > 1 ? barrasV[0] : ox, xb = barrasV.length > 1 ? barrasV[1] : barrasV[0];
+          return <CotaEspH y={oy+dh*0.5} x1={xa} x2={xb} label={`${((xb-xa)/scale*100).toFixed(1)}cm`} />;
+        })()}
+        {barrasH.length > 0 && (() => {
+          const ya = barrasH.length > 1 ? barrasH[0] : oy, yb = barrasH.length > 1 ? barrasH[1] : barrasH[0];
+          return <CotaEspV x={ox+dw*0.25} y1={ya} y2={yb} label={`${((yb-ya)/scale*100).toFixed(1)}cm`} />;
+        })()}
         <Cota x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} label={`${L.toFixed(2)} m`} offset={20} orient="h" />
         <Cota x1={ox} y1={oy} x2={ox+dw} y2={oy+dh} label={`${H.toFixed(2)} m`} offset={20} orient="v" />
       </svg>
