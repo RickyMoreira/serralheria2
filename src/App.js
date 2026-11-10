@@ -967,7 +967,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa superior"].cor}} />Travessa sup/inf</div>
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Montante vertical"].cor}} />Montante vertical</div>
-        {(travPosRatio||[]).length > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa horizontal"].cor}} />Travessa horizontal</div>}
+        {(travPosRatio||[]).length > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa horizontal"].cor}} />Travessa</div>}
         {(nTravV||0) > 0 && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Travessa vertical"].cor}} />Travessa vertical</div>}
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra vertical"].cor}} />Preenchimento vertical</div>
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra horizontal"].cor}} />Preenchimento horizontal</div>
@@ -1151,7 +1151,7 @@ function PortaoCalc() {
     setForm(f => {
       const newId = Date.now();
       const nTrav = f.travHoriz.length;
-      const altAtual = parseFloat(f.altura) || 200;
+      const altAtual = (parseFloat(f.altura) || 2) * 100; // altura em m → cm
       const pos = Math.round(altAtual / (nTrav + 2) * (nTrav + 1));
       return {
         ...f,
@@ -1369,7 +1369,7 @@ function PortaoCalc() {
       <div className="card">
         <div className="card-header">
           <span>PARTE INTERNA</span>
-          <button onClick={addTravH} className="btn-add">+ Travessa horizontal</button>
+          <button onClick={addTravH} className="btn-add">+ Travessa</button>
         </div>
         <div style={{padding:"16px 18px",display:"flex",flexDirection:"column",gap:0}}>
 
