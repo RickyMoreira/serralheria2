@@ -556,6 +556,12 @@ function Defs() {
       <marker id="arrSp" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
         <path d="M0,0 L0,6 L6,3 z" fill="#6060ff" />
       </marker>
+      <marker id="arrSpT" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L6,3 z" fill="#6060ff" />
+      </marker>
+      <marker id="arrSpTRev" markerWidth="6" markerHeight="6" refX="6" refY="3" orient="auto-start-reverse">
+        <path d="M0,0 L0,6 L6,3 z" fill="#6060ff" />
+      </marker>
       <marker id="arrSpRev" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto-start-reverse">
         <path d="M0,0 L0,6 L6,3 z" fill="#6060ff" />
       </marker>
@@ -928,18 +934,19 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                     {reg.ori === "horizontal" && altR > 30 && (() => {
                       const espPxH = (espMetros / H) * dh;
                       if (espPxH < 10) return null;
-                      const nBars = Math.max(0, Math.ceil(altR/espPxH)-1);
+                      const y1c = y1r + 4, altC = altR - 8; // mesma área das barras desenhadas
+                      const nBars = Math.max(0, Math.ceil(altC/espPxH)-1);
                       if (nBars < 1) return null;
-                      const by1 = y1r + ((1)/(nBars+1)) * altR;
-                      const by2 = y1r + ((2)/(nBars+1)) * altR;
+                      const by1 = y1c + ((1)/(nBars+1)) * altC;
+                      const by2 = y1c + ((2)/(nBars+1)) * altC;
                       const bx  = fx + fw * 0.5;
                       return (
                         <g>
                           <line x1={bx-4} y1={by1} x2={bx+4} y2={by1} stroke="#6060ff" strokeWidth="0.8" />
                           <line x1={bx-4} y1={by2} x2={bx+4} y2={by2} stroke="#6060ff" strokeWidth="0.8" />
-                          <line x1={bx} y1={by1+1} x2={bx} y2={by2-1} stroke="#6060ff" strokeWidth="1" markerStart="url(#arrSpRev)" markerEnd="url(#arrSp)" />
-                          <rect x={bx+4} y={(by1+by2)/2-5} width={24} height={11} fill="#f5f5f0" rx="2" opacity="0.9" />
-                          <text x={bx+6} y={(by1+by2)/2+4} fill="#6060ff" fontSize="8" fontFamily="monospace" fontWeight="bold">
+                          <line x1={bx} y1={by1} x2={bx} y2={by2} stroke="#6060ff" strokeWidth="1" markerStart="url(#arrSpTRev)" markerEnd="url(#arrSpT)" />
+                          <rect x={bx+5} y={(by1+by2)/2-6} width={26} height={12} fill="#f5f5f0" rx="2" />
+                          <text x={bx+18} y={(by1+by2)/2} textAnchor="middle" dominantBaseline="central" fill="#6060ff" fontSize="8" fontFamily="monospace" fontWeight="bold">
                             {parseFloat(reg.esp).toFixed(0)}cm
                           </text>
                         </g>
@@ -1001,6 +1008,105 @@ function regiaoDefault(id) {
   return { id, ori:"vertical", esp:"10", angulo:"45", preA:30, preB:30, preE:2 };
 }
 
+/* ===== MODELOS (galeria clicável) ===== */
+function ModeloThumb({ tipo, modelo }) {
+  const W = 120, H = 80, m = 6;
+  const bw = W - 2*m, bh = H - 2*m;
+  const asp = (parseFloat(modelo.largura || modelo.comprimento) / parseFloat(modelo.altura)) || (bw / bh);
+  let w = bh * asp, h = bh;
+  if (w > bw) { w = bw; h = bw / asp; }
+  const x0 = (W - w) / 2, y0 = (H - h) / 2;
+  const cor = "#40d0ff", cor2 = "#8899aa";
+  const els = [];
+  const fillRegiao = (ya, yb, ori, key, folhasN, esp) => {
+    const fw = w / folhasN;
+    for (let fi = 0; fi < folhasN; fi++) {
+      const xa = x0 + fi*fw + 3, xb = x0 + (fi+1)*fw - 3;
+      const ys = ya + 3, ye = yb - 3;
+      if (ori === "vertical") {
+        for (let x = xa + esp; x < xb; x += esp) els.push(<line key={`${key}v${fi}-${x}`} x1={x} y1={ys} x2={x} y2={ye} stroke={cor} strokeWidth="1" />);
+      } else if (ori === "horizontal") {
+        for (let y = ys + esp; y < ye; y += esp) els.push(<line key={`${key}h${fi}-${y}`} x1={xa} y1={y} x2={xb} y2={y} stroke={cor} strokeWidth="1" />);
+      } else {
+        const hh = ye - ys;
+        for (let d = -hh; d < xb - xa; d += esp*1.2) {
+          const ax = xa + d, bx = xa + d + hh;
+          let x1 = ax, y1 = ye, x2 = bx, y2 = ys;
+          if (x1 < xa) { y1 = ye - (xa - x1); x1 = xa; }
+          if (x2 > xb) { y2 = ys + (x2 - xb); x2 = xb; }
+          if (x1 < xb && y1 >= y2) els.push(<line key={`${key}d${fi}-${d}`} x1={x1} y1={y1} x2={x2} y2={y2} stroke={cor} strokeWidth="1" />);
+        }
+      }
+    }
+  };
+  if (tipo === "portao") {
+    const fN = Number(modelo.folhas);
+    const regs = modelo.regioes;
+    const alt = parseFloat(modelo.altura) * 100;
+    const cortes = [0, ...(modelo.travHoriz || []).map(t => t.pos), alt];
+    regs.forEach((r, i) => {
+      const ya = y0 + (cortes[i] / alt) * h, yb = y0 + (cortes[i+1] / alt) * h;
+      fillRegiao(ya, yb, r.ori, `r${i}`, fN, 6);
+      if (i > 0) els.push(<line key={`t${i}`} x1={x0} y1={ya} x2={x0+w} y2={ya} stroke={cor2} strokeWidth="2" />);
+    });
+    for (let fi = 1; fi < fN; fi++) els.push(<line key={`m${fi}`} x1={x0 + fi*w/fN} y1={y0} x2={x0 + fi*w/fN} y2={y0+h} stroke={cor2} strokeWidth="2" />);
+  } else if (tipo === "parapeito") {
+    const ori = modelo.oriPreenchi;
+    if (ori === "horizontal") for (let i = 1; i <= 4; i++) els.push(<line key={`p${i}`} x1={x0} y1={y0 + i*h/5} x2={x0+w} y2={y0 + i*h/5} stroke={cor} strokeWidth="1.2" />);
+    else for (let x = x0 + 8; x < x0 + w; x += 8) els.push(<line key={`p${x}`} x1={x} y1={y0} x2={x} y2={y0+h} stroke={cor} strokeWidth="1" />);
+    [0, 0.5, 1].forEach((f, i) => els.push(<line key={`po${i}`} x1={x0 + f*w} y1={y0} x2={x0 + f*w} y2={y0+h} stroke={cor2} strokeWidth="3" />));
+  } else {
+    const n = Number(modelo.nTravH) || 0;
+    for (let x = x0 + 7; x < x0 + w; x += 7) els.push(<line key={`g${x}`} x1={x} y1={y0} x2={x} y2={y0+h} stroke={cor} strokeWidth="1" />);
+    for (let i = 1; i <= n; i++) els.push(<line key={`gt${i}`} x1={x0} y1={y0 + i*h/(n+1)} x2={x0+w} y2={y0 + i*h/(n+1)} stroke={cor2} strokeWidth="2" />);
+  }
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{display:"block",background:"rgba(0,0,0,.25)",borderRadius:4}}>
+      <rect x={x0} y={y0} width={w} height={h} fill="none" stroke={cor2} strokeWidth="3" />
+      {els}
+    </svg>
+  );
+}
+
+function ModelosGaleria({ tipo, modelos, onEscolher }) {
+  return (
+    <div className="card" style={{marginBottom:16}}>
+      <div className="card-header">🖼 Escolha o modelo e faça as alterações se necessário</div>
+      <div className="card-body">
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:10}}>
+          {modelos.map(m => (
+            <button key={m.nome} type="button" onClick={()=>onEscolher(m)}
+              style={{cursor:"pointer",textAlign:"left",background:"var(--bg)",border:"1px solid var(--accent)",borderRadius:6,padding:8,color:"inherit",font:"inherit"}}>
+              <ModeloThumb tipo={tipo} modelo={m} />
+              <div style={{fontWeight:700,fontSize:13,marginTop:6}}>{m.nome}</div>
+              <div style={{fontSize:11,opacity:.8}}>{m.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const mkReg = (ori, esp, angulo) => ({ ori, esp: String(esp), angulo: String(angulo || 45), preA:30, preB:30, preE:2 });
+const MODELOS_PORTAO = [
+  { nome:"Vertical simples", desc:"3,00 × 1,80 m · 2 folhas", largura:"3", altura:"1.8", folhas:"2", estA:50, estB:50, estE:3, travHoriz:[], regioes:[mkReg("vertical",10)] },
+  { nome:"Horizontal (ripado)", desc:"3,00 × 1,80 m · 2 folhas", largura:"3", altura:"1.8", folhas:"2", estA:50, estB:50, estE:3, travHoriz:[], regioes:[mkReg("horizontal",8)] },
+  { nome:"Diagonal 45°", desc:"4,00 × 2,00 m · 2 folhas", largura:"4", altura:"2", folhas:"2", estA:50, estB:50, estE:3, travHoriz:[], regioes:[mkReg("diagonal",10,45)] },
+  { nome:"Vertical + travessa", desc:"4,00 × 2,00 m · travessa a 150 cm", largura:"4", altura:"2", folhas:"2", estA:50, estB:50, estE:3, travHoriz:[{pos:150}], regioes:[mkReg("vertical",10), mkReg("horizontal",8)] },
+  { nome:"Social 1 folha", desc:"1,00 × 2,00 m · 1 folha", largura:"1", altura:"2", folhas:"1", estA:40, estB:40, estE:2, travHoriz:[], regioes:[mkReg("vertical",8)] },
+];
+const MODELOS_PARAPEITO = [
+  { nome:"Horizontal 5 fios", desc:"10 m × 1,10 m", comprimento:"10", altura:"1.1", oriPreenchi:"horizontal", espacamento:"12", qtdVertical:"3", postesEsp:"200" },
+  { nome:"Vertical (balaústres)", desc:"10 m × 1,10 m · vão 12 cm", comprimento:"10", altura:"1.1", oriPreenchi:"vertical", espacamento:"12", qtdVertical:"3", postesEsp:"200" },
+  { nome:"Escada / sacada", desc:"3 m × 0,90 m · vão 11 cm", comprimento:"3", altura:"0.9", oriPreenchi:"vertical", espacamento:"11", qtdVertical:"2", postesEsp:"150" },
+];
+const MODELOS_GRADE = [
+  { nome:"Janela simples", desc:"1,20 × 1,00 m · vão 10 cm", largura:"1.2", altura:"1", espacamentoV:"10", nTravH:"0" },
+  { nome:"Janela com travessa", desc:"1,50 × 1,20 m · 1 travessa", largura:"1.5", altura:"1.2", espacamentoV:"10", nTravH:"1" },
+  { nome:"Grade de muro", desc:"2,50 × 2,00 m · 2 travessas", largura:"2.5", altura:"2", espacamentoV:"12", nTravH:"2" },
+];
+
 function PortaoCalc() {
   const [form, setForm] = useState({
     largura:"", altura:"", folhas:"2",
@@ -1011,8 +1117,35 @@ function PortaoCalc() {
     regioes:[regiaoDefault(0)],
   });
   const [result, setResult] = useState(null);
+  const [autoCalc, setAutoCalc] = useState(0);
+  const drawRef = useRef(null);
+  const scrollPend = useRef(false);
+  useEffect(() => {
+    if (autoCalc > 0) { scrollPend.current = true; calcular(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCalc]);
+  useEffect(() => {
+    if (result && scrollPend.current) {
+      scrollPend.current = false;
+      setTimeout(() => { if (drawRef.current) drawRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, 50);
+    }
+  }, [result]);
   const set = (k,v) => setForm(f => ({...f,[k]:v}));
   const setEst = (A,B,e) => setForm(f => ({...f, estA:A, estB:B, estE:e}));
+
+  function aplicarModelo(m) {
+    const ts = Date.now();
+    setForm(f => ({
+      ...f,
+      largura:m.largura, altura:m.altura, folhas:m.folhas,
+      estA:m.estA, estB:m.estB, estE:m.estE,
+      incluiDiagonal:false, nTravVert:"0",
+      travHoriz: m.travHoriz.map((t,i)=>({ id: ts+i, pos:String(t.pos) })),
+      regioes: m.regioes.map((r,i)=>({ ...r, id: i===0 ? 0 : ts+i-1 })),
+    }));
+    setResult(null);
+    setAutoCalc(n => n+1);
+  }
 
   function addTravH() {
     setForm(f => {
@@ -1214,6 +1347,7 @@ function PortaoCalc() {
 
   return (
     <div className="content" style={{padding:0}}>
+      <ModelosGaleria tipo="portao" modelos={MODELOS_PORTAO} onEscolher={aplicarModelo} />
       <div className="grid-2">
         <div className="card">
           <div className="card-header">⚙ Dimensões</div>
@@ -1369,6 +1503,7 @@ function PortaoCalc() {
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:"",travHoriz:[],regioes:[regiaoDefault(0)]}));setResult(null);}}>LIMPAR</button>
       </div>
 
+      <div ref={drawRef} style={{scrollMarginTop:8}} />
       {result && (<>
         <DesenhoPortao L={result.L} H={result.H} folhas={result.folhas}
           nBarrasH={0} nBarrasV={0}
@@ -1453,6 +1588,19 @@ function ParapeitoCalc() {
     postesEsp:"200",
   });
   const [result, setResult] = useState(null);
+  const [autoCalc, setAutoCalc] = useState(0);
+  const drawRef = useRef(null);
+  const scrollPend = useRef(false);
+  useEffect(() => {
+    if (autoCalc > 0) { scrollPend.current = true; calcular(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCalc]);
+  useEffect(() => {
+    if (result && scrollPend.current) {
+      scrollPend.current = false;
+      setTimeout(() => { if (drawRef.current) drawRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, 50);
+    }
+  }, [result]);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const setEst = (A,B,e) => setForm(f=>({...f, estA:A, estB:B, estE:e}));
   const setPre = (A,B,e) => setForm(f=>({...f, preA:A, preB:B, preE:e}));
@@ -1506,6 +1654,7 @@ function ParapeitoCalc() {
 
   return (
     <div className="content" style={{padding:0}}>
+      <ModelosGaleria tipo="parapeito" modelos={MODELOS_PARAPEITO} onEscolher={m=>{setForm(f=>({...f,...m}));setResult(null);setAutoCalc(n=>n+1);}} />
       <div className="grid-2">
         <div className="card">
           <div className="card-header">⚙ Dimensões</div>
@@ -1532,6 +1681,7 @@ function ParapeitoCalc() {
         <button className="btn-calc" onClick={calcular}>CALCULAR PARAPEITO</button>
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,comprimento:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
+      <div ref={drawRef} style={{scrollMarginTop:8}} />
       {result && (<>
         <DesenhoParapeito L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
         <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
@@ -1602,6 +1752,19 @@ function GradeCalc() {
     espacamentoV:"10", nTravH:"0",
   });
   const [result, setResult] = useState(null);
+  const [autoCalc, setAutoCalc] = useState(0);
+  const drawRef = useRef(null);
+  const scrollPend = useRef(false);
+  useEffect(() => {
+    if (autoCalc > 0) { scrollPend.current = true; calcular(); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCalc]);
+  useEffect(() => {
+    if (result && scrollPend.current) {
+      scrollPend.current = false;
+      setTimeout(() => { if (drawRef.current) drawRef.current.scrollIntoView({ behavior:"smooth", block:"start" }); }, 50);
+    }
+  }, [result]);
   const set = (k,v) => setForm(f=>({...f,[k]:v}));
   const setMolTubo = (A,B,e) => setForm(f=>({...f, molA:A, molB:B, molE:e}));
   const setMolMac  = (tipo,L,e,D) => setForm(f=>({...f, molTipo:tipo, molL:L, molEsp:e, molD:D}));
@@ -1656,6 +1819,7 @@ function GradeCalc() {
 
   return (
     <div className="content" style={{padding:0}}>
+      <ModelosGaleria tipo="grade" modelos={MODELOS_GRADE} onEscolher={m=>{setForm(f=>({...f,...m}));setResult(null);setAutoCalc(n=>n+1);}} />
       <div className="grid-2">
         <div className="card">
           <div className="card-header">⚙ Dimensões</div>
@@ -1694,6 +1858,7 @@ function GradeCalc() {
         <button className="btn-calc" onClick={calcular}>CALCULAR GRADE</button>
         <button className="btn-reset" onClick={()=>{setForm(f=>({...f,largura:"",altura:""}));setResult(null);}}>LIMPAR</button>
       </div>
+      <div ref={drawRef} style={{scrollMarginTop:8}} />
       {result && (<>
         <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
         <ListaCorte pecas={result.pecas} perfilEst={`mol_${form.molTipo}`} perfilPre={`bar_${form.barTipo}`} />
