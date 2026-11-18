@@ -620,8 +620,8 @@ function getPecaCor(nome) {
   if (nome.startsWith("Diag ")) return PECA_CORES["Barra diagonal"];
   return PECA_CORES[nome] || { bg: "#111", cor: "#aaa" };
 }
-function ListaCorte({ pecas }) {
-  const sorted = [...pecas].sort((a, b) => {
+function ordenarPecas(pecas) {
+  return [...pecas].sort((a, b) => {
     const aIsDiag = a.nome.startsWith("Diag ");
     const bIsDiag = b.nome.startsWith("Diag ");
     if (aIsDiag && bIsDiag) {
@@ -631,6 +631,24 @@ function ListaCorte({ pecas }) {
     }
     return b.comp - a.comp;
   });
+}
+// número de cada peça na lista de corte (nome → nº), usado também no desenho
+function numerosPecas(pecas) {
+  const m = {};
+  ordenarPecas(pecas).forEach((p, i) => { if (!(p.nome in m)) m[p.nome] = i + 1; });
+  return m;
+}
+function BadgeNum({ x, y, n }) {
+  return (
+    <g pointerEvents="none">
+      <circle cx={x} cy={y} r={6} fill="#ffffff" stroke="#c0392b" strokeWidth="1" />
+      <text x={x} y={y} textAnchor="middle" dominantBaseline="central" fill="#c0392b" fontSize={n > 9 ? 6.5 : 7.5} fontFamily="monospace" fontWeight="bold">{n}</text>
+    </g>
+  );
+}
+const NOTA_NUM = "Nº vermelho = item da lista de corte (marcado em uma só folha; as demais são iguais)";
+function ListaCorte({ pecas }) {
+  const sorted = ordenarPecas(pecas);
   const totalPeso = pecas.reduce((s, p) => s + p.peso, 0);
   const totalMetros = pecas.reduce((s, p) => s + p.compTotal, 0);
 
@@ -687,7 +705,8 @@ function ListaCorte({ pecas }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // PORTÃO
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiagonal, perfilEst }) {
+function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiagonal, perfilEst, pecas }) {
+  const nums = numerosPecas(pecas || []);
   const maxW = 720; const maxDrawH = 400;
   const padL = 14; const padR = 130; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
@@ -757,10 +776,13 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                     {reg.ori === "horizontal"
                       ? (() => {
                           const nBars = Math.max(0, Math.ceil(altR / espPxH) - 1);
-                          return [...Array(Math.min(nBars,60))].map((_,bi) => {
+                          const linhasH = [...Array(Math.min(nBars,60))].map((_,bi) => {
                             const by = y1r + ((bi+1)/(nBars+1)) * altR;
                             return <line key={bi} x1={fx+6} y1={by} x2={fx+fw-6} y2={by} stroke={corPre} strokeWidth="1.5" />;
                           });
+                          const nH = nums[`Barra horizontal R${ri+1}`];
+                          if (fi === 0 && nH && nBars > 0) linhasH.push(<BadgeNum key="bnh" x={fx+fw*0.8} y={y1r + ((Math.floor((nBars-1)/2)+1)/(nBars+1)) * altR} n={nH} />);
+                          return linhasH;
                         })()
                       : reg.ori === "diagonal"
                       ? (() => {
@@ -829,6 +851,19 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                                   return <line key={bi} x1={x1} y1={y1} x2={x2} y2={y2} stroke={corD} strokeWidth="1.5" />;
                                 })}
                               </g>
+                              {fi === 0 && (() => {
+                                const cand = (pecas||[]).filter(pc => pc.nome.startsWith(`Diag R${ri+1} `));
+                                const usados = new Set(); const out = [];
+                                linhas.forEach((ln, bi) => {
+                                  const comp = Math.hypot(ln.x2-ln.x1, ln.y2-ln.y1) / scale;
+                                  let best = null, bd = 1e9;
+                                  cand.forEach(pc => { const d = Math.abs(pc.comp - comp); if (d < bd) { bd = d; best = pc; } });
+                                  if (!best || usados.has(best.nome)) return;
+                                  usados.add(best.nome);
+                                  out.push(<BadgeNum key={`bd${bi}`} x={fxInt+(ln.x1+ln.x2)/2} y={y1r+(ln.y1+ln.y2)/2} n={nums[best.nome]} />);
+                                });
+                                return out;
+                              })()}
                               {/* Cota de espaçamento perpendicular — entre 2 barras próximas ao centro */}
                               {(() => {
                                 if (linhas.length < 2) return null;
@@ -879,10 +914,13 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                         })()
                       : (() => {
                           const nBars = Math.max(0, Math.ceil((fw-4) / espPxV) - 1);
-                          return [...Array(Math.min(nBars,60))].map((_,bi) => {
+                          const linhasV = [...Array(Math.min(nBars,60))].map((_,bi) => {
                             const bx = fx + ((bi+1)/(nBars+1)) * fw;
                             return <line key={bi} x1={bx} y1={y1r} x2={bx} y2={y2r} stroke={corPre} strokeWidth="1.5" />;
                           });
+                          const nVn = nums[`Barra vertical R${ri+1}`];
+                          if (fi === 0 && nVn && nBars > 0) linhasV.push(<BadgeNum key="bnv" x={fx + ((Math.floor((nBars-1)/2)+1)/(nBars+1)) * fw} y={y1r + altR*0.3} n={nVn} />);
+                          return linhasV;
                         })()
                     }
                   </g>
@@ -955,6 +993,16 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
                   </g>
                 );
               })}
+              {fi === 0 && (() => {
+                const B = [];
+                const add = (nome, x, y) => { if (nums[nome]) B.push(<BadgeNum key={`${nome}-${x}-${y}`} x={x} y={y} n={nums[nome]} />); };
+                add("Travessa superior", fx+fw*0.5, oy);
+                add("Travessa inferior", fx+fw*0.5, oy+dh);
+                add("Montante vertical", fx+2, oy+dh*0.25);
+                if (travRatios.length) add("Travessa horizontal", fx+fw*0.2, oy+travRatios[0]*dh);
+                if ((nTravV||0) > 0) add("Travessa vertical", fx+fw/((nTravV||0)+1), oy+dh*0.25);
+                return B;
+              })()}
               {folhas > 1 && <text x={fx+fw/2} y={oy+dh/2} textAnchor="middle" fill="#bbb" fontSize="9" fontFamily="monospace">FOLHA {fi+1}</text>}
             </g>
           );
@@ -973,6 +1021,7 @@ function DesenhoPortao({ L, H, folhas, nTravV, travPosRatio, regioes, incluiDiag
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra horizontal"].cor}} />Preenchimento horizontal</div>
         <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Barra diagonal"].cor}} />Preenchimento diagonal</div>
         {incluiDiagonal && <div className="legend-item"><div className="legend-swatch" style={{background: PECA_CORES["Diagonal"].cor, height:3}} />Diagonal</div>}
+        <div className="legend-item" style={{color:"#c0392b"}}>● {NOTA_NUM}</div>
       </div>
     </div>
   );
@@ -1512,6 +1561,7 @@ function PortaoCalc() {
           regioes={result.regioes}
           oriPreenchi="vertical"
           incluiDiagonal={form.incluiDiagonal}
+          pecas={result.pecas}
           perfilEst={`${form.estA}x${form.estB}x${form.estE}`}
           perfilPre={`${form.estA}x${form.estB}x${form.estE}`} />
         <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.estA}x${form.estB}x${form.estE}`} />
@@ -1556,7 +1606,8 @@ function CotaEspH({ y, x1, x2, label }) {
   );
 }
 
-function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre }) {
+function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, perfilPre, pecas }) {
+  const nums = numerosPecas(pecas || []);
   const maxW = 660; const maxDrawH = 340;
   const padL = 14; const padR = 90; const padT = 14; const padB = 52;
   const availW = maxW - padL - padR;
@@ -1592,6 +1643,17 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
             return <line key={`${vi}-${bi}`} x1={bx} y1={oy+3} x2={bx} y2={oy+dh-3} stroke="#6fcf6f" strokeWidth="1.5" />;
           });
         })}
+        {(() => {
+          const B = [];
+          const add = (nome, x, y) => { if (nums[nome]) B.push(<BadgeNum key={nome} x={x} y={y} n={nums[nome]} />); };
+          const vao = nPostes > 1 ? postesX[1] - postesX[0] : dw;
+          add("Poste vertical", postesX[0], oy + dh*0.3);
+          add("Travessa superior", ox + dw*0.25, oy);
+          add("Travessa inferior", ox + dw*0.25, oy + dh);
+          if (oriPreenchi === "horizontal" && elsY.length > 0) add("Barra horizontal", postesX[0] + vao*0.3, elsY[Math.floor((elsY.length-1)/2)]);
+          if (oriPreenchi === "vertical" && nElementos > 0) add("Barra vertical", postesX[0] + ((Math.floor((nElementos-1)/2)+1)/(nElementos+1))*vao, oy + dh*0.25);
+          return B;
+        })()}
         {oriPreenchi === "horizontal" && elsY.length > 0 && (() => {
           const ya = elsY.length > 1 ? elsY[0] : oy, yb = elsY.length > 1 ? elsY[1] : elsY[0];
           return <CotaEspV x={ox+dw*0.5} y1={ya} y2={yb} label={`${((yb-ya)/scale*100).toFixed(1)}cm`} />;
@@ -1609,6 +1671,7 @@ function DesenhoParapeito({ L, H, nPostes, nElementos, oriPreenchi, perfilEst, p
       <div className="legend-box">
         <div className="legend-item"><div className="legend-swatch" style={{background:"#4a9eff"}} />Postes e travessas</div>
         <div className="legend-item"><div className="legend-swatch" style={{background:"#6fcf6f"}} />Preenchimento {oriPreenchi}</div>
+        <div className="legend-item" style={{color:"#c0392b"}}>● Nº vermelho = item da lista de corte</div>
       </div>
     </div>
   );
@@ -1719,7 +1782,7 @@ function ParapeitoCalc() {
       </div>
       <div ref={drawRef} style={{scrollMarginTop:8}} />
       {result && (<>
-        <DesenhoParapeito L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
+        <DesenhoParapeito pecas={result.pecas} L={result.L} H={result.H} nPostes={result.nPostes} nElementos={result.nEl} oriPreenchi={form.oriPreenchi} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
         <ListaCorte pecas={result.pecas} perfilEst={`${form.estA}x${form.estB}x${form.estE}`} perfilPre={`${form.preA}x${form.preB}x${form.preE}`} />
         <div className="results-card">
           <div className="results-header">✔ Resumo</div>
@@ -1737,7 +1800,8 @@ function ParapeitoCalc() {
 // ══════════════════════════════════════════════════════════════════════════════
 // GRADE
 // ══════════════════════════════════════════════════════════════════════════════
-function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
+function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra, pecas }) {
+  const nums = numerosPecas(pecas || []);
   const maxSize = 460;
   const padL = 14; const padR = 90; const padT = 14; const padB = 52;
   const availW = maxSize - padL - padR;
@@ -1767,6 +1831,16 @@ function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
         <line x1={ox+dw} y1={oy} x2={ox+dw} y2={oy+dh} stroke={corLateral} strokeWidth="5" />
         <line x1={ox} y1={oy} x2={ox+dw} y2={oy} stroke={corTopBot} strokeWidth="5" />
         <line x1={ox} y1={oy+dh} x2={ox+dw} y2={oy+dh} stroke={corTopBot} strokeWidth="5" />
+        {(() => {
+          const B = [];
+          const add = (nome, x, y) => { if (nums[nome]) B.push(<BadgeNum key={nome} x={x} y={y} n={nums[nome]} />); };
+          add("Moldura lateral", ox, oy + dh*0.3);
+          add("Moldura superior", ox + dw*0.3, oy);
+          add("Moldura inferior", ox + dw*0.3, oy + dh);
+          if (barrasV.length) add("Barra vertical", barrasV[Math.floor((barrasV.length-1)/2)], oy + dh*0.25);
+          if (barrasH.length) add("Travessa horizontal", ox + dw*0.7, barrasH[0]);
+          return B;
+        })()}
         {barrasV.length > 0 && (() => {
           const xa = barrasV.length > 1 ? barrasV[0] : ox, xb = barrasV.length > 1 ? barrasV[1] : barrasV[0];
           return <CotaEspH y={oy+dh*0.5} x1={xa} x2={xb} label={`${((xb-xa)/scale*100).toFixed(1)}cm`} />;
@@ -1783,6 +1857,7 @@ function DesenhoGrade({ L, H, nV, nH, descMoldura, descBarra }) {
         <div className="legend-item"><div className="legend-swatch" style={{background:corTopBot}} />Sup/Inf — {descMoldura}</div>
         {nV>0 && <div className="legend-item"><div className="legend-swatch" style={{background:corBarraV}} />Barra vertical — {descBarra}</div>}
         {nH>0 && <div className="legend-item"><div className="legend-swatch" style={{background:corTravH}} />Travessa horizontal — {descBarra}</div>}
+        <div className="legend-item" style={{color:"#c0392b"}}>● Nº vermelho = item da lista de corte</div>
       </div>
     </div>
   );
@@ -1904,7 +1979,7 @@ function GradeCalc() {
       </div>
       <div ref={drawRef} style={{scrollMarginTop:8}} />
       {result && (<>
-        <DesenhoGrade L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
+        <DesenhoGrade pecas={result.pecas} L={result.L} H={result.H} nV={result.nV} nH={result.nH} descMoldura={result.descMol} descBarra={result.descBar} />
         <ListaCorte pecas={result.pecas} perfilEst={`mol_${form.molTipo}`} perfilPre={`bar_${form.barTipo}`} />
         <div className="results-card">
           <div className="results-header">✔ Resumo</div>
