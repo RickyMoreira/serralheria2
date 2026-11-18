@@ -1201,7 +1201,9 @@ function PortaoCalc() {
       const newId = Date.now();
       const nTrav = f.travHoriz.length;
       const altAtual = (parseFloat(f.altura) || 2) * 100; // altura em m → cm
-      const pos = Math.round(altAtual / (nTrav + 2) * (nTrav + 1));
+      // 1ª travessa a 75% da altura (150 cm numa altura de 2 m); as próximas ficam na metade do espaço restante abaixo da última
+      const maxPos = Math.max(0, ...f.travHoriz.map(t => parseFloat(t.pos) || 0));
+      const pos = Math.round(nTrav === 0 ? altAtual * 0.75 : (maxPos + altAtual) / 2);
       return {
         ...f,
         travHoriz: [...f.travHoriz, { id: newId, pos: String(pos) }],
